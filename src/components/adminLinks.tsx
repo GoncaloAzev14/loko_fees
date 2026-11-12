@@ -4,8 +4,6 @@ import { CoinIcon, ListIcon, ReceiptPlusIcon, ShieldIcon, SlidersIcon, SwapIcon,
 export interface AdminLink {
   to: string
   label: string
-  /** Shorter wording where space is tight (the swing menu). */
-  shortLabel?: string
   Icon: ComponentType<SVGProps<SVGSVGElement>>
 }
 
@@ -16,6 +14,6 @@ export const ADMIN_LINKS: AdminLink[] = [
   { to: '/admin/money', label: 'Receitas e despesas', Icon: SwapIcon },
   { to: '/admin/catalog', label: 'Tipos de multa', Icon: ListIcon },
   { to: '/admin/players', label: 'Plantel', Icon: UsersIcon },
-  { to: '/admin/admins', label: 'Administradores', shortLabel: 'Admins', Icon: ShieldIcon },
+  { to: '/admin/admins', label: 'Administradores', Icon: ShieldIcon },
   { to: '/admin/settings', label: 'Definições', Icon: SlidersIcon },
 ]

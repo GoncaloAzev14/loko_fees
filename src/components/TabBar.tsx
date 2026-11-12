@@ -1,17 +1,15 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
-import { fanPositions } from '../lib/fan'
 import { ADMIN_LINKS } from './adminLinks'
 import { HomeIcon, LoginIcon, PlusIcon, ReceiptIcon, UsersIcon, WalletIcon } from './icons'
 
 const tab = ({ isActive }: { isActive: boolean }) => (isActive ? 'dk on' : 'dk')
-const positions = fanPositions(ADMIN_LINKS.length)
 
 /**
  * The bottom bar (phones only; wide screens get the sidebar).
  * The centre button logs in when nobody is signed in; for an admin it opens a menu whose
- * options swing out in an arc.
+ * options swing up as a stack.
  */
 export default function TabBar() {
   const { isAdmin } = useAuth()
@@ -39,21 +37,20 @@ export default function TabBar() {
       {isAdmin && (
         <>
           <div className={`scrim${open ? ' open' : ''}`} onClick={() => setOpen(false)} aria-hidden="true" />
-          <div className={`fan${open ? ' open' : ''}`} role="menu" aria-label="Administração" aria-hidden={!open}>
-            {ADMIN_LINKS.map(({ to, label, shortLabel, Icon }, i) => (
+          <div className={`menu${open ? ' open' : ''}`} role="menu" aria-label="Administração" aria-hidden={!open}>
+            {ADMIN_LINKS.map(({ to, label, Icon }, i) => (
               <Link
                 key={to}
                 to={to}
                 role="menuitem"
-                aria-label={label}
                 tabIndex={open ? 0 : -1}
                 ref={i === 0 ? first : undefined}
-                className="fan-item"
-                style={{ '--cx': positions[i].cx, '--cy': positions[i].cy, '--i': i } as CSSProperties}
+                className="menu-item"
+                style={{ '--i': i, '--tilt': i % 2 ? '-8deg' : '8deg' } as CSSProperties}
                 onClick={() => setOpen(false)}
               >
-                <Icon />
-                <span className={`fan-label${i === 1 || i === ADMIN_LINKS.length - 2 ? ' above' : ''}`}>{shortLabel ?? label}</span>
+                <span className="mi"><Icon /></span>
+                {label}
               </Link>
             ))}
           </div>

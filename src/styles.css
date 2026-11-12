@@ -12,7 +12,7 @@
   --on-brand: #0e0e10; /* text on orange fills: white would only reach 3.3:1 */
   --good: #5fd38d;
   --radius: 20px;
-  --dock-h: 70px;
+  --dock-h: 72px;
   color-scheme: dark;
 }
 
@@ -65,70 +65,73 @@ main {
   left: 10px; right: 10px; max-width: 520px; margin: 0 auto;
   bottom: calc(10px + env(safe-area-inset-bottom));
   height: var(--dock-h);
-  display: grid; grid-template-columns: repeat(5, 1fr); align-items: end;
-  padding: 0 4px 9px;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 28px;
+  display: grid; grid-template-columns: repeat(5, 1fr); align-items: stretch;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 30px;
   box-shadow: 0 14px 30px -10px rgba(0, 0, 0, 0.7);
 }
+/* icon + label centred in the strip */
 .dk, .mid {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  font-size: 0.66rem; font-weight: 600; color: var(--muted); min-width: 0;
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  font-size: 0.68rem; font-weight: 600; color: var(--muted); min-width: 0;
 }
 .dk.on { color: var(--brand); }
 .mid { color: var(--text); font-weight: 700; }
+.mid::before { content: ''; width: 22px; height: 22px; } /* keeps "Menu" on the same line as the other labels */
+/* the centre button: bigger than the tabs, rising out of the strip */
 .orb {
-  width: 54px; height: 54px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+  position: absolute; left: 50%; top: -38px; margin-left: -34px;
+  width: 68px; height: 68px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   background: var(--brand); color: #fff;
-  transform: translateY(-10px);
-  box-shadow: 0 0 0 5px var(--bg), 0 10px 24px -4px rgba(242, 92, 31, 0.6);
+  box-shadow: 0 0 0 6px var(--bg), 0 12px 26px -4px rgba(242, 92, 31, 0.6);
   transition: background 0.25s, color 0.25s;
 }
-.orb .ic { width: 26px; height: 26px; transition: transform 0.5s cubic-bezier(0.34, 1.6, 0.5, 1); }
+.orb .ic { width: 30px; height: 30px; transition: transform 0.5s cubic-bezier(0.34, 1.6, 0.5, 1); }
 .orb.open { background: #fff; color: var(--brand); }
 .orb.open .ic { transform: rotate(135deg); }
 
-/* swing menu: options fan out over the centre button */
+/* admin menu: an ordered stack of options that swings up from the centre button */
 .scrim {
   position: fixed; inset: 0; z-index: 30;
-  background: rgba(8, 8, 9, 0.74); backdrop-filter: blur(3px);
+  background: rgba(8, 8, 9, 0.78); backdrop-filter: blur(3px);
   opacity: 0; pointer-events: none; transition: opacity 0.3s;
 }
 .scrim.open { opacity: 1; pointer-events: auto; }
-.fan {
-  --r: min(150px, calc(50vw - 42px));
-  position: fixed; z-index: 40; width: 0; height: 0;
-  left: 50%; bottom: calc(87px + env(safe-area-inset-bottom)); /* orb centre + 14px, keeps end labels off the bar */
+.menu {
+  position: fixed; z-index: 40; left: 0; right: 0;
+  bottom: calc(10px + var(--dock-h) + 56px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column-reverse; align-items: center; gap: 8px;
   pointer-events: none;
 }
-.fan-item {
-  position: absolute; left: -23px; top: -23px; width: 46px; height: 46px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--surface); border: 1px solid var(--brand-line); color: var(--brand);
+.menu-item {
+  display: flex; align-items: center; gap: 12px;
+  width: min(280px, calc(100vw - 48px)); height: clamp(44px, 6.4vh, 54px); padding: 0 18px 0 6px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 99px;
+  color: var(--text); font-weight: 600; font-size: 0.9rem;
   opacity: 0; pointer-events: none;
-  transform: translate(0, 0) rotate(-200deg) scale(0.2);
+  transform: translateY(calc(var(--i) * 62px)) scale(0.4) rotate(var(--tilt));
   transition: transform 0.22s ease-in, opacity 0.15s;
 }
-.fan-item:first-child { background: var(--brand); border-color: var(--brand); color: #fff; }
-.fan-label {
-  position: absolute; top: 52px; left: 50%; width: 66px; margin-left: -33px;
-  text-align: center; font-size: 0.66rem; font-weight: 600; line-height: 1.15; color: #f1f1f3;
+.menu-item .mi {
+  width: clamp(34px, 5vh, 42px); height: clamp(34px, 5vh, 42px); border-radius: 50%; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--brand-soft); color: var(--brand);
 }
-/* next to the end options the label goes above, so it does not run into their circles */
-.fan-label.above { top: auto; bottom: 52px; }
-.fan.open .fan-item {
-  opacity: 1; pointer-events: auto;
-  transform: translate(calc(var(--r) * var(--cx)), calc(var(--r) * var(--cy) * -1)) rotate(0deg) scale(1);
-  transition: transform 0.6s cubic-bezier(0.34, 1.75, 0.5, 1) calc(var(--i) * 45ms), opacity 0.2s calc(var(--i) * 45ms);
+.menu-item:first-child { border-color: var(--brand); }
+.menu-item:first-child .mi { background: var(--brand); color: #fff; }
+.menu.open .menu-item {
+  opacity: 1; pointer-events: auto; transform: none;
+  transition: transform 0.55s cubic-bezier(0.34, 1.6, 0.5, 1) calc(var(--i) * 45ms), opacity 0.2s calc(var(--i) * 45ms);
 }
 @media (prefers-reduced-motion: reduce) {
-  .fan-item, .fan.open .fan-item { transition: opacity 0.15s !important; transform: translate(calc(var(--r) * var(--cx)), calc(var(--r) * var(--cy) * -1)); }
+  .menu-item, .menu.open .menu-item { transition: opacity 0.15s !important; transform: none; }
   .orb .ic { transition: none; }
 }
 
 @media (min-width: 900px) {
   .shell { display: grid; grid-template-columns: 250px 1fr; }
-  .topbar, .dock, .scrim, .fan { display: none; }
+  .topbar, .dock, .scrim, .menu { display: none; }
   main { padding: 28px 40px 56px; max-width: 920px; margin: 0; width: 100%; }
   .sidebar {
     display: flex; flex-direction: column; gap: 1rem;
