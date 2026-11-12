@@ -1,0 +1,78 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useMemo, useState } from 'react'
+import * as api from './api'
+import type { LedgerFilter } from './types'
+
+export const useSummary = () => useQuery({ queryKey: ['summary'], queryFn: api.getSummary })
+export const useBalances = () => useQuery({ queryKey: ['balances'], queryFn: api.getBalances })
+export const useFineTypes = () => useQuery({ queryKey: ['fine-types'], queryFn: api.getFineTypes })
+export const useSettings = () => useQuery({ queryKey: ['settings'], queryFn: api.getSettings })
+export const useLedger = (f: LedgerFilter = {}) =>
+  useQuery({ queryKey: ['ledger', f], queryFn: () => api.getLedger(f) })
+export const usePayments = (playerId?: string) =>
+  useQuery({ queryKey: ['payments', playerId ?? null], queryFn: () => api.getPayments(playerId) })
+export const useIncomes = () => useQuery({ queryKey: ['incomes'], queryFn: api.getIncomes })
+export const useExpenses = () => useQuery({ queryKey: ['expenses'], queryFn: api.getExpenses })
+
+/** id -> row lookups for joining names client-side. */
+export function useLookups() {
+  const balances = useBalances()
+  const types = useFineTypes()
+  return useMemo(
+    () => ({
+      players: new Map((balances.data ?? []).map((b) => [b.player_id, b])),
+      types: new Map((types.data ?? []).map((t) => [t.id, t])),
+      ready: balances.isSuccess && types.isSuccess,
+    }),
+    [balances.data, balances.isSuccess, types.data, types.isSuccess],
+  )
+}
+
+/**
+ * Wraps a write. Every view is derived from the same ledger, so on success
+ * everything is refetched rather than patched.
+ */
+export function useAction<A extends unknown[]>(fn: (...args: A) => Promise<unknown>) {
+  const qc = useQueryClient()
+  const [state, setState] = useState<{ busy: boolean; error: string | null }>({ busy: false, error: null })
+  const run = useCallback(
+    async (...args: A) => {
+      setState({ busy: true, error: null })
+      try {
+        await fn(...args)
+        await qc.invalidateQueries()
+        setState({ busy: false, error: null })
+        return true
+      } catch (e) {
+        setState({ busy: false, error: e instanceof Error ? e.message : 'Erro inesperado' })
+        return false
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [qc],
+  )
+  return { run, ...state }
+}
+
+/** useState persisted in localStorage; silently falls back to memory if storage is blocked. */
+export function useLocalState(key: string, initial: string) {
+  const [value, setValue] = useState(() => {
+    try {
+      return localStorage.getItem(key) ?? initial
+    } catch {
+      return initial
+    }
+  })
+  const set = useCallback(
+    (v: string) => {
+      setValue(v)
+      try {
+        localStorage.setItem(key, v)
+      } catch {
+        /* ignore */
+      }
+    },
+    [key],
+  )
+  return [value, set] as const
+}

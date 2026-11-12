@@ -1,0 +1,34 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import App from './App'
+import { AuthProvider } from './lib/auth'
+import { isConfigured } from './lib/supabase'
+import './styles.css'
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: true } },
+})
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    {isConfigured ? (
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </AuthProvider>
+      </QueryClientProvider>
+    ) : (
+      <main className="setup">
+        <h1>Falta configurar</h1>
+        <p>
+          Defina <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code> num ficheiro <code>.env</code> (veja{' '}
+          <code>.env.example</code> e o <code>README.md</code>).
+        </p>
+      </main>
+    )}
+  </StrictMode>,
+)

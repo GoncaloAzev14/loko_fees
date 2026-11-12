@@ -1,0 +1,39 @@
+import { Navigate, Route, Routes } from 'react-router-dom'
+import Layout, { AdminHub } from './components/Layout'
+import RequireAdmin from './components/RequireAdmin'
+import Dashboard from './pages/Dashboard'
+import Fines from './pages/Fines'
+import Login from './pages/Login'
+import PlayerDetail from './pages/PlayerDetail'
+import Players from './pages/Players'
+import AddFine from './pages/admin/AddFine'
+import Catalog from './pages/admin/Catalog'
+import Money from './pages/admin/Money'
+import Payments from './pages/admin/Payments'
+import Roster from './pages/admin/Roster'
+import Settings from './pages/admin/Settings'
+
+/** Public read-only screens, plus /admin/* which only admins can open. */
+export default function App() {
+  return (
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="players" element={<Players />} />
+        <Route path="players/:id" element={<PlayerDetail />} />
+        <Route path="fines" element={<Fines />} />
+        <Route path="login" element={<Login />} />
+        <Route path="admin" element={<RequireAdmin />}>
+          <Route index element={<AdminHub />} />
+          <Route path="fines/new" element={<AddFine />} />
+          <Route path="payments" element={<Payments />} />
+          <Route path="money" element={<Money />} />
+          <Route path="catalog" element={<Catalog />} />
+          <Route path="players" element={<Roster />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
+  )
+}
