@@ -1,0 +1,109 @@
+import { useState, type FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { Async, ErrorNote } from '../../components/ui'
+import { addFines } from '../../lib/api'
+import { money, parseAmount, todayISO } from '../../lib/format'
+import { useAction, useBalances, useFineTypes } from '../../lib/hooks'
+
+/** Register the same fine for one or many players (e.g. the whole squad after a defeat). */
+export default function AddFine() {
+  const [params] = useSearchParams()
+  const balances = useBalances()
+  const types = useFineTypes()
+  const [typeId, setTypeId] = useState('')
+  const [amount, setAmount] = useState('')
+  const [date, setDate] = useState(todayISO())
+  const [description, setDescription] = useState('')
+  const [selected, setSelected] = useState<Set<string>>(() => new Set(params.get('player') ? [params.get('player')!] : []))
+  const [done, setDone] = useState<string | null>(null)
+  const save = useAction(addFines)
+
+  const toggle = (id: string) =>
+    setSelected((s) => {
+      const n = new Set(s)
+      if (!n.delete(id)) n.add(id)
+      return n
+    })
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    setDone(null)
+    const value = parseAmount(amount)
+    if (!typeId || selected.size === 0 || !(value >= 0)) return
+    const ok = await save.run({ playerIds: [...selected], fineTypeId: typeId, amount: value, finedOn: date, description })
+    if (ok) {
+      setDone(`${selected.size} ${selected.size === 1 ? 'multa registada' : 'multas registadas'} (${money(value * selected.size)}).`)
+      setSelected(new Set())
+      setDescription('')
+    }
+  }
+
+  return (
+    <>
+      <h1>Registar multa</h1>
+      <Async q={types}>
+        {(typeList) => (
+          <Async q={balances}>
+            {(players) => {
+              const active = players.filter((p) => p.active)
+              return (
+                <form className="card form" onSubmit={submit}>
+                  <label className="field" htmlFor="type">Motivo</label>
+                  <select
+                    id="type" required value={typeId}
+                    onChange={(e) => {
+                      setTypeId(e.target.value)
+                      const t = typeList.find((x) => x.id === e.target.value)
+                      if (t) setAmount(String(t.default_amount).replace('.', ','))
+                    }}
+                  >
+                    <option value="">Escolher…</option>
+                    {typeList.filter((t) => t.active).map((t) => (
+                      <option key={t.id} value={t.id}>{t.name} ({money(t.default_amount)})</option>
+                    ))}
+                  </select>
+
+                  <div className="grid2">
+                    <div>
+                      <label className="field" htmlFor="amount">Valor por pessoa (€)</label>
+                      <input id="amount" inputMode="decimal" required value={amount} onChange={(e) => setAmount(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="field" htmlFor="date">Data</label>
+                      <input id="date" type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
+                    </div>
+                  </div>
+
+                  <label className="field" htmlFor="desc">Descrição (opcional)</label>
+                  <input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} />
+
+                  <div className="field-row">
+                    <span className="field">Quem ({selected.size})</span>
+                    <span>
+                      <button type="button" className="link" onClick={() => setSelected(new Set(active.map((p) => p.player_id)))}>Todos</button>
+                      {' · '}
+                      <button type="button" className="link" onClick={() => setSelected(new Set())}>Nenhum</button>
+                    </span>
+                  </div>
+                  <div className="chips wrap">
+                    {active.map((p) => (
+                      <button type="button" key={p.player_id} aria-pressed={selected.has(p.player_id)} className={`chip ${selected.has(p.player_id) ? 'on' : ''}`} onClick={() => toggle(p.player_id)}>
+                        {p.name}
+                      </button>
+                    ))}
+                  </div>
+
+                  <ErrorNote error={save.error} />
+                  {done && <p className="good" role="status">{done}</p>}
+                  <button className="btn" disabled={save.busy || !typeId || selected.size === 0}>
+                    {save.busy ? 'A guardar…' : `Registar${selected.size ? ` (${selected.size})` : ''}`}
+                  </button>
+                </form>
+              )
+            }}
+          </Async>
+        )}
+      </Async>
+    </>
+  )
+}
