@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Async, BalanceLine } from '../components/ui'
+import { Async } from '../components/ui'
+import { money } from '../lib/format'
 import { useBalances } from '../lib/hooks'
 
 type Filter = 'all' | 'debt' | 'credit'
@@ -36,9 +37,21 @@ export default function Players() {
                 <li key={b.player_id} className={`row ${b.active ? '' : 'cancelled'}`}>
                   <div className="row-main">
                     <Link className="row-title" to={`/players/${b.player_id}`}>{b.name}</Link>
-                    <div className="row-sub">{b.role === 'staff' ? 'Equipa técnica' : 'Jogador'}{!b.active && ' · inativo'}</div>
+                    <div className="row-sub">
+                      {b.role === 'staff' ? 'Equipa técnica' : 'Jogador'}
+                      {!b.active && ' · inativo'}
+                      {b.overdue > 0 && ` · ${money(b.overdue)} vencido`}
+                    </div>
                   </div>
-                  <div className="row-side"><BalanceLine b={b} /></div>
+                  <div className="row-side">
+                    {b.credit > 0 ? (
+                      <span className="amount good">Crédito {money(b.credit)}</span>
+                    ) : b.outstanding > 0 ? (
+                      <span className="amount bad">{money(b.outstanding)}</span>
+                    ) : (
+                      <span className="muted">Sem dívidas</span>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>

@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import * as api from './api'
 import type { LedgerFilter } from './types'
 
@@ -35,11 +35,13 @@ export function useLookups() {
 export function useAction<A extends unknown[]>(fn: (...args: A) => Promise<unknown>) {
   const qc = useQueryClient()
   const [state, setState] = useState<{ busy: boolean; error: string | null }>({ busy: false, error: null })
+  const fnRef = useRef(fn)
+  fnRef.current = fn
   const run = useCallback(
     async (...args: A) => {
       setState({ busy: true, error: null })
       try {
-        await fn(...args)
+        await fnRef.current(...args)
         await qc.invalidateQueries()
         setState({ busy: false, error: null })
         return true
@@ -48,7 +50,6 @@ export function useAction<A extends unknown[]>(fn: (...args: A) => Promise<unkno
         return false
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [qc],
   )
   return { run, ...state }

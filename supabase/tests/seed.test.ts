@@ -27,13 +27,13 @@ describe('demo seed', async () => {
   })
 
   it('imports the sheet\'s 7 late fees; the app rule would also fine two players the sheet missed', async () => {
-    const count = async () => (await db.query(`select 1 from fines where kind = 'late_fee'`)).rows.length
-    expect(await count()).toBe(7)
+    const lateFeePlayers = async () =>
+      (await db.query<{ name: string }>(
+        `select p.name from fines f join players p on p.id = f.player_id where f.kind = 'late_fee' order by 1`)).rows.map((r) => r.name)
+    const before = await lateFeePlayers()
+    expect(before).toHaveLength(7)
     await db.query(`select apply_late_fees('2026-11-12')`)
-    const { rows } = await db.query<{ name: string }>(
-      `select p.name from fines f join players p on p.id = f.player_id
-       where f.kind = 'late_fee' and f.description is not null order by 1`) // imported ones have no description
     // João has an unpaid October red card, Miguel Bombeiro an unpaid October lateness: both overdue, neither fined in the sheet.
-    expect(rows.map((r) => r.name)).toEqual(['João', 'Miguel Bombeiro'])
+    expect((await lateFeePlayers()).filter((n) => !before.includes(n))).toEqual(['João', 'Miguel Bombeiro'])
   })
 })

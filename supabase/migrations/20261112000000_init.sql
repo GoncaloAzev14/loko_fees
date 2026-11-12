@@ -212,9 +212,8 @@ language plpgsql security definer set search_path = public as $$
 declare
   n integer;
 begin
-  insert into public.fines (player_id, kind, amount, fined_on, description, late_for_month)
-  select d.player_id, 'late_fee', s.late_fine_amount, d.due_on + 1,
-         'Multa de Falta de Pagamento', d.month
+  insert into public.fines (player_id, kind, amount, fined_on, late_for_month)
+  select d.player_id, 'late_fee', s.late_fine_amount, d.due_on + 1, d.month
   from (
     select distinct l.player_id, date_trunc('month', l.fined_on)::date as month, l.due_on
     from public.fine_ledger l
