@@ -26,15 +26,16 @@ const db = new PGlite({
 })
 await db.exec(`
   create role anon nologin; create role authenticated nologin;
-  create schema auth; create table auth.users (id uuid primary key);
+  create schema auth; create table auth.users (id uuid primary key, email text);
   create function auth.uid() returns uuid language sql stable as
     $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
   grant usage on schema auth, public to anon, authenticated;
   grant execute on function auth.uid() to anon, authenticated;
 `)
 await db.exec(sql('../supabase/migrations/20261112000000_init.sql'))
+await db.exec(sql('../supabase/migrations/20261113000000_admin_management.sql'))
 await db.exec(sql('../supabase/seed.sql'))
-await db.exec(`insert into auth.users values ('${ADMIN}'), ('${VIEWER}'); insert into admins values ('${ADMIN}');`)
+await db.exec(`insert into auth.users values ('${ADMIN}', 'admin@loko.test'), ('${VIEWER}', 'viewer@loko.test'); insert into admins values ('${ADMIN}');`)
 
 // --- helpers ---
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url')
@@ -87,8 +88,12 @@ async function rest(req, url, body) {
   const params = [...url.searchParams]
 
   if (name === 'rpc') {
-    const r = await inTx(uid, (tx) => tx.query(`select public.${ident(fn)}() as r`))
-    return [200, r.rows[0].r]
+    const named = Object.entries(body ?? {})
+    const argList = named.map(([k], i) => `${ident(k)} => $${i + 1}`).join(', ')
+    const r = await inTx(uid, (tx) => tx.query(`select * from public.${ident(fn)}(${argList})`, named.map(([, v]) => v)))
+    // scalar functions come back as one column named after the function
+    const scalar = r.fields.length === 1 && r.fields[0].name === fn
+    return [200, scalar ? r.rows[0][fn] : r.rows]
   }
   const t = `public.${ident(name)}`
   const args = []
@@ -151,6 +156,20 @@ createServer(async (req, res) => {
       return uid ? send(200, userOf(uid, email)) : send(401, { message: 'no session' })
     }
     if (url.pathname === '/auth/v1/logout') return send(204)
+    if (url.pathname === '/functions/v1/invite-admin') {
+      // mimic the Edge Function: admins only; no real email is sent
+      const uid = uidFromAuth(req.headers.authorization)
+      const isAdmin = uid && (await inTx(uid, (tx) => tx.query('select public.is_admin() as a'))).rows[0].a
+      if (!isAdmin) return send(403, { error: 'Só administradores podem convidar.' })
+      const email = String(body?.email ?? '').trim().toLowerCase()
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return send(400, { error: 'Email inválido.' })
+      const existing = USERS[email]
+      const id = existing?.id ?? crypto.randomUUID()
+      if (!existing) USERS[email] = { id, password: 'invited-' + id }
+      await db.exec(`insert into auth.users values ('${id}', '${email}') on conflict do nothing; insert into public.admins values ('${id}') on conflict do nothing;`)
+      console.log(`[fake] would email an invitation to ${email} (redirect ${body.redirectTo})`)
+      return send(200, { status: existing ? 'promoted' : 'invited' })
+    }
     if (url.pathname.startsWith('/rest/v1/')) {
       const [status, payload] = await rest(req, url, body)
       return send(status, payload)

@@ -58,6 +58,21 @@ psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
 3. Optional but recommended: enable the `pg_cron` extension and run `supabase/cron.sql` so late fees are applied daily. Without it they are applied whenever an admin opens the app.
 4. Host the `dist/` folder (`npm run build`) on any static host (Netlify, Vercel, Cloudflare Pages, GitHub Pages…) with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set, and an SPA fallback to `index.html`.
 
+## Inviting admins from the app
+
+Admin → **Administradores** lets an admin invite someone by email (they get a link to choose a password) and remove admins. This needs a one-time setup on the hosted project:
+
+1. Run `supabase/migrations/20261113000000_admin_management.sql` in the SQL Editor (or `npx supabase db push`).
+2. **Authentication → URL Configuration**: set *Site URL* to where the app is hosted and add `<that URL>/set-password` (and `http://localhost:5173/set-password` for local use) to *Redirect URLs*.
+3. **Authentication → Emails → SMTP Settings**: connect an email provider (e.g. Resend, free tier). Supabase's built-in sender only delivers to members of your own Supabase organization and is heavily rate limited, so invitations to other people won't arrive without this.
+4. Deploy the function (needs a one-time `npx supabase login`):
+   ```bash
+   npx supabase link --project-ref <your-project-ref>
+   npx supabase functions deploy invite-admin
+   ```
+
+The function (`supabase/functions/invite-admin`) checks that the caller is an admin, then uses the service role key, which Supabase injects on the server and never reaches the browser. If the email already has an account it is promoted instead of invited.
+
 Do not load `supabase/seed.sql` in production: it is demo data.
 
 ## Demo data
