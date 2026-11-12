@@ -2,7 +2,9 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// GitHub Pages serves project sites under /<repo>/; the deploy workflow sets BASE_PATH.
 export default defineConfig({
+  base: process.env.BASE_PATH ?? '/',
   plugins: [
     react(),
     VitePWA({
@@ -16,7 +18,6 @@ export default defineConfig({
         theme_color: '#0e0e10',
         background_color: '#0e0e10',
         display: 'standalone',
-        start_url: '/',
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],

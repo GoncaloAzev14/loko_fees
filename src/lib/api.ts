@@ -104,7 +104,7 @@ export const removeAdmin = (userId: string) => run(supabase.rpc('remove_admin', 
 /** Emails an invitation and makes the person an admin. 'promoted' = they already had an account. */
 export async function inviteAdmin(email: string): Promise<'invited' | 'promoted'> {
   const { data, error } = await supabase.functions.invoke('invite-admin', {
-    body: { email, redirectTo: `${window.location.origin}/set-password` },
+    body: { email, redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}set-password` },
   })
   if (error) {
     let message = error.message
