@@ -13,12 +13,13 @@ export default defineConfig({
         short_name: 'Loko Fees',
         description: 'Multas e caixa do Lokomotiv',
         lang: 'pt-PT',
-        theme_color: '#b3001b',
-        background_color: '#f6f4f1',
+        theme_color: '#0e0e10',
+        background_color: '#0e0e10',
         display: 'standalone',
         start_url: '/',
       },
       workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         // Let the app be opened and read offline: keep the last data seen.
         runtimeCaching: [
           {

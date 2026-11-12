@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { AuthProvider } from './lib/auth'
 import { isConfigured } from './lib/supabase'
+import '@fontsource-variable/sora'
 import './styles.css'
 
 const queryClient = new QueryClient({
