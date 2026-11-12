@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import Layout, { AdminHub } from './components/Layout'
+import Layout from './components/Layout'
 import RequireAdmin from './components/RequireAdmin'
+import Caixa from './pages/Caixa'
 import Dashboard from './pages/Dashboard'
 import Fines from './pages/Fines'
 import Login from './pages/Login'
@@ -24,10 +25,11 @@ export default function App() {
         <Route path="players" element={<Players />} />
         <Route path="players/:id" element={<PlayerDetail />} />
         <Route path="fines" element={<Fines />} />
+        <Route path="caixa" element={<Caixa />} />
         <Route path="login" element={<Login />} />
         <Route path="set-password" element={<SetPassword />} />
         <Route path="admin" element={<RequireAdmin />}>
-          <Route index element={<AdminHub />} />
+          <Route index element={<Navigate to="/" replace />} />
           <Route path="fines/new" element={<AddFine />} />
           <Route path="payments" element={<Payments />} />
           <Route path="money" element={<Money />} />
