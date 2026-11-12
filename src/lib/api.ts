@@ -1,6 +1,7 @@
+import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import type {
-  Balance, Expense, FineType, Income, LedgerFilter, LedgerRow, Payment, Role, Settings, Summary,
+  AdminUser, Balance, Expense, FineType, Income, LedgerFilter, LedgerRow, Payment, Role, Settings, Summary,
 } from './types'
 
 async function run<T>(q: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<T> {
@@ -93,3 +94,25 @@ export const saveSettings = (s: Settings) =>
 
 /** Adds the late fees that are due. Returns how many were created. */
 export const applyLateFees = () => run<number>(supabase.rpc('apply_late_fees_admin'))
+
+// --- admin management ---
+
+export const listAdmins = () => run<AdminUser[]>(supabase.rpc('list_admins'))
+
+export const removeAdmin = (userId: string) => run(supabase.rpc('remove_admin', { p_user_id: userId }))
+
+/** Emails an invitation and makes the person an admin. 'promoted' = they already had an account. */
+export async function inviteAdmin(email: string): Promise<'invited' | 'promoted'> {
+  const { data, error } = await supabase.functions.invoke('invite-admin', {
+    body: { email, redirectTo: `${window.location.origin}/set-password` },
+  })
+  if (error) {
+    let message = error.message
+    if (error instanceof FunctionsHttpError) {
+      const body = await error.context.json().catch(() => null)
+      if (body?.error) message = body.error
+    }
+    throw new Error(message)
+  }
+  return data.status
+}

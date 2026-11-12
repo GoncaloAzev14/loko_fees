@@ -81,3 +81,8 @@ export interface LedgerFilter {
   from?: string
   to?: string
 }
+
+export interface AdminUser {
+  user_id: string
+  email: string
+}

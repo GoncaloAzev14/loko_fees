@@ -12,6 +12,7 @@ export const useLedger = (f: LedgerFilter = {}) =>
 export const usePayments = (playerId?: string) =>
   useQuery({ queryKey: ['payments', playerId ?? null], queryFn: () => api.getPayments(playerId) })
 export const useIncomes = () => useQuery({ queryKey: ['incomes'], queryFn: api.getIncomes })
+export const useAdmins = () => useQuery({ queryKey: ['admins'], queryFn: api.listAdmins })
 export const useExpenses = () => useQuery({ queryKey: ['expenses'], queryFn: api.getExpenses })
 
 /** id -> row lookups for joining names client-side. */

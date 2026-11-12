@@ -7,6 +7,7 @@ const ADMIN_LINKS = [
   ['/admin/money', 'Receitas e despesas'],
   ['/admin/catalog', 'Tipos de multa'],
   ['/admin/players', 'Plantel'],
+  ['/admin/admins', 'Administradores'],
   ['/admin/settings', 'Definições'],
 ] as const
 

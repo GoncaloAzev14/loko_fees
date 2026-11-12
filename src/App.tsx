@@ -6,6 +6,8 @@ import Fines from './pages/Fines'
 import Login from './pages/Login'
 import PlayerDetail from './pages/PlayerDetail'
 import Players from './pages/Players'
+import SetPassword from './pages/SetPassword'
+import Admins from './pages/admin/Admins'
 import AddFine from './pages/admin/AddFine'
 import Catalog from './pages/admin/Catalog'
 import Money from './pages/admin/Money'
@@ -23,6 +25,7 @@ export default function App() {
         <Route path="players/:id" element={<PlayerDetail />} />
         <Route path="fines" element={<Fines />} />
         <Route path="login" element={<Login />} />
+        <Route path="set-password" element={<SetPassword />} />
         <Route path="admin" element={<RequireAdmin />}>
           <Route index element={<AdminHub />} />
           <Route path="fines/new" element={<AddFine />} />
@@ -30,6 +33,7 @@ export default function App() {
           <Route path="money" element={<Money />} />
           <Route path="catalog" element={<Catalog />} />
           <Route path="players" element={<Roster />} />
+          <Route path="admins" element={<Admins />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
