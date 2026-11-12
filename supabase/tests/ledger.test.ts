@@ -7,7 +7,7 @@ const USER = '00000000-0000-0000-0000-00000000000b'
 async function fixture() {
   const db = await newDb()
   await db.exec(`
-    insert into auth.users values ('${ADMIN}'), ('${USER}');
+    insert into auth.users values ('${ADMIN}', 'admin@x.pt'), ('${USER}', 'user@x.pt');
     insert into admins values ('${ADMIN}');
     insert into players (name) values ('Ana'), ('Bruno');
     insert into fine_types (name, default_amount) values ('Derrota', 2), ('Atraso', 1);
