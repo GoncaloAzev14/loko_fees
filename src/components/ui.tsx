@@ -1,6 +1,6 @@
 import type { UseQueryResult } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { money } from '../lib/format'
+import { money, moneyParts } from '../lib/format'
 import { STATUS_LABEL } from '../lib/labels'
 import type { Balance, FineStatus } from '../lib/types'
 
@@ -16,14 +16,20 @@ export function Async<T>({ q, children }: { q: UseQueryResult<T>; children: (dat
   return <>{children(q.data)}</>
 }
 
-export function StatCard({ label, value, tone, hint }: { label: string; value: string; tone?: 'good' | 'bad' | 'warn'; hint?: string }) {
-  return (
-    <div className={`card stat ${tone ?? ''}`}>
-      <div className="stat-label">{label}</div>
-      <div className="stat-value">{value}</div>
-      {hint && <div className="stat-hint">{hint}</div>}
-    </div>
-  )
+/** A large amount with the currency symbol in the accent colour. */
+export function BigMoney({ value }: { value: number }) {
+  const { value: n, symbol } = moneyParts(value)
+  return <div className="big">{n} <em>{symbol}</em></div>
+}
+
+export function initials(name: string) {
+  const words = name.replace(/\(.*?\)/g, '').trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return '?'
+  return (words.length === 1 ? words[0].slice(0, 2) : words[0][0] + words[1][0]).toUpperCase()
+}
+
+export function Avatar({ name }: { name: string }) {
+  return <span className="avatar" aria-hidden="true">{initials(name)}</span>
 }
 
 export function StatusBadge({ status, remaining, amount }: { status: FineStatus; remaining?: number; amount?: number }) {
@@ -49,7 +55,7 @@ export function BalanceLine({ b }: { b: Balance }) {
 }
 
 export function PlayerSelect({
-  balances, value, onChange, placeholder = 'Todos', id, required,
+  balances, value, onChange, placeholder = 'Todos', id, required, ariaLabel,
 }: {
   balances: Balance[]
   value: string
@@ -57,9 +63,10 @@ export function PlayerSelect({
   placeholder?: string
   id?: string
   required?: boolean
+  ariaLabel?: string
 }) {
   return (
-    <select id={id} value={value} required={required} onChange={(e) => onChange(e.target.value)}>
+    <select id={id} aria-label={ariaLabel} value={value} required={required} onChange={(e) => onChange(e.target.value)}>
       <option value="">{placeholder}</option>
       {balances.map((b) => (
         <option key={b.player_id} value={b.player_id}>

@@ -11,7 +11,7 @@ export default function Login() {
   const [busy, setBusy] = useState(false)
 
   if (loading) return <p className="muted pad">A carregar…</p>
-  if (isAdmin) return <Navigate to="/admin" replace />
+  if (isAdmin) return <Navigate to="/" replace />
 
   async function submit(e: FormEvent) {
     e.preventDefault()

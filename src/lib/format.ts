@@ -1,6 +1,15 @@
 const eur = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' })
 export const money = (n: number) => eur.format(n)
 
+/** '124,00' and '€' separately, so the symbol can be styled on its own. */
+export function moneyParts(n: number) {
+  const parts = eur.formatToParts(n)
+  return {
+    value: parts.filter((p) => p.type !== 'currency' && p.type !== 'literal').map((p) => p.value).join(''),
+    symbol: parts.find((p) => p.type === 'currency')?.value ?? '€',
+  }
+}
+
 const pad = (n: number) => String(n).padStart(2, '0')
 export const toISO = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 export const todayISO = () => toISO(new Date())

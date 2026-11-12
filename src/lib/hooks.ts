@@ -7,8 +7,8 @@ export const useSummary = () => useQuery({ queryKey: ['summary'], queryFn: api.g
 export const useBalances = () => useQuery({ queryKey: ['balances'], queryFn: api.getBalances })
 export const useFineTypes = () => useQuery({ queryKey: ['fine-types'], queryFn: api.getFineTypes })
 export const useSettings = () => useQuery({ queryKey: ['settings'], queryFn: api.getSettings })
-export const useLedger = (f: LedgerFilter = {}) =>
-  useQuery({ queryKey: ['ledger', f], queryFn: () => api.getLedger(f) })
+export const useLedger = (f: LedgerFilter = {}, enabled = true) =>
+  useQuery({ queryKey: ['ledger', f], queryFn: () => api.getLedger(f), enabled })
 export const usePayments = (playerId?: string) =>
   useQuery({ queryKey: ['payments', playerId ?? null], queryFn: () => api.getPayments(playerId) })
 export const useIncomes = () => useQuery({ queryKey: ['incomes'], queryFn: api.getIncomes })

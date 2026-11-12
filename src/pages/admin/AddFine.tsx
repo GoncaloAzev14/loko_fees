@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { ArrowRightIcon, ChevronRightIcon } from '../../components/icons'
 import { Async, ErrorNote } from '../../components/ui'
 import { addFines } from '../../lib/api'
 import { money, parseAmount, todayISO } from '../../lib/format'
@@ -17,6 +18,7 @@ export default function AddFine() {
   const [selected, setSelected] = useState<Set<string>>(() => new Set(params.get('player') ? [params.get('player')!] : []))
   const [done, setDone] = useState<string | null>(null)
   const save = useAction(addFines)
+  const amountValue = parseAmount(amount)
 
   const toggle = (id: string) =>
     setSelected((s) => {
@@ -95,8 +97,13 @@ export default function AddFine() {
 
                   <ErrorNote error={save.error} />
                   {done && <p className="good" role="status">{done}</p>}
-                  <button className="btn" disabled={save.busy || !typeId || selected.size === 0}>
-                    {save.busy ? 'A guardar…' : `Registar${selected.size ? ` (${selected.size})` : ''}`}
+                  <button className="cta" disabled={save.busy || !typeId || selected.size === 0}>
+                    <span className="cir"><ArrowRightIcon /></span>
+                    <span className="tx">
+                      {save.busy ? 'A guardar…' : `Registar${selected.size ? ` (${selected.size})` : ''}`}
+                      <small>{selected.size === 1 ? '1 jogador' : `${selected.size} jogadores`}{amountValue >= 0 && ` · ${money(amountValue * selected.size)}`}</small>
+                    </span>
+                    <ChevronRightIcon />
                   </button>
                 </form>
               )

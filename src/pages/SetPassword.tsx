@@ -34,7 +34,7 @@ export default function SetPassword() {
     const { error } = await supabase.auth.updateUser({ password })
     setBusy(false)
     if (error) return setError(error.message)
-    navigate('/admin', { replace: true })
+    navigate('/', { replace: true })
   }
 
   return (

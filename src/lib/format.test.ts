@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, monthRange, parseAmount, parseDate, toISO } from './format'
+import { formatDate, money, monthRange, moneyParts, parseAmount, parseDate, toISO } from './format'
 
 describe('format', () => {
   it('parses ISO dates as local dates', () => {
     const d = parseDate('2026-11-01')
     expect([d.getFullYear(), d.getMonth(), d.getDate()]).toEqual([2026, 10, 1])
     expect(toISO(d)).toBe('2026-11-01')
+  })
+
+  it('splits money into the number and the currency symbol', () => {
+    expect(moneyParts(124)).toEqual({ value: '124,00', symbol: '€' })
+    expect(moneyParts(-2.5)).toEqual({ value: '-2,50', symbol: '€' })
+    expect(`${moneyParts(18).value} ${moneyParts(18).symbol}`.replace(/\s/g, '')).toBe(money(18).replace(/\s/g, ''))
   })
 
   it('formats dates in Portuguese', () => {
