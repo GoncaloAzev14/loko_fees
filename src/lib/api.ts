@@ -1,7 +1,7 @@
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import type {
-  AdminUser, Balance, Expense, FineType, Income, LedgerFilter, LedgerRow, Payment, Role, Settings, Summary,
+  AdminUser, ArchivedFineType, ArchivedPlayer, ArchivedSeason, Balance, Expense, FineType, Income, LedgerFilter, LedgerRow, Payment, Role, Settings, Summary,
 } from './types'
 
 async function run<T>(q: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<T> {
@@ -21,8 +21,20 @@ export const getBalances = () =>
 export const getFineTypes = () =>
   run<FineType[]>(supabase.from('fine_types').select('*').order('name'))
 
-export const getSettings = () =>
-  run<Settings>(supabase.from('settings').select('late_fine_amount, due_day, season').single())
+export const DEFAULT_SEASON = '2026/27'
+
+export async function getSettings(): Promise<Settings> {
+  const { data, error } = await supabase.from('settings').select('late_fine_amount, due_day, season').single()
+  if (!error) return data as Settings
+  // 42703 = undefined column: the database has not had the season migration yet.
+  // Keep the app working (with the default season) instead of failing every page.
+  if (error.code === '42703') {
+    const old = await supabase.from('settings').select('late_fine_amount, due_day').single()
+    if (old.error) throw new Error(old.error.message)
+    return { ...(old.data as Omit<Settings, 'season'>), season: DEFAULT_SEASON }
+  }
+  throw new Error(error.message)
+}
 
 export function getLedger(f: LedgerFilter = {}) {
   let q = supabase.from('fine_ledger').select('*')
@@ -116,3 +128,34 @@ export async function inviteAdmin(email: string): Promise<'invited' | 'promoted'
   }
   return data.status
 }
+
+// --- deleting (only allowed while nothing depends on the row) ---
+
+const inUse = (message: string, friendly: string) => {
+  if (/foreign key|23503/i.test(message)) throw new Error(friendly)
+  throw new Error(message)
+}
+
+export const deletePlayer = (id: string) =>
+  run(supabase.from('players').delete().eq('id', id)).catch((e: Error) =>
+    inUse(e.message, 'Este jogador tem multas ou pagamentos. Marque-o como inativo, ou feche a época e apague-o depois.'))
+
+export const deleteFineType = (id: string) =>
+  run(supabase.from('fine_types').delete().eq('id', id)).catch((e: Error) =>
+    inUse(e.message, 'Este tipo de multa já foi usado em multas. Marque-o como inativo, ou feche a época e apague-o depois.'))
+
+// --- seasons ---
+
+/** Archives the current season, clears fines/payments/income/expenses and starts `next`. */
+export const closeSeason = (next: string) => run<string>(supabase.rpc('close_season', { p_next_season: next }))
+
+export const getArchivedSeasons = () =>
+  run<ArchivedSeason[]>(supabase.from('season_archive').select('*').order('closed_at', { ascending: false }))
+
+export const getArchivedPlayers = (archiveId: string) =>
+  run<ArchivedPlayer[]>(supabase.from('season_archive_players').select('*').eq('archive_id', archiveId).order('total_fined', { ascending: false }))
+
+export const getArchivedFineTypes = (archiveId: string) =>
+  run<ArchivedFineType[]>(supabase.from('season_archive_types').select('*').eq('archive_id', archiveId).order('total_amount', { ascending: false }))
+
+export const deleteArchivedSeason = (id: string) => run(supabase.from('season_archive').delete().eq('id', id))

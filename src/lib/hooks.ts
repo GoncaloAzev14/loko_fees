@@ -6,7 +6,9 @@ import type { LedgerFilter } from './types'
 export const useSummary = () => useQuery({ queryKey: ['summary'], queryFn: api.getSummary })
 export const useBalances = () => useQuery({ queryKey: ['balances'], queryFn: api.getBalances })
 export const useFineTypes = () => useQuery({ queryKey: ['fine-types'], queryFn: api.getFineTypes })
-export const useSettings = () => useQuery({ queryKey: ['settings'], queryFn: api.getSettings })
+// Read on every page for the app name: do not retry or refetch on focus if it fails.
+export const useSettings = () =>
+  useQuery({ queryKey: ['settings'], queryFn: api.getSettings, retry: false, refetchOnWindowFocus: false, staleTime: 5 * 60_000 })
 export const useLedger = (f: LedgerFilter = {}, enabled = true) =>
   useQuery({ queryKey: ['ledger', f], queryFn: () => api.getLedger(f), enabled })
 export const usePayments = (playerId?: string) =>
@@ -18,6 +20,13 @@ export function useClubName() {
 }
 export const useIncomes = () => useQuery({ queryKey: ['incomes'], queryFn: api.getIncomes })
 export const useAdmins = () => useQuery({ queryKey: ['admins'], queryFn: api.listAdmins })
+export const useArchivedSeasons = () => useQuery({ queryKey: ['archive'], queryFn: api.getArchivedSeasons })
+export const useArchivedDetail = (id: string, enabled: boolean) =>
+  useQuery({
+    queryKey: ['archive', id],
+    enabled,
+    queryFn: async () => ({ players: await api.getArchivedPlayers(id), types: await api.getArchivedFineTypes(id) }),
+  })
 export const useExpenses = () => useQuery({ queryKey: ['expenses'], queryFn: api.getExpenses })
 
 /** id -> row lookups for joining names client-side. */

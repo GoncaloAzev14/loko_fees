@@ -17,6 +17,10 @@ Phones get a bottom tab bar, wide screens a sidebar – same code, same screens.
 | Payments | Recorded per player, any amount. They settle the player's **oldest fines first**; partial payments are possible and any surplus is **credit**. |
 | Box | payments + income (prizes, donations) − expenses. |
 | Catalog | Each fine type has a default amount; it can be changed on each individual fine. |
+| Season | The app is called "FC Lokomotiv <season>" (e.g. 2026/27). Definições → Época only edits that name. |
+| Closing a season | Definições → *Fechar época* (typed confirmation) archives a summary, then clears fines, payments, income and expenses and starts the next season. The cash in the box carries over; unpaid fines and player credit do **not** (they are in the archive). Players and fine types stay. |
+| Archive | *Arquivo de épocas* (admins only) keeps, per closed season, the totals, one line per player and one per fine type. Not every individual fine. |
+| Deleting | Admins can delete players and fine types, but only while nothing uses them (a player with fines or payments, or a fine type used by a fine, is refused). Otherwise mark them inactive, or close the season and then delete. Single fines and payments can always be deleted. |
 
 The ledger logic lives in SQL views (`supabase/migrations`), so the app has a single source of truth and no duplicated calculations. The SQL is tested in-process with PGlite (`npm test`).
 

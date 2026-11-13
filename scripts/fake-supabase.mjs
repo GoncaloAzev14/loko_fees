@@ -34,7 +34,7 @@ await db.exec(`
 `)
 await db.exec(sql('../supabase/migrations/20261112000000_init.sql'))
 await db.exec(sql('../supabase/migrations/20261113000000_admin_management.sql'))
-await db.exec(sql('../supabase/migrations/20261114000000_season_and_protected_deletes.sql'))
+await db.exec(sql('../supabase/migrations/20261114000000_season_archive_and_reset.sql'))
 await db.exec(sql('../supabase/seed.sql'))
 await db.exec(`insert into auth.users values ('${ADMIN}', 'admin@loko.test'), ('${VIEWER}', 'viewer@loko.test'); insert into admins values ('${ADMIN}');`)
 

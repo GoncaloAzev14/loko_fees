@@ -88,3 +88,33 @@ export interface AdminUser {
   user_id: string
   email: string
 }
+
+export interface ArchivedSeason {
+  id: string
+  season: string
+  closed_at: string
+  fines_count: number
+  total_fined: number
+  total_paid: number
+  total_outstanding: number
+  total_credit: number
+  total_income: number
+  total_expenses: number
+  box: number
+}
+
+export interface ArchivedPlayer {
+  player_name: string
+  role: Role
+  fines_count: number
+  total_fined: number
+  total_paid: number
+  outstanding: number
+  credit: number
+}
+
+export interface ArchivedFineType {
+  fine_type: string
+  fines_count: number
+  total_amount: number
+}

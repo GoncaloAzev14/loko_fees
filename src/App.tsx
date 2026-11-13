@@ -10,6 +10,7 @@ import Players from './pages/Players'
 import SetPassword from './pages/SetPassword'
 import Admins from './pages/admin/Admins'
 import AddFine from './pages/admin/AddFine'
+import Archive from './pages/admin/Archive'
 import Catalog from './pages/admin/Catalog'
 import Money from './pages/admin/Money'
 import Payments from './pages/admin/Payments'
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="catalog" element={<Catalog />} />
           <Route path="players" element={<Roster />} />
           <Route path="admins" element={<Admins />} />
+          <Route path="archive" element={<Archive />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

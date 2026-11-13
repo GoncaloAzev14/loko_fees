@@ -1,5 +1,5 @@
 import type { ComponentType, SVGProps } from 'react'
-import { CoinIcon, ListIcon, ReceiptPlusIcon, ShieldIcon, SlidersIcon, SwapIcon, UsersIcon } from './icons'
+import { ArchiveIcon, CoinIcon, ListIcon, ReceiptPlusIcon, ShieldIcon, SlidersIcon, SwapIcon, UsersIcon } from './icons'
 
 export interface AdminLink {
   to: string
@@ -15,5 +15,6 @@ export const ADMIN_LINKS: AdminLink[] = [
   { to: '/admin/catalog', label: 'Tipos de multa', Icon: ListIcon },
   { to: '/admin/players', label: 'Plantel', Icon: UsersIcon },
   { to: '/admin/admins', label: 'Administradores', Icon: ShieldIcon },
+  { to: '/admin/archive', label: 'Arquivo de épocas', Icon: ArchiveIcon },
   { to: '/admin/settings', label: 'Definições', Icon: SlidersIcon },
 ]

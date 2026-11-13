@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Async, ErrorNote } from '../../components/ui'
-import { savePlayer } from '../../lib/api'
+import { deletePlayer, savePlayer } from '../../lib/api'
 import { useAction, useBalances } from '../../lib/hooks'
 import type { Balance, Role } from '../../lib/types'
 
@@ -36,7 +36,7 @@ export default function Roster() {
         <ErrorNote error={add.error} />
         <button className="btn" disabled={add.busy}>Adicionar</button>
       </form>
-      <p className="muted small">Marque como inativo quem saiu do clube: deixa de aparecer ao registar multas, mas o histórico mantém-se.</p>
+      <p className="muted small">Marque como inativo quem saiu do clube: deixa de aparecer ao registar multas, mas o histórico mantém-se. Só é possível apagar jogadores sem multas nem pagamentos, por exemplo depois de fechar a época.</p>
       <Async q={q}>{(rows) => <ul className="list">{rows.map((b) => <PlayerRow key={b.player_id} b={b} />)}</ul>}</Async>
     </>
   )
@@ -47,6 +47,7 @@ function PlayerRow({ b }: { b: Balance }) {
   const [role, setRole] = useState<Role>(b.role)
   const [active, setActive] = useState(b.active)
   const save = useAction(savePlayer)
+  const del = useAction(deletePlayer)
   const dirty = name.trim() !== b.name || role !== b.role || active !== b.active
   return (
     <li className="row edit">
@@ -59,7 +60,14 @@ function PlayerRow({ b }: { b: Balance }) {
       <button className="btn small" disabled={!dirty || !name.trim() || save.busy} onClick={() => save.run({ id: b.player_id, name: name.trim(), role, active })}>
         Guardar
       </button>
-      <ErrorNote error={save.error} />
+      <button
+        className="link danger"
+        disabled={del.busy}
+        onClick={() => confirm(`Apagar ${b.name} definitivamente? Só é possível se não tiver multas nem pagamentos.`) && del.run(b.player_id)}
+      >
+        Apagar
+      </button>
+      <ErrorNote error={save.error ?? del.error} />
     </li>
   )
 }

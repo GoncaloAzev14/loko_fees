@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Async, ErrorNote } from '../../components/ui'
-import { saveFineType } from '../../lib/api'
+import { deleteFineType, saveFineType } from '../../lib/api'
 import { parseAmount } from '../../lib/format'
 import { useAction, useFineTypes } from '../../lib/hooks'
 import type { FineType } from '../../lib/types'
@@ -50,6 +50,7 @@ function TypeRow({ t }: { t: FineType }) {
   const [amount, setAmount] = useState(String(t.default_amount).replace('.', ','))
   const [active, setActive] = useState(t.active)
   const save = useAction(saveFineType)
+  const del = useAction(deleteFineType)
   const value = parseAmount(amount)
   const dirty = name.trim() !== t.name || value !== t.default_amount || active !== t.active
   return (
@@ -60,7 +61,14 @@ function TypeRow({ t }: { t: FineType }) {
       <button className="btn small" disabled={!dirty || !(value >= 0) || !name.trim() || save.busy} onClick={() => save.run({ id: t.id, name: name.trim(), default_amount: value, active })}>
         Guardar
       </button>
-      <ErrorNote error={save.error} />
+      <button
+        className="link danger"
+        disabled={del.busy}
+        onClick={() => confirm(`Apagar «${t.name}» definitivamente? Só é possível se nenhuma multa o usar.`) && del.run(t.id)}
+      >
+        Apagar
+      </button>
+      <ErrorNote error={save.error ?? del.error} />
     </li>
   )
 }
