@@ -11,6 +11,11 @@ export const useLedger = (f: LedgerFilter = {}, enabled = true) =>
   useQuery({ queryKey: ['ledger', f], queryFn: () => api.getLedger(f), enabled })
 export const usePayments = (playerId?: string) =>
   useQuery({ queryKey: ['payments', playerId ?? null], queryFn: () => api.getPayments(playerId) })
+/** 'FC Lokomotiv 2026/27'; just 'FC Lokomotiv' until the season has loaded. */
+export function useClubName() {
+  const { data } = useSettings()
+  return data?.season ? `FC Lokomotiv ${data.season}` : 'FC Lokomotiv'
+}
 export const useIncomes = () => useQuery({ queryKey: ['incomes'], queryFn: api.getIncomes })
 export const useAdmins = () => useQuery({ queryKey: ['admins'], queryFn: api.listAdmins })
 export const useExpenses = () => useQuery({ queryKey: ['expenses'], queryFn: api.getExpenses })

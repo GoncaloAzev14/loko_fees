@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       pwaAssets: { config: true },
       manifest: {
-        name: 'Loko Fees',
-        short_name: 'Loko Fees',
+        name: 'FC Lokomotiv',
+        short_name: 'FC Lokomotiv',
         description: 'Multas e caixa do Lokomotiv',
         lang: 'pt-PT',
         theme_color: '#0e0e10',

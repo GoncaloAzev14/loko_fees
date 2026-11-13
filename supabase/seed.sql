@@ -203,7 +203,3 @@ from (values
   ('Cunha', 100, '2026-10-03', 'Prémio de Vitória')
 ) as v(player, amount, received_on, description)
 join public.players p on p.name = v.player;
-
--- The sheet only stores the final box value; this reproduces it.
-insert into public.expenses (amount, spent_on, description) values
-  (160, '2026-11-06', 'Despesas anteriores (valor inicial importado)');

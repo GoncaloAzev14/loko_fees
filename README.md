@@ -1,4 +1,4 @@
-# Loko Fees
+# FC Lokomotiv · fines and box
 
 Fines and box (caixa) tracker for a club's players and staff. A single responsive React PWA:
 
@@ -84,7 +84,7 @@ pip install openpyxl
 python scripts/build_seed.py "Lokomotiv 26-27.xlsx"
 ```
 
-Conversions are documented at the top of `scripts/build_seed.py`. In short: each paid row becomes a payment, prizes/referee gift become income, the sheet's box value (124 €) is reproduced with one opening expense, and the typo "Marcus" is fixed to "Marcos".
+Conversions are documented at the top of `scripts/build_seed.py`. In short: each paid row becomes a payment, prizes/referee gift become income, the sheet's hand-typed box value (124 €) is not reproduced (paid rows add up to 284 € and the sheet lists no expenses, so the demo box shows 284 €), and the typo "Marcus" is fixed to "Marcos".
 
 ## Scripts
 

@@ -23,6 +23,8 @@ export interface FineType {
 export interface Settings {
   late_fine_amount: number
   due_day: number
+  /** e.g. '2026/27' */
+  season: string
 }
 
 export interface LedgerRow {

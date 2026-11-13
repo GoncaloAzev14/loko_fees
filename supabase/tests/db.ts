@@ -18,6 +18,7 @@ export async function newDb(opts: { seed?: boolean } = {}) {
   `)
   await db.exec(read('../migrations/20261112000000_init.sql'))
   await db.exec(read('../migrations/20261113000000_admin_management.sql'))
+  await db.exec(read('../migrations/20261114000000_season_and_protected_deletes.sql'))
   if (opts.seed) await db.exec(read('../seed.sql'))
   return db
 }

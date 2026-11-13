@@ -10,8 +10,9 @@ Conversions:
   * Prizes / referee gift become incomes, not fines.
   * 'Multa de Falta de Pagamento' rows become late fees for October, dated on the day
     after the October due date (8 Nov).
-  * The sheet's hand-typed box value (K2) is reproduced by one opening expense, since the
-    sheet does not list expenses.
+  * The sheet's hand-typed box value (K2, 124 €) is NOT reproduced: the paid rows add up to more
+    and the sheet lists no expenses, so inventing one would be made-up data. Log real expenses in
+    the app instead.
   * The sheet's credit table (Rodrigo Mendes 2) becomes an extra payment.
 """
 import collections
@@ -103,14 +104,10 @@ def main(path, out):
     o.append(") as v(player, amount, received_on, description)")
     o.append("join public.players p on p.name = v.player;\n")
 
-    o.append("-- The sheet only stores the final box value; this reproduces it.")
-    o.append("insert into public.expenses (amount, spent_on, description) values")
-    o.append(f"  ({num(total_in - box)}, '2026-11-06', 'Despesas anteriores (valor inicial importado)');")
-
     with open(out, "w", encoding="utf-8") as fh:
         fh.write("\n".join(o) + "\n")
     print(f"{len(roster)} players, {len(fines)} fines, {len(late)} late fees, "
-          f"{len(payments)} payments, {len(incomes)} incomes; box={box}, opening expense={total_in - box}")
+          f"{len(payments)} payments, {len(incomes)} incomes; money in={total_in} (sheet box cell says {box}, not reproduced)")
 
 
 if __name__ == "__main__":

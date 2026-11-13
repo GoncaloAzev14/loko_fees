@@ -1,5 +1,7 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useLayoutEffect } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
+import { useClubName } from '../lib/hooks'
 import { ADMIN_LINKS } from './adminLinks'
 import { HomeIcon, LoginIcon, ReceiptIcon, TrainIcon, UsersIcon, WalletIcon } from './icons'
 import TabBar from './TabBar'
@@ -7,12 +9,22 @@ import TabBar from './TabBar'
 const nav = ({ isActive }: { isActive: boolean }) => (isActive ? 'active' : undefined)
 
 function Brand() {
+  const name = useClubName()
   return (
     <div className="brand">
       <span className="brand-tile"><TrainIcon /></span>
-      Loko Fees
+      {name}
     </div>
   )
+}
+
+/** Every page opens at the top, whatever the previous one was scrolled to. */
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
 }
 
 /**
@@ -21,8 +33,13 @@ function Brand() {
  */
 export default function Layout() {
   const { isAdmin, session, signOut } = useAuth()
+  const name = useClubName()
+  useEffect(() => {
+    document.title = name
+  }, [name])
   return (
     <div className="shell">
+      <ScrollToTop />
       <aside className="sidebar">
         <Brand />
         <nav aria-label="Principal">
@@ -45,8 +62,10 @@ export default function Layout() {
       </aside>
 
       <header className="topbar">
-        <Brand />
-        {session && <button className="link" onClick={signOut}>Sair</button>}
+        <div className="topbar-in">
+          <Brand />
+          {session && <button className="link" onClick={signOut}>Sair</button>}
+        </div>
       </header>
 
       <main>

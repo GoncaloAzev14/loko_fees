@@ -3,6 +3,7 @@ import { Async, ErrorNote } from '../../components/ui'
 import { applyLateFees, saveSettings } from '../../lib/api'
 import { money, parseAmount } from '../../lib/format'
 import { useAction, useSettings } from '../../lib/hooks'
+import { isSeason, nextSeason } from '../../lib/season'
 import type { Settings as S } from '../../lib/types'
 
 export default function Settings() {
@@ -18,6 +19,7 @@ export default function Settings() {
 function SettingsForm({ s }: { s: S }) {
   const [late, setLate] = useState(String(s.late_fine_amount).replace('.', ','))
   const [day, setDay] = useState(String(s.due_day))
+  const [season, setSeason] = useState(s.season)
   const [result, setResult] = useState<string | null>(null)
   const save = useAction(saveSettings)
   const apply = useAction(async () => {
@@ -27,16 +29,25 @@ function SettingsForm({ s }: { s: S }) {
 
   const amount = parseAmount(late)
   const dueDay = Number(day)
-  const valid = amount >= 0 && Number.isInteger(dueDay) && dueDay >= 1 && dueDay <= 28
+  const valid = amount >= 0 && Number.isInteger(dueDay) && dueDay >= 1 && dueDay <= 28 && isSeason(season)
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (valid) await save.run({ late_fine_amount: amount, due_day: dueDay })
+    if (valid) await save.run({ late_fine_amount: amount, due_day: dueDay, season: season.trim() })
   }
 
   return (
     <>
       <form className="card form" onSubmit={submit}>
+        <label className="field" htmlFor="season">Época</label>
+        <input id="season" required inputMode="numeric" placeholder="2026/27" value={season} onChange={(e) => setSeason(e.target.value)} aria-invalid={!isSeason(season)} />
+        <p className="muted small">
+          {isSeason(season) ? `O nome da aplicação passa a ser «FC Lokomotiv ${season.trim()}».` : 'Use o formato 2026/27.'}{' '}
+          {isSeason(s.season) && season.trim() === s.season && (
+            <button type="button" className="link" onClick={() => setSeason(nextSeason(s.season))}>Passar para {nextSeason(s.season)}</button>
+          )}
+        </p>
+        <p className="muted small">Mudar a época só muda o nome: as multas, os pagamentos e a caixa mantêm-se.</p>
         <label className="field" htmlFor="due">Dia limite de pagamento (do mês seguinte)</label>
         <input id="due" type="number" min={1} max={28} required value={day} onChange={(e) => setDay(e.target.value)} />
         <p className="muted small">Uma multa de outubro tem de ser paga até ao dia {valid ? dueDay : '…'} de novembro.</p>

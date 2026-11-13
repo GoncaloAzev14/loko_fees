@@ -22,7 +22,7 @@ export const getFineTypes = () =>
   run<FineType[]>(supabase.from('fine_types').select('*').order('name'))
 
 export const getSettings = () =>
-  run<Settings>(supabase.from('settings').select('late_fine_amount, due_day').single())
+  run<Settings>(supabase.from('settings').select('late_fine_amount, due_day, season').single())
 
 export function getLedger(f: LedgerFilter = {}) {
   let q = supabase.from('fine_ledger').select('*')

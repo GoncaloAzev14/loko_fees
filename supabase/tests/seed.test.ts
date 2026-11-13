@@ -6,8 +6,9 @@ describe('demo seed', async () => {
   const db = await newDb({ seed: true })
   const one = async <T extends object>(sql: string) => (await db.query<T>(sql)).rows[0]
 
-  it('has the box value of the sheet', async () => {
-    expect((await one<{ box: number }>(`select box::float from club_summary`)).box).toBe(124)
+  it('has no invented expenses: the box is everything paid in', async () => {
+    expect((await db.query(`select 1 from expenses`)).rows).toHaveLength(0)
+    expect((await one<{ box: number }>(`select box::float from club_summary`)).box).toBe(284)
   })
 
   it('has the sheet totals for fines and income', async () => {
