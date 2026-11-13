@@ -331,21 +331,21 @@ input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); opaci
 code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border: 1px solid var(--line); }
 
 /* ---------- login: its own full screen ---------- */
-.login-screen { max-width: 480px; min-height: 100dvh; margin: 0 auto; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
+.login-screen { --hero-h: clamp(170px, calc(100dvh - 535px), 440px); max-width: 480px; min-height: 100dvh; margin: 0 auto; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
 .login-hero {
   position: relative; flex: none;
-  height: clamp(250px, 33dvh, 340px);
+  height: var(--hero-h); /* takes whatever height the form and the tab bar leave */
   background: radial-gradient(120% 95% at 50% 18%, #8a3511 0%, #4a1d09 48%, #1c0d06 100%);
 }
 .login-lines { position: absolute; inset: 0; width: 100%; height: 100%; }
 .login-lines path { fill: none; stroke: rgba(255, 150, 90, 0.2); stroke-width: 1.2; }
 .login-crest {
   position: absolute; left: 50%; top: calc(46% + env(safe-area-inset-top) / 2); transform: translate(-50%, -50%);
-  width: min(46vw, 176px); height: auto; filter: drop-shadow(0 14px 34px rgba(0, 0, 0, 0.55));
+  width: min(46vw, 176px, calc(var(--hero-h) * 0.68)); height: auto; filter: drop-shadow(0 14px 34px rgba(0, 0, 0, 0.55));
 }
 .login-wave { position: absolute; left: 0; bottom: -1px; width: 100%; height: 64px; display: block; }
 .login-wave path { fill: var(--bg); }
-.login-panel { padding: 0 28px calc(var(--dock-h) + 48px + env(safe-area-inset-bottom)); flex: 1; display: flex; flex-direction: column; }
+.login-panel { padding: 0 28px calc(var(--dock-h) + 60px + env(safe-area-inset-bottom)); flex: none; display: flex; flex-direction: column; }
 .login-panel h1 {
   align-self: flex-start; margin: 0 0 0.7rem; padding-bottom: 8px;
   font-size: 1.95rem; line-height: 1.08; letter-spacing: -0.025em;
@@ -360,7 +360,7 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
 .lf-eye { background: none; border: 0; padding: 8px; margin-right: -8px; color: var(--muted); cursor: pointer; display: flex; border-radius: 50%; }
 .lf-eye:hover, .lf-eye[aria-pressed='true'] { color: var(--brand); }
 .login-btn { width: 100%; min-height: 54px; margin-top: 1.2rem; font-size: 1.05rem; border-radius: 16px; }
-.login-back { margin: auto 0 0; padding-top: 1.2rem; text-align: center; font-size: 0.9rem; color: var(--muted); }
+.login-back { margin: 1.5rem 0 0; text-align: center; font-size: 0.9rem; color: var(--muted); }
 
 /* ---------- compact filters (Multas, Caixa) ---------- */
 .dates { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
@@ -394,4 +394,14 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
 /* on touch screens the whole date field opens the picker, so the little calendar icon only costs room */
 @media (hover: none) {
   .field-inline input[type='date']::-webkit-calendar-picker-indicator { display: none; }
+}
+
+/* short phones: tighter form so the first view still clears the tab bar */
+@media (max-height: 720px) {
+  .login-screen { --hero-h: clamp(170px, calc(100dvh - 470px), 440px); }
+  .login-panel h1 { font-size: 1.6rem; margin-bottom: 0.45rem; }
+  .lf-label { margin-top: 0.6rem; font-size: 0.88rem; }
+  .lf input, .lf input:focus { min-height: 42px; }
+  .login-btn { min-height: 48px; margin-top: 0.9rem; }
+  .login-back { margin-top: 1.1rem; }
 }

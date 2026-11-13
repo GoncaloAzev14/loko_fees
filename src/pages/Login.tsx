@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from '../components/icons'
 import Logo from '../components/Logo'
+import TabBar from '../components/TabBar'
 import { ErrorNote } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { contourPaths } from '../lib/contours'
@@ -42,6 +43,7 @@ export default function Login() {
   }
 
   return (
+    <>
     <div className="login-screen">
       <div className="login-hero">
         <svg className="login-lines" viewBox={`0 0 ${HERO_W} ${HERO_H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -96,5 +98,7 @@ export default function Login() {
         <p className="login-back">Só quer consultar? <Link to="/">Continuar sem entrar</Link></p>
       </div>
     </div>
+    <TabBar />
+    </>
   )
 }
