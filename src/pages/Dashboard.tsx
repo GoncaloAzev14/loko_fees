@@ -13,15 +13,18 @@ export default function Dashboard() {
 
   return (
     <>
-      <p className="tag">Em caixa</p>
-      <Async q={summary}>
-        {(s) => (
-          <>
-            <BigMoney value={s.box} />
-            <p className="muted small">Entradas {money(s.total_in)} · saídas {money(s.total_out)}</p>
-          </>
-        )}
-      </Async>
+      {/* stays under the header while the rest of the page scrolls */}
+      <div className="sticky-box">
+        <p className="tag">Em caixa</p>
+        <Async q={summary}>
+          {(s) => (
+            <>
+              <BigMoney value={s.box} />
+              <p className="muted small">Entradas {money(s.total_in)} · saídas {money(s.total_out)}</p>
+            </>
+          )}
+        </Async>
+      </div>
 
       <Async q={balances}>
         {(list) => {

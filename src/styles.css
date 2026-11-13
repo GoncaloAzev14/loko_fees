@@ -13,11 +13,13 @@
   --good: #5fd38d;
   --radius: 20px;
   --dock-h: 72px;
+  --topbar-h: calc(60px + env(safe-area-inset-top)); /* the locked header on phones */
+  --main-px: 16px;
   color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
-html { background: var(--bg); }
+html { background: var(--bg); touch-action: pan-x pan-y; } /* no pinch or double-tap zoom */
 body {
   margin: 0;
   background: var(--bg);
@@ -43,15 +45,29 @@ h2 { font-size: 0.95rem; margin: 1.5rem 2px 0.7rem; font-weight: 600; }
 /* ---------- shell: tab bar on phones, sidebar on wide screens ---------- */
 .shell { min-height: 100dvh; }
 main {
-  padding: 0.5rem 16px calc(var(--dock-h) + 56px + env(safe-area-inset-bottom));
+  padding: calc(var(--topbar-h) + 0.5rem) var(--main-px) calc(var(--dock-h) + 56px + env(safe-area-inset-bottom));
   max-width: 640px;
   margin: 0 auto;
 }
 .topbar {
-  display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  padding: calc(14px + env(safe-area-inset-top)) 16px 4px;
-  max-width: 640px; margin: 0 auto;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 36; /* stays put while the page scrolls */
+  height: var(--topbar-h);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: env(safe-area-inset-top) 0 0;
+  background: var(--bg);
 }
+.topbar-in {
+  width: 100%; max-width: 640px; padding: 0 16px 8px;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+/* a block that stays under the header while the page scrolls (the box total on Início) */
+.sticky-box {
+  position: sticky; top: var(--topbar-h); z-index: 20;
+  margin: 0 calc(var(--main-px) * -1); padding: 4px var(--main-px) 10px;
+  background: var(--bg);
+}
+.sticky-box .big { margin-bottom: 0.25rem; }
+.sticky-box p { margin-top: 0; margin-bottom: 0; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: 0.01em; }
 .brand-tile {
   width: 42px; height: 42px; border-radius: 14px; flex: none;
@@ -130,9 +146,10 @@ main {
 }
 
 @media (min-width: 900px) {
+  :root { --topbar-h: 0px; --main-px: 40px; }
   .shell { display: grid; grid-template-columns: 250px 1fr; }
   .topbar, .dock, .scrim, .menu { display: none; }
-  main { padding: 28px 40px 56px; max-width: 920px; margin: 0; width: 100%; }
+  main { padding: 28px var(--main-px) 56px; max-width: 920px; margin: 0; width: 100%; }
   .sidebar {
     display: flex; flex-direction: column; gap: 1rem;
     position: sticky; top: 0; height: 100dvh; padding: 22px 14px;
@@ -221,13 +238,24 @@ a.row-title { color: var(--text); }
 .field { display: block; font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-top: 6px; }
 .field-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
 input, select, textarea {
-  width: 100%; min-height: 48px; padding: 8px 14px; font: inherit; font-weight: 500; color: var(--text);
+  width: 100%; min-height: 48px; padding: 8px 14px; font: inherit; font-size: 16px; font-weight: 500; color: var(--text);
   background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
 }
 select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 20px) 21px, calc(100% - 15px) 21px; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 36px; }
 input::placeholder { color: var(--muted); }
 input:focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(242, 92, 31, 0.18); outline: 0; }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.grid2 > *, .filters.grid > * { min-width: 0; } /* grid items may not grow past their column (iOS date inputs do) */
+/* iOS Safari paints native date inputs oversized and above neighbouring elements; make them behave like text fields */
+input[type='date'] {
+  -webkit-appearance: none; appearance: none;
+  display: block; width: 100%; min-width: 0; max-width: 100%; height: 48px;
+  position: relative; isolation: isolate; overflow: hidden;
+  text-align: left; line-height: 1.2;
+}
+input[type='date']::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; margin: 0; }
+input[type='date']::-webkit-datetime-edit, input[type='date']::-webkit-datetime-edit-fields-wrapper { padding: 0; }
+input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.7; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
 .filters { margin-bottom: 10px; }
 .filters.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
