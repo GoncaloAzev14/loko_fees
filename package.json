@@ -10,7 +10,8 @@
     "test": "vitest run",
     "typecheck": "tsc",
     "dev:fake": "node scripts/fake-supabase.mjs",
-    "logo": "node scripts/build_logo.mjs"
+    "logo": "node scripts/build_logo.mjs",
+    "dev:fake:web": "vite --mode fake --port 5174 --strictPort"
   },
   "dependencies": {
     "@fontsource-variable/sora": "^5.3.0",

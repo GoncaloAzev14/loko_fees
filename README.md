@@ -41,7 +41,7 @@ cp .env.example .env        # then paste the "anon key" (or publishable key) pri
 npm run dev
 ```
 
-No Docker? `npm run dev:fake` serves a stand-in backend on the same port (in-process Postgres running the same migration and seed, logins `admin@loko.test` / `admin123` and `viewer@loko.test` / `viewer123`; use any value as the anon key). It is only a smoke-test aid, not a replacement for Supabase.
+No Docker? `npm run dev:fake` serves a stand-in backend on the same port (in-process Postgres running the same migration and seed, logins `admin@loko.test` / `admin123` and `viewer@loko.test` / `viewer123`; use any value as the anon key). It is only a smoke-test aid, not a replacement for Supabase. To point a second copy of the app at it without touching your real `.env`, put the same two variables in `.env.fake` (git-ignored) and run `npm run dev:fake:web` (port 5174, `--mode fake`).
 
 Create an admin (local):
 
