@@ -5,7 +5,7 @@ import { addPayment, deletePayment } from '../../lib/api'
 import { formatDate, money, parseAmount, todayISO } from '../../lib/format'
 import { useAction, useBalances, useLookups, usePayments } from '../../lib/hooks'
 
-/** Record money received from a player. It settles their oldest fines first; any surplus is credit. */
+/** Record money received from a player. The form stays pinned while the list scrolls. */
 export default function Payments() {
   const [params] = useSearchParams()
   const balances = useBalances()
@@ -33,42 +33,40 @@ export default function Payments() {
 
   return (
     <>
-      <h1>Pagamentos</h1>
-      <Async q={balances}>
-        {(list) => {
-          const b = list.find((x) => x.player_id === playerId)
-          return (
-            <form className="card form" onSubmit={submit}>
-              <label className="field" htmlFor="player">Jogador</label>
-              <PlayerSelect id="player" required balances={list} value={playerId} onChange={setPlayerId} placeholder="Escolher…" />
-              {b && (
-                <p className="hint">
-                  <BalanceLine b={b} />
-                  {b.outstanding > 0 && (
-                    <> · <button type="button" className="link" onClick={() => setAmount(String(b.outstanding).replace('.', ','))}>pagar tudo</button></>
-                  )}
-                </p>
-              )}
-              <div className="grid2">
-                <div>
-                  <label className="field" htmlFor="amount">Valor (€)</label>
-                  <input id="amount" inputMode="decimal" required value={amount} onChange={(e) => setAmount(e.target.value)} />
+      <div className="sticky-box form">
+        <h1>Pagamentos</h1>
+        <Async q={balances}>
+          {(list) => {
+            const b = list.find((x) => x.player_id === playerId)
+            return (
+              <form className="cf" onSubmit={submit}>
+                <PlayerSelect ariaLabel="Jogador" required balances={list} value={playerId} onChange={setPlayerId} placeholder="Jogador" />
+                {b && (
+                  <p className="hint" style={{ margin: '0 2px' }}>
+                    <BalanceLine b={b} />
+                    {b.outstanding > 0 && (
+                      <> · <button type="button" className="link" onClick={() => setAmount(String(b.outstanding).replace('.', ','))}>pagar tudo</button></>
+                    )}
+                  </p>
+                )}
+                <div className="cf-row">
+                  <input className="narrow" aria-label="Valor (€)" placeholder="€" inputMode="decimal" required value={amount} onChange={(e) => setAmount(e.target.value)} />
+                  <label className="field-inline">
+                    <span>Data</span>
+                    <input type="date" aria-label="Data" required value={date} onChange={(e) => setDate(e.target.value)} />
+                  </label>
                 </div>
-                <div>
-                  <label className="field" htmlFor="date">Data</label>
-                  <input id="date" type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
+                <div className="cf-row">
+                  <input aria-label="Nota (opcional)" placeholder="Nota (opcional)" value={note} onChange={(e) => setNote(e.target.value)} />
+                  <button className="cf-btn" disabled={save.busy}>{save.busy ? '…' : 'Registar'}</button>
                 </div>
-              </div>
-              <label className="field" htmlFor="note">Nota (opcional)</label>
-              <input id="note" value={note} onChange={(e) => setNote(e.target.value)} />
-              <p className="muted small">Cobre primeiro as multas mais antigas; o que sobrar fica como crédito.</p>
-              <ErrorNote error={save.error} />
-              {done && <p className="good" role="status">{done}</p>}
-              <button className="btn" disabled={save.busy}>{save.busy ? 'A guardar…' : 'Registar pagamento'}</button>
-            </form>
-          )
-        }}
-      </Async>
+              </form>
+            )
+          }}
+        </Async>
+        <ErrorNote error={save.error} />
+        {done && <p className="good form-msg" role="status">{done}</p>}
+      </div>
 
       <h2>Últimos pagamentos</h2>
       <ErrorNote error={del.error} />

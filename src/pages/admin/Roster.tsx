@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react'
+import { PlusIcon } from '../../components/icons'
 import { Async, ErrorNote } from '../../components/ui'
 import { deletePlayer, savePlayer } from '../../lib/api'
 import { useAction, useBalances } from '../../lib/hooks'
 import type { Balance, Role } from '../../lib/types'
 
-/** The members of the club: players and staff. */
+/** The members of the club: players and staff. The add form stays pinned while the list scrolls. */
 export default function Roster() {
   const q = useBalances()
   const [name, setName] = useState('')
@@ -13,30 +14,24 @@ export default function Roster() {
 
   async function submit(e: FormEvent) {
     e.preventDefault()
+    if (!name.trim()) return
     if (await add.run({ name: name.trim(), role, active: true })) setName('')
   }
 
   return (
     <>
-      <h1>Plantel</h1>
-      <form className="card form" onSubmit={submit}>
-        <div className="grid2">
-          <div>
-            <label className="field" htmlFor="name">Nome</label>
-            <input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div>
-            <label className="field" htmlFor="role">Função</label>
-            <select id="role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
-              <option value="player">Jogador</option>
-              <option value="staff">Equipa técnica</option>
-            </select>
-          </div>
-        </div>
+      <div className="sticky-box form">
+        <h1>Plantel</h1>
+        <form className="cf-row" onSubmit={submit}>
+          <input aria-label="Nome" placeholder="Nome" required value={name} onChange={(e) => setName(e.target.value)} />
+          <select className="role" aria-label="Função" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+            <option value="player">Jogador</option>
+            <option value="staff">Equipa técnica</option>
+          </select>
+          <button className="cf-add" aria-label="Adicionar" disabled={add.busy}><PlusIcon /></button>
+        </form>
         <ErrorNote error={add.error} />
-        <button className="btn" disabled={add.busy}>Adicionar</button>
-      </form>
-      <p className="muted small">Marque como inativo quem saiu do clube: deixa de aparecer ao registar multas, mas o histórico mantém-se. Só é possível apagar jogadores sem multas nem pagamentos, por exemplo depois de fechar a época.</p>
+      </div>
       <Async q={q}>{(rows) => <ul className="list">{rows.map((b) => <PlayerRow key={b.player_id} b={b} />)}</ul>}</Async>
     </>
   )

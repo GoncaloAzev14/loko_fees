@@ -20,6 +20,8 @@ export default function AddFine() {
   const save = useAction(addFines)
   const amountValue = parseAmount(amount)
 
+  const allSelected = (active: { player_id: string }[]) => active.length > 0 && active.every((p) => selected.has(p.player_id))
+
   const toggle = (id: string) =>
     setSelected((s) => {
       const n = new Set(s)
@@ -41,53 +43,53 @@ export default function AddFine() {
   }
 
   return (
-    <>
-      <h1>Registar multa</h1>
+    <div className="fill">
+      <h1 style={{ fontSize: '1.35rem', margin: '0.1rem 0 0.7rem' }}>Registar multa</h1>
       <Async q={types}>
         {(typeList) => (
           <Async q={balances}>
             {(players) => {
               const active = players.filter((p) => p.active)
               return (
-                <form className="card form" onSubmit={submit}>
-                  <label className="field" htmlFor="type">Motivo</label>
-                  <select
-                    id="type" required value={typeId}
-                    onChange={(e) => {
-                      setTypeId(e.target.value)
-                      const t = typeList.find((x) => x.id === e.target.value)
-                      if (t) setAmount(String(t.default_amount).replace('.', ','))
-                    }}
-                  >
-                    <option value="">Escolher…</option>
-                    {typeList.filter((t) => t.active).map((t) => (
-                      <option key={t.id} value={t.id}>{t.name} ({money(t.default_amount)})</option>
-                    ))}
-                  </select>
-
-                  <div className="grid2">
-                    <div>
-                      <label className="field" htmlFor="amount">Valor por pessoa (€)</label>
-                      <input id="amount" inputMode="decimal" required value={amount} onChange={(e) => setAmount(e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="field" htmlFor="date">Data</label>
-                      <input id="date" type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
-                    </div>
+                <form className="cf fill-form" onSubmit={submit}>
+                  <div className="cf-row">
+                    <select
+                      aria-label="Motivo" required value={typeId}
+                      onChange={(e) => {
+                        setTypeId(e.target.value)
+                        const t = typeList.find((x) => x.id === e.target.value)
+                        if (t) setAmount(String(t.default_amount).replace('.', ','))
+                      }}
+                    >
+                      <option value="">Motivo</option>
+                      {typeList.filter((t) => t.active).map((t) => (
+                        <option key={t.id} value={t.id}>{t.name} ({money(t.default_amount)})</option>
+                      ))}
+                    </select>
+                    <input className="narrow" aria-label="Valor por pessoa (€)" placeholder="€" inputMode="decimal" required value={amount} onChange={(e) => setAmount(e.target.value)} />
                   </div>
 
-                  <label className="field" htmlFor="desc">Descrição (opcional)</label>
-                  <input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} />
-
-                  <div className="field-row">
-                    <span className="field">Quem ({selected.size})</span>
-                    <span>
-                      <button type="button" className="link" onClick={() => setSelected(new Set(active.map((p) => p.player_id)))}>Todos</button>
-                      {' · '}
-                      <button type="button" className="link" onClick={() => setSelected(new Set())}>Nenhum</button>
-                    </span>
+                  <div className="cf-row">
+                    <label className="field-inline" style={{ flex: '0 0 148px' }}>
+                      <span>Data</span>
+                      <input type="date" aria-label="Data" required value={date} onChange={(e) => setDate(e.target.value)} />
+                    </label>
+                    <input aria-label="Descrição (opcional)" placeholder="Descrição (opcional)" value={description} onChange={(e) => setDescription(e.target.value)} />
                   </div>
-                  <div className="chips wrap">
+
+                  <div className="field-row" style={{ marginTop: 4 }}>
+                    <span className="field" style={{ marginTop: 0 }}>Quem ({selected.size})</span>
+                    <label className="check all">
+                      <input
+                        type="checkbox"
+                        checked={allSelected(active)}
+                        ref={(el) => { if (el) el.indeterminate = selected.size > 0 && !allSelected(active) }}
+                        onChange={() => setSelected(allSelected(active) ? new Set() : new Set(active.map((p) => p.player_id)))}
+                      />
+                      Todos
+                    </label>
+                  </div>
+                  <div className="chips-fill">
                     {active.map((p) => (
                       <button type="button" key={p.player_id} aria-pressed={selected.has(p.player_id)} className={`chip ${selected.has(p.player_id) ? 'on' : ''}`} onClick={() => toggle(p.player_id)}>
                         {p.name}
@@ -96,8 +98,8 @@ export default function AddFine() {
                   </div>
 
                   <ErrorNote error={save.error} />
-                  {done && <p className="good" role="status">{done}</p>}
-                  <button className="cta" disabled={save.busy || !typeId || selected.size === 0}>
+                  {done && <p className="good form-msg" role="status">{done}</p>}
+                  <button className="cta" style={{ marginTop: 4 }} disabled={save.busy || !typeId || selected.size === 0}>
                     <span className="cir"><ArrowRightIcon /></span>
                     <span className="tx">
                       {save.busy ? 'A guardar…' : `Registar${selected.size ? ` (${selected.size})` : ''}`}
@@ -111,6 +113,6 @@ export default function AddFine() {
           </Async>
         )}
       </Async>
-    </>
+    </div>
   )
 }

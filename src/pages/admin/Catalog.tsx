@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from 'react'
+import { PlusIcon } from '../../components/icons'
 import { Async, ErrorNote } from '../../components/ui'
 import { deleteFineType, saveFineType } from '../../lib/api'
 import { parseAmount } from '../../lib/format'
 import { useAction, useFineTypes } from '../../lib/hooks'
 import type { FineType } from '../../lib/types'
 
-/** The list of possible fines and the amount each one costs by default. */
+/** The list of possible fines and the amount each costs by default. The add form stays pinned. */
 export default function Catalog() {
   const q = useFineTypes()
   const [name, setName] = useState('')
@@ -24,22 +25,15 @@ export default function Catalog() {
 
   return (
     <>
-      <h1>Tipos de multa</h1>
-      <p className="muted">O valor é o predefinido: ao registar uma multa pode ser alterado.</p>
-      <form className="card form" onSubmit={submit}>
-        <div className="grid2">
-          <div>
-            <label className="field" htmlFor="name">Nome</label>
-            <input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div>
-            <label className="field" htmlFor="amount">Valor (€)</label>
-            <input id="amount" inputMode="decimal" required value={amount} onChange={(e) => setAmount(e.target.value)} />
-          </div>
-        </div>
+      <div className="sticky-box form">
+        <h1>Tipos de multa</h1>
+        <form className="cf-row" onSubmit={submit}>
+          <input aria-label="Nome" placeholder="Nome" required value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="narrow" aria-label="Valor (€)" placeholder="€" inputMode="decimal" required value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <button className="cf-add" aria-label="Adicionar" disabled={add.busy}><PlusIcon /></button>
+        </form>
         <ErrorNote error={add.error} />
-        <button className="btn" disabled={add.busy}>Adicionar</button>
-      </form>
+      </div>
       <Async q={q}>{(rows) => <ul className="list">{rows.map((t) => <TypeRow key={t.id} t={t} />)}</ul>}</Async>
     </>
   )

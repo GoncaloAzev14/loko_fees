@@ -43,26 +43,18 @@ function SettingsForm({ s }: { s: S }) {
       <form className="card form" onSubmit={submit}>
         <label className="field" htmlFor="season">Época</label>
         <input id="season" required inputMode="numeric" placeholder="2026/27" value={season} onChange={(e) => setSeason(e.target.value)} aria-invalid={!isSeason(season)} />
-        <p className="muted small">
-          {isSeason(season) ? `O nome da aplicação é «FC Lokomotiv ${season.trim()}».` : 'Use o formato 2026/27.'} Isto só muda o nome
-          (para corrigir um engano). Para começar uma nova época, use «Fechar época» mais abaixo.
-        </p>
+        {!isSeason(season) && <p className="error small">Use o formato 2026/27.</p>}
         <label className="field" htmlFor="due">Dia limite de pagamento (do mês seguinte)</label>
         <input id="due" type="number" min={1} max={28} required value={day} onChange={(e) => setDay(e.target.value)} />
-        <p className="muted small">Uma multa de outubro tem de ser paga até ao dia {valid ? dueDay : '…'} de novembro.</p>
         <label className="field" htmlFor="late">Multa por falta de pagamento (€)</label>
         <input id="late" inputMode="decimal" required value={late} onChange={(e) => setLate(e.target.value)} />
-        <p className="muted small">
-          Aplicada automaticamente uma vez por jogador e por mês, a quem ainda deve multas desse mês depois do prazo
-          {valid && ` (${money(amount)})`}.
-        </p>
         <ErrorNote error={save.error} />
         <button className="btn" disabled={!valid || save.busy}>Guardar</button>
       </form>
 
       <section className="card">
         <h2>Multas de atraso</h2>
-        <p className="muted small">São aplicadas todos os dias e sempre que um administrador abre a aplicação. Pode forçar agora:</p>
+        <p className="muted small">Aplicadas todos os dias. Pode forçar agora.</p>
         <ErrorNote error={apply.error} />
         {result && <p className="good" role="status">{result}</p>}
         <button className="btn secondary" disabled={apply.busy} onClick={() => apply.run()}>Aplicar agora</button>
@@ -93,10 +85,7 @@ function CloseSeason({ current }: { current: string }) {
   return (
     <section className="card">
       <h2>Fechar época</h2>
-      <p className="muted small">
-        No fim da época: guarda um resumo no <Link to="/admin/archive">arquivo</Link> e recomeça com as multas, os pagamentos,
-        as receitas e as despesas a zero. O dinheiro da caixa transita. Os jogadores e os tipos de multa mantêm-se.
-      </p>
+      <p className="muted small">Guarda um resumo no <Link to="/admin/archive">arquivo</Link> e recomeça a zero.</p>
       {done && <p className="good" role="status">{done}</p>}
       {!open ? (
         <button className="btn secondary" onClick={() => { setOpen(true); setDone(null) }}>Fechar a época {current}…</button>

@@ -63,7 +63,7 @@ main {
 /* a block that stays under the header while the page scrolls (the box total on Início) */
 .sticky-box {
   position: sticky; top: var(--topbar-h); z-index: 20;
-  margin: 0 calc(var(--main-px) * -1); padding: 4px var(--main-px) 10px;
+  margin: 0 calc(var(--main-px) * -1) 12px; padding: 4px var(--main-px) 10px;
   background: var(--bg);
 }
 .sticky-box::after { /* soft edge where the page scrolls underneath */
@@ -143,8 +143,8 @@ main {
   display: flex; align-items: center; justify-content: center;
   background: var(--brand-soft); color: var(--brand);
 }
-.menu-item:first-child { border-color: var(--brand); }
-.menu-item:first-child .mi { background: var(--brand); color: #fff; }
+.menu-item.current { border-color: var(--brand); background: var(--brand-soft); }
+.menu-item.current .mi { background: var(--brand); color: #fff; }
 .menu.open .menu-item {
   opacity: 1; pointer-events: auto; transform: none;
   transition: transform 0.55s cubic-bezier(0.34, 1.6, 0.5, 1) calc(var(--i) * 45ms), opacity 0.2s calc(var(--i) * 45ms);
@@ -331,7 +331,7 @@ input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); opaci
 code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border: 1px solid var(--line); }
 
 /* ---------- login: its own full screen ---------- */
-.login-screen { --hero-h: clamp(170px, calc(100dvh - 535px), 440px); max-width: 480px; min-height: 100dvh; margin: 0 auto; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
+.login-screen { --hero-h: clamp(170px, calc(100dvh - 490px), 460px); max-width: 480px; min-height: 100dvh; margin: 0 auto; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
 .login-hero {
   position: relative; flex: none;
   height: var(--hero-h); /* takes whatever height the form and the tab bar leave */
@@ -359,7 +359,7 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
 }
 .lf-eye { background: none; border: 0; padding: 8px; margin-right: -8px; color: var(--muted); cursor: pointer; display: flex; border-radius: 50%; }
 .lf-eye:hover, .lf-eye[aria-pressed='true'] { color: var(--brand); }
-.login-btn { width: 100%; min-height: 54px; margin-top: 1.2rem; font-size: 1.05rem; border-radius: 16px; }
+.login-btn { width: 100%; min-height: 54px; margin-top: 1.5rem; font-size: 1.05rem; border-radius: 16px; }
 .login-back { margin: 1.5rem 0 0; text-align: center; font-size: 0.9rem; color: var(--muted); }
 
 /* ---------- compact filters (Multas, Caixa) ---------- */
@@ -398,10 +398,68 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
 
 /* short phones: tighter form so the first view still clears the tab bar */
 @media (max-height: 720px) {
-  .login-screen { --hero-h: clamp(170px, calc(100dvh - 470px), 440px); }
+  .login-screen { --hero-h: clamp(170px, calc(100dvh - 425px), 460px); }
   .login-panel h1 { font-size: 1.6rem; margin-bottom: 0.45rem; }
   .lf-label { margin-top: 0.6rem; font-size: 0.88rem; }
   .lf input, .lf input:focus { min-height: 42px; }
   .login-btn { min-height: 48px; margin-top: 0.9rem; }
   .login-back { margin-top: 1.1rem; }
 }
+
+/* ---------- compact forms, pinned under the header ---------- */
+.sticky-box.form h1 { font-size: 1.35rem; margin: 0.1rem 0 0.55rem; }
+.cf { display: flex; flex-direction: column; gap: 8px; }
+.cf-row { display: flex; gap: 8px; align-items: center; }
+.cf-row > input, .cf-row > select { flex: 1 1 0; min-width: 0; min-height: 46px; border-radius: 14px; }
+.cf-row > .narrow { flex: 0 0 92px; }
+.cf-row > .role { flex: 0 0 122px; }
+.cf-row > .field-inline { flex: 1 1 0; }
+.cf-add, .cf-btn {
+  flex: none; height: 46px; border: 0; border-radius: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--brand); color: var(--on-brand); font: inherit; font-weight: 700;
+}
+.cf-add { width: 46px; }
+.cf-btn { padding: 0 16px; font-size: 0.9rem; }
+.cf-add:disabled, .cf-btn:disabled { opacity: 0.45; cursor: default; }
+.seg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 99px; }
+.seg2 button { min-height: 38px; border: 0; border-radius: 99px; background: none; color: var(--muted); font: inherit; font-weight: 700; font-size: 0.88rem; cursor: pointer; }
+.seg2 button[aria-selected='true'] { background: var(--brand); color: var(--on-brand); }
+.chips.tight { gap: 6px; padding-bottom: 4px; }
+.chips.tight .chip { min-height: 34px; padding: 0 12px; font-size: 0.78rem; }
+.form-msg { margin: 6px 2px 0; font-size: 0.82rem; }
+.statbtn .touch { margin-left: auto; color: var(--muted); opacity: 0.7; width: 16px; height: 16px; }
+.empty { margin: 1.2rem 2px; padding: 1.1rem; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); }
+
+/* Registar multa: the page is exactly one screen on phones. The player chips scale with the screen height,
+   the rows spread over the spare space, and only the chip area scrolls if there are more players than fit. */
+.fill-form { display: flex; flex-direction: column; }
+.chips-fill { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-wrap: wrap; align-content: space-evenly; column-gap: 6px; row-gap: 6px; }
+.chips-fill .chip { min-height: clamp(34px, 4.4dvh, 48px); padding: 0 clamp(12px, 3.2vw, 15px); font-size: clamp(0.8rem, 1.9dvh, 0.9rem); display: flex; align-items: center; }
+@media (max-width: 899.98px) {
+  .fill { display: flex; flex-direction: column; height: calc(100dvh - var(--topbar-h) - 0.5rem - var(--dock-h) - 56px - env(safe-area-inset-bottom)); }
+  .fill > .fill-form, .fill > div:last-child { flex: 1; min-height: 0; }
+}
+
+/* ---------- checkboxes in the app's look ---------- */
+.check input[type='checkbox'] {
+  appearance: none; -webkit-appearance: none; flex: none;
+  width: 22px; height: 22px; min-height: 0; margin: 0; padding: 0;
+  display: grid; place-content: center; cursor: pointer;
+  background: transparent; border: 2px solid #6b6b72; border-radius: 7px; box-shadow: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.check input[type='checkbox']:checked, .check input[type='checkbox']:indeterminate { background: var(--brand); border-color: var(--brand); }
+.check input[type='checkbox']:checked::after {
+  content: ''; width: 6px; height: 11px; margin-top: -2px;
+  border: solid var(--on-brand); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg);
+}
+.check input[type='checkbox']:indeterminate::after { content: ''; width: 10px; height: 2.5px; border-radius: 2px; background: var(--on-brand); }
+.check input[type='checkbox']:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* "Todos": the whole control is a pill that lights up when anything is selected */
+.check.all {
+  margin: 0; padding: 5px 14px 5px 6px; gap: 9px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 99px;
+  color: var(--text); font-weight: 600; font-size: 0.88rem; transition: background 0.15s, border-color 0.15s;
+}
+.check.all:has(input:checked), .check.all:has(input:indeterminate) { background: var(--brand-soft); border-color: var(--brand); }
