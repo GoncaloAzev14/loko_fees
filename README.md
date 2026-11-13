@@ -171,6 +171,7 @@ At the end of each season use **Menu → Definições → Fechar época**: it ar
 | *Não foi possível carregar os dados* everywhere after a quiet period | Free Supabase projects pause after about a week without activity. Open the Supabase dashboard and click **Restore project**. |
 | The invitation email never arrives | Check the SMTP settings (step 4), look in spam, and remember the limit of 30 emails per hour. Without custom SMTP only members of your Supabase organization receive mail. |
 | The invitation link says expired or opens the wrong page | Fix **Site URL** and **Redirect URLs** (step 3.4). Links are single-use: send a new invitation. |
+| Inviting says *O convite foi enviado, mas não foi possível dar acesso de administrador* (older versions: *falhou a atribuição*) | The invitation email went out but the account was not added to `admins`. Redeploy the function (`npx supabase functions deploy invite-admin --no-verify-jwt`) and make sure migration 2 (`…_admin_management.sql`) was run. To fix a person already invited, run `insert into admins select id from auth.users where email = 'their@email' on conflict do nothing;` in the SQL Editor. |
 | Inviting fails with *Invalid JWT* | Redeploy the function with `npx supabase functions deploy invite-admin --no-verify-jwt`. |
 | The deploy Action fails at *Get Pages site* | Pages is not enabled for Actions. Settings → Pages → Source: **GitHub Actions**, then **Re-run all jobs**. |
 | The deploy Action fails at the tests | Fix the failing test first; the workflow only publishes when `npm test` passes. |

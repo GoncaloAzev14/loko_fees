@@ -42,18 +42,28 @@ Deno.serve(async (req) => {
 
   // 3. Invite (or promote) with elevated rights.
   const service = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-  const { data, error } = await service.auth.admin.inviteUserByEmail(email, { redirectTo })
+  const { error } = await service.auth.admin.inviteUserByEmail(email, { redirectTo })
+
+  // Making someone an admin always goes through this database helper (security definer): it does not
+  // depend on the server role having rights on the admins table, which a project created with
+  // "Automatically expose new tables" switched off does not give it.
+  const makeAdmin = async () => {
+    const { data: found, error: rpcError } = await service.rpc('add_admin_by_email', { p_email: email })
+    if (rpcError) console.error('add_admin_by_email failed:', rpcError.code, rpcError.message)
+    return !rpcError && found === true
+  }
 
   if (error) {
+    // The email already has an account: just promote it.
     if (error.code === 'email_exists' || /already.*registered/i.test(error.message)) {
-      const { data: found, error: promoteError } = await service.rpc('add_admin_by_email', { p_email: email })
-      if (promoteError || !found) return json(500, { error: 'Não foi possível promover essa conta.' })
+      if (!(await makeAdmin())) return json(500, { error: 'Não foi possível promover essa conta.' })
       return json(200, { status: 'promoted' })
     }
     return json(400, { error: error.message })
   }
 
-  const { error: insertError } = await service.from('admins').insert({ user_id: data.user.id })
-  if (insertError) return json(500, { error: 'Convite enviado, mas falhou a atribuição de administrador. Tente de novo.' })
+  if (!(await makeAdmin())) {
+    return json(500, { error: 'O convite foi enviado, mas não foi possível dar acesso de administrador. Tente de novo ou peça ajuda.' })
+  }
   return json(200, { status: 'invited' })
 })
