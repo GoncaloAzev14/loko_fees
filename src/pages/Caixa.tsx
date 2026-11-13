@@ -47,40 +47,31 @@ export default function Caixa() {
 
   return (
     <>
-      <p className="tag">Caixa do clube</p>
-      <Async q={summary}>
-        {(s) => (
-          <>
-            <BigMoney value={s.box} />
-            <div className="trio" style={{ gridTemplateColumns: '1fr 1fr', marginTop: 14 }}>
-              <div className="t3" style={{ textAlign: 'left', padding: '12px 14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span className="ring" style={{ margin: 0, width: 28, height: 28 }}><ArrowDownIcon className="ic sm" /></span>
-                  <span>Entradas</span>
-                </div>
-                <b style={{ marginTop: 8 }}>{money(s.total_in)}</b>
+      <div className="sticky-box compact">
+        <div className="tag-row">
+          <p className="tag">Caixa do clube</p>
+          <span className="muted small">Toque para filtrar</span>
+        </div>
+        <Async q={summary}>
+          {(s) => (
+            <>
+              <BigMoney value={s.box} />
+              <div className="statbtns">
+                <button className="statbtn" aria-pressed={filter === 'in'} onClick={() => setFilter(filter === 'in' ? 'all' : 'in')}>
+                  <span className="ring"><ArrowDownIcon className="ic sm" /></span>
+                  <span><small>Entradas</small><b>{money(s.total_in)}</b></span>
+                </button>
+                <button className="statbtn" aria-pressed={filter === 'out'} onClick={() => setFilter(filter === 'out' ? 'all' : 'out')}>
+                  <span className="ring"><ArrowUpIcon className="ic sm" /></span>
+                  <span><small>Saídas</small><b>{money(s.total_out)}</b></span>
+                </button>
               </div>
-              <div className="t3" style={{ textAlign: 'left', padding: '12px 14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span className="ring" style={{ margin: 0, width: 28, height: 28 }}><ArrowUpIcon className="ic sm" /></span>
-                  <span>Saídas</span>
-                </div>
-                <b style={{ marginTop: 8 }}>{money(s.total_out)}</b>
-              </div>
-            </div>
-          </>
-        )}
-      </Async>
-
-      <div className="chips" role="group" aria-label="Filtro" style={{ marginTop: 14 }}>
-        {(['all', 'in', 'out'] as const).map((f) => (
-          <button key={f} className={`chip ${filter === f ? 'on' : ''}`} aria-pressed={filter === f} onClick={() => setFilter(f)}>
-            {{ all: 'Tudo', in: 'Entradas', out: 'Saídas' }[f]}
-          </button>
-        ))}
+            </>
+          )}
+        </Async>
       </div>
 
-      <h2>Movimentos</h2>
+      <h2>Movimentos{filter !== 'all' && <span className="muted"> · {filter === 'in' ? 'só entradas' : 'só saídas'}</span>}</h2>
       {loading ? (
         <p className="muted pad">A carregar…</p>
       ) : failed ? (
