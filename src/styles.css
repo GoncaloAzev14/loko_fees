@@ -20,6 +20,12 @@
 
 * { box-sizing: border-box; }
 html { background: var(--bg); touch-action: pan-x pan-y; } /* no pinch or double-tap zoom */
+/* The app is a fixed frame the size of the screen; only #root scrolls, and without the elastic overshoot.
+   That stops Safari dragging the whole page (and showing a black gap) on every screen, and makes a page
+   that fits on one screen completely still. */
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+body { position: fixed; inset: 0; width: 100%; }
+#root { height: 100%; overflow-x: hidden; overflow-y: auto; overscroll-behavior: none; -webkit-overflow-scrolling: touch; }
 body {
   margin: 0;
   background: var(--bg);
@@ -331,7 +337,7 @@ input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); opaci
 code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border: 1px solid var(--line); }
 
 /* ---------- login: its own full screen ---------- */
-.login-screen { --hero-h: clamp(170px, calc(100dvh - 490px), 460px); max-width: 480px; min-height: 100dvh; margin: 0 auto; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
+.login-screen { --hero-h: clamp(170px, calc(100dvh - 480px - env(safe-area-inset-bottom)), 460px); max-width: 480px; min-height: 100dvh; margin: 0 auto; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
 .login-hero {
   position: relative; flex: none;
   height: var(--hero-h); /* takes whatever height the form and the tab bar leave */
@@ -398,7 +404,7 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
 
 /* short phones: tighter form so the first view still clears the tab bar */
 @media (max-height: 720px) {
-  .login-screen { --hero-h: clamp(170px, calc(100dvh - 425px), 460px); }
+  .login-screen { --hero-h: clamp(170px, calc(100dvh - 415px - env(safe-area-inset-bottom)), 460px); }
   .login-panel h1 { font-size: 1.6rem; margin-bottom: 0.45rem; }
   .lf-label { margin-top: 0.6rem; font-size: 0.88rem; }
   .lf input, .lf input:focus { min-height: 42px; }

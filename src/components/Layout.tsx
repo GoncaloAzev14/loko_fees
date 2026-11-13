@@ -19,11 +19,11 @@ function Brand() {
   )
 }
 
-/** Every page opens at the top, whatever the previous one was scrolled to. */
+/** Every page opens at the top, whatever the previous one was scrolled to. (#root is what scrolls.) */
 function ScrollToTop() {
   const { pathname } = useLocation()
   useLayoutEffect(() => {
-    window.scrollTo(0, 0)
+    document.getElementById('root')?.scrollTo(0, 0)
   }, [pathname])
   return null
 }
