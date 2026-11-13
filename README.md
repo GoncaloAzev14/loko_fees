@@ -92,4 +92,6 @@ Conversions are documented at the top of `scripts/build_seed.py`. In short: each
 
 ## Scripts
 
-`npm run dev` · `npm run build` · `npm test` · `npm run typecheck` · `npm run dev:fake`
+`npm run dev` · `npm run build` · `npm test` · `npm run typecheck` · `npm run dev:fake` · `npm run logo`
+
+`npm run logo` rebuilds the logo and app icons from `branding/original.png` (the club crest): it cuts the crest out of its black background, upscales it, and writes `branding/logo-source.png`, `public/logo.png` and the PWA/favicon icons in `public/`.

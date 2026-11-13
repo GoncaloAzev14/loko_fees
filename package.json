@@ -9,8 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc",
-    "icons": "pwa-assets-generator",
-    "dev:fake": "node scripts/fake-supabase.mjs"
+    "dev:fake": "node scripts/fake-supabase.mjs",
+    "logo": "node scripts/build_logo.mjs"
   },
   "dependencies": {
     "@fontsource-variable/sora": "^5.3.0",
@@ -25,8 +25,8 @@
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@vite-pwa/assets-generator": "^2.0.0",
     "@vitejs/plugin-react": "^6.3.0",
+    "sharp": "^0.35.5",
     "supabase": "^3.1.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.8",

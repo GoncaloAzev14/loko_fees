@@ -74,6 +74,7 @@ main {
   display: flex; align-items: center; justify-content: center;
   background: var(--brand-soft); border: 1px solid var(--brand-line); color: var(--brand);
 }
+.brand-logo { width: 44px; height: 44px; object-fit: contain; flex: none; }
 .sidebar { display: none; }
 
 .dock {
@@ -320,3 +321,14 @@ input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); opaci
 
 .setup { padding: 2rem 1rem; max-width: 560px; }
 code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border: 1px solid var(--line); }
+
+/* ---------- login ---------- */
+.login { max-width: 420px; margin: 0 auto; padding-top: 0.5rem; }
+.login-logo { display: block; width: 132px; height: 132px; margin: 0 auto 0.75rem; filter: drop-shadow(0 10px 30px rgba(242, 92, 31, 0.28)); }
+.login .tag, .login h1, .login-note { text-align: center; }
+.login h1 { font-size: 2.2rem; margin: 0.15rem 0 0.4rem; }
+.login-note { margin: 0 auto 1.2rem; max-width: 34ch; }
+.pw { position: relative; }
+.pw input { padding-right: 96px; }
+.pw .link { position: absolute; right: 14px; top: 0; bottom: 0; font-size: 0.82rem; font-weight: 600; }
+.login-back { text-align: center; margin: 1.4rem 0 0; font-size: 0.88rem; }

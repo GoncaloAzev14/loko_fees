@@ -3,7 +3,8 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { useClubName } from '../lib/hooks'
 import { ADMIN_LINKS } from './adminLinks'
-import { HomeIcon, LoginIcon, ReceiptIcon, TrainIcon, UsersIcon, WalletIcon } from './icons'
+import { HomeIcon, LoginIcon, ReceiptIcon, UsersIcon, WalletIcon } from './icons'
+import Logo from './Logo'
 import TabBar from './TabBar'
 
 const nav = ({ isActive }: { isActive: boolean }) => (isActive ? 'active' : undefined)
@@ -12,7 +13,7 @@ function Brand() {
   const name = useClubName()
   return (
     <div className="brand">
-      <span className="brand-tile"><TrainIcon /></span>
+      <Logo className="brand-logo" />
       {name}
     </div>
   )
