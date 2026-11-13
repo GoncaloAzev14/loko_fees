@@ -47,3 +47,13 @@ export const ArrowUpIcon = (p: IconProps) => <Svg {...p}><path d="M12 19V7M7 12l
 export const ChevronLeftIcon = (p: IconProps) => <Svg {...p}><path d="M15 5l-7 7 7 7" /></Svg>
 export const ChevronRightIcon = (p: IconProps) => <Svg {...p}><path d="M9 5l7 7-7 7" /></Svg>
 export const ArchiveIcon = (p: IconProps) => <Svg {...p}><path d="M4 7h16v3H4zM6 10v9h12v-9M10 14h4" /></Svg>
+export const MailIcon = (p: IconProps) => <Svg {...p}><rect x="3" y="5" width="18" height="14" rx="3" /><path d="M4 7l8 6 8-6" /></Svg>
+export const LockIcon = (p: IconProps) => <Svg {...p}><rect x="5" y="11" width="14" height="9" rx="3" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></Svg>
+export const EyeIcon = (p: IconProps) => <Svg {...p}><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></Svg>
+export const EyeOffIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 3l18 18" />
+    <path d="M10.6 5.6A9.7 9.7 0 0 1 12 5.5c6.5 0 10 6.5 10 6.5a17 17 0 0 1-3.2 4M6.5 7.7C3.7 9.5 2 12 2 12s3.5 6.5 10 6.5c1.5 0 2.8-.3 4-.8" />
+    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+  </Svg>
+)

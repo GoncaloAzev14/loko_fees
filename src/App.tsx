@@ -21,13 +21,13 @@ import Settings from './pages/admin/Settings'
 export default function App() {
   return (
     <Routes>
+      <Route path="login" element={<Login />} />
       <Route element={<Layout />}>
         <Route index element={<Dashboard />} />
         <Route path="players" element={<Players />} />
         <Route path="players/:id" element={<PlayerDetail />} />
         <Route path="fines" element={<Fines />} />
         <Route path="caixa" element={<Caixa />} />
-        <Route path="login" element={<Login />} />
         <Route path="set-password" element={<SetPassword />} />
         <Route path="admin" element={<RequireAdmin />}>
           <Route index element={<Navigate to="/" replace />} />
