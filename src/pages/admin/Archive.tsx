@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { Async, ErrorNote } from '../../components/ui'
 import { deleteArchivedSeason } from '../../lib/api'
 import { formatDate, money } from '../../lib/format'
-import { useAction, useArchivedDetail, useArchivedSeasons } from '../../lib/hooks'
+import { useAction, useArchivedDetail, useArchivedSeasons, useSettings } from '../../lib/hooks'
 import type { ArchivedSeason } from '../../lib/types'
 
 /** Closed seasons, as a record: totals per season, per player and per fine type. Admins only. */
 export default function Archive() {
   const q = useArchivedSeasons()
+  const season = useSettings().data?.season
   return (
     <>
       <h1>Arquivo de épocas</h1>
@@ -15,7 +16,7 @@ export default function Archive() {
       <Async q={q}>
         {(rows) =>
           rows.length === 0 ? (
-            <p className="muted pad">Ainda não fechou nenhuma época. Faça-o em Definições.</p>
+            <p className="empty">Não há registos de épocas anteriores{season ? ` à época ${season}` : ''}.</p>
           ) : (
             rows.map((s) => <Season key={s.id} s={s} />)
           )

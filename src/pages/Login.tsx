@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from '../components/icons'
 import Logo from '../components/Logo'
 import TabBar from '../components/TabBar'
@@ -95,7 +95,6 @@ export default function Login() {
           </form>
         )}
 
-        <p className="login-back">Só quer consultar? <Link to="/">Continuar sem entrar</Link></p>
       </div>
     </div>
     <TabBar />

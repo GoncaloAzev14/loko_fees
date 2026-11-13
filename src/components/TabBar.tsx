@@ -37,15 +37,15 @@ export default function TabBar() {
       {isAdmin && (
         <>
           <div className={`scrim${open ? ' open' : ''}`} onClick={() => setOpen(false)} aria-hidden="true" />
-          <div className={`menu${open ? ' open' : ''}`} role="menu" aria-label="Administração" aria-hidden={!open}>
+          <div className={`menu${open ? ' open' : ''}`} role="menu" aria-label="Administração" inert={!open}>
             {ADMIN_LINKS.map(({ to, label, Icon }, i) => (
               <Link
                 key={to}
                 to={to}
                 role="menuitem"
-                tabIndex={open ? 0 : -1}
+                aria-current={pathname === to ? 'page' : undefined}
                 ref={i === 0 ? first : undefined}
-                className="menu-item"
+                className={`menu-item${pathname === to ? ' current' : ''}`}
                 style={{ '--i': i, '--tilt': i % 2 ? '-8deg' : '8deg' } as CSSProperties}
                 onClick={() => setOpen(false)}
               >

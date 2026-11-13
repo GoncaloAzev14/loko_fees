@@ -149,8 +149,13 @@ export const deleteFineType = (id: string) =>
 /** Archives the current season, clears fines/payments/income/expenses and starts `next`. */
 export const closeSeason = (next: string) => run<string>(supabase.rpc('close_season', { p_next_season: next }))
 
-export const getArchivedSeasons = () =>
-  run<ArchivedSeason[]>(supabase.from('season_archive').select('*').order('closed_at', { ascending: false }))
+export async function getArchivedSeasons(): Promise<ArchivedSeason[]> {
+  const { data, error } = await supabase.from('season_archive').select('*').order('closed_at', { ascending: false })
+  // PGRST205 / 42P01: the archive table does not exist (season migration not run yet): nothing is archived
+  if (error && (error.code === 'PGRST205' || error.code === '42P01')) return []
+  if (error) throw new Error(error.message)
+  return data as ArchivedSeason[]
+}
 
 export const getArchivedPlayers = (archiveId: string) =>
   run<ArchivedPlayer[]>(supabase.from('season_archive_players').select('*').eq('archive_id', archiveId).order('total_fined', { ascending: false }))

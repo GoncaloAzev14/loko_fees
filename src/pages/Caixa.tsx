@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowDownIcon, ArrowUpIcon, CoinIcon, PlusIcon } from '../components/icons'
+import { ArrowDownIcon, ArrowUpIcon, CoinIcon, PlusIcon, TouchIcon } from '../components/icons'
 import { Async, BigMoney } from '../components/ui'
 import { formatDate, money } from '../lib/format'
 import { useExpenses, useIncomes, useLookups, usePayments, useSummary } from '../lib/hooks'
@@ -48,10 +48,7 @@ export default function Caixa() {
   return (
     <>
       <div className="sticky-box compact">
-        <div className="tag-row">
-          <p className="tag">Caixa do clube</p>
-          <span className="muted small">Toque para filtrar</span>
-        </div>
+        <p className="tag">Caixa do clube</p>
         <Async q={summary}>
           {(s) => (
             <>
@@ -60,10 +57,12 @@ export default function Caixa() {
                 <button className="statbtn" aria-pressed={filter === 'in'} onClick={() => setFilter(filter === 'in' ? 'all' : 'in')}>
                   <span className="ring"><ArrowDownIcon className="ic sm" /></span>
                   <span><small>Entradas</small><b>{money(s.total_in)}</b></span>
+                  <TouchIcon className="ic touch" />
                 </button>
                 <button className="statbtn" aria-pressed={filter === 'out'} onClick={() => setFilter(filter === 'out' ? 'all' : 'out')}>
                   <span className="ring"><ArrowUpIcon className="ic sm" /></span>
                   <span><small>Saídas</small><b>{money(s.total_out)}</b></span>
+                  <TouchIcon className="ic touch" />
                 </button>
               </div>
             </>
