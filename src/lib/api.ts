@@ -113,8 +113,12 @@ export const listAdmins = () => run<AdminUser[]>(supabase.rpc('list_admins'))
 
 export const removeAdmin = (userId: string) => run(supabase.rpc('remove_admin', { p_user_id: userId }))
 
-/** Emails an invitation and makes the person an admin. 'promoted' = they already had an account. */
-export async function inviteAdmin(email: string): Promise<'invited' | 'promoted'> {
+/**
+ * Emails an invitation and makes the person an admin.
+ * 'promoted' = they already had a working account; 'resent' = they had one without a password,
+ * so they were sent a fresh access code.
+ */
+export async function inviteAdmin(email: string): Promise<'invited' | 'promoted' | 'resent'> {
   const { data, error } = await supabase.functions.invoke('invite-admin', {
     body: { email, redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}set-password` },
   })
@@ -127,6 +131,43 @@ export async function inviteAdmin(email: string): Promise<'invited' | 'promoted'
     throw new Error(message)
   }
   return data.status
+}
+
+// --- first access / forgotten password (no login needed, works from a code in an email) ---
+
+/** The emailed code is single-use per type; which type applies depends on how the account was created. */
+const CODE_TYPES = ['email', 'signup', 'invite', 'recovery'] as const
+
+/**
+ * Emails an access code. Whether the address belongs to an invited person is never revealed:
+ * an unknown address looks exactly like a known one. Real failures (rate limit, mail down) are shown.
+ */
+export async function requestAccessCode(email: string): Promise<void> {
+  const { error } = await supabase.auth.signInWithOtp({
+    email: email.trim(),
+    options: { shouldCreateUser: false, emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}set-password` },
+  })
+  if (!error) return
+  if (error.code === 'otp_disabled' || error.code === 'user_not_found' || error.code === 'signup_disabled') return
+  if (error.status === 429 || error.code === 'over_email_send_rate_limit' || error.code === 'over_request_rate_limit')
+    throw new Error('Aguarde um minuto antes de pedir outro código.')
+  throw new Error('Não foi possível enviar o código. Tente de novo daqui a pouco.')
+}
+
+/** Signs in with the emailed code, then stores the chosen password so next time a normal login works. */
+export async function finishAccess(email: string, code: string, password: string): Promise<void> {
+  const token = code.replace(/\s/g, '')
+  let verified = false
+  for (const type of CODE_TYPES) {
+    const { data, error } = await supabase.auth.verifyOtp({ email: email.trim(), token, type })
+    if (!error && data.session) {
+      verified = true
+      break
+    }
+  }
+  if (!verified) throw new Error('Código inválido ou expirado. Peça um novo código.')
+  const { error } = await supabase.auth.updateUser({ password })
+  if (error) throw new Error(error.message)
 }
 
 // --- deleting (only allowed while nothing depends on the row) ---

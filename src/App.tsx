@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import RequireAdmin from './components/RequireAdmin'
+import Access from './pages/Access'
 import Caixa from './pages/Caixa'
 import Dashboard from './pages/Dashboard'
 import Fines from './pages/Fines'
@@ -22,6 +23,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="login" element={<Login />} />
+      <Route path="recover" element={<Access />} />
       <Route element={<Layout />}>
         <Route index element={<Dashboard />} />
         <Route path="players" element={<Players />} />

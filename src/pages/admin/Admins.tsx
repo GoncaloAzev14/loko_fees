@@ -12,7 +12,11 @@ export default function Admins() {
   const [done, setDone] = useState<string | null>(null)
   const invite = useAction(async (to: string) => {
     const status = await inviteAdmin(to)
-    setDone(status === 'invited' ? `Convite enviado para ${to}.` : `${to} já tinha conta e passou a administrador.`)
+    setDone(
+      status === 'invited' ? `Convite enviado para ${to}.`
+      : status === 'resent' ? `Enviámos um novo código a ${to}.`
+      : `${to} já tinha conta e passou a administrador.`,
+    )
   })
   const remove = useAction(removeAdmin)
 
@@ -28,7 +32,7 @@ export default function Admins() {
       <form className="card form" onSubmit={submit}>
         <label className="field" htmlFor="email">Convidar por email</label>
         <input id="email" type="email" required autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <p className="muted small">A pessoa recebe um email com uma ligação para escolher a palavra-passe e passa a ter acesso de administrador.</p>
+        <p className="muted small">A pessoa recebe um email com uma ligação e um código para escolher a palavra-passe.</p>
         <ErrorNote error={invite.error} />
         {done && <p className="good" role="status">{done}</p>}
         <button className="btn" disabled={invite.busy}>{invite.busy ? 'A enviar…' : 'Enviar convite'}</button>
@@ -43,9 +47,17 @@ export default function Admins() {
               return (
                 <li key={a.user_id} className="row">
                   <div className="row-main">
-                    <div className="row-title">{a.email}{me && ' (você)'}</div>
+                    <div className="row-title">
+                      {a.email}{me && ' (você)'}
+                      {a.pending && <span className="badge pending">Convite pendente</span>}
+                    </div>
                     {!me && (
                       <div className="row-actions">
+                        {a.pending && (
+                          <button className="link" disabled={invite.busy} onClick={() => { setDone(null); invite.run(a.email) }}>
+                            Reenviar convite
+                          </button>
+                        )}
                         <button
                           className="link danger"
                           disabled={remove.busy}

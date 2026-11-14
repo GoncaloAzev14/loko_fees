@@ -21,7 +21,9 @@ export default function SetPassword() {
     return (
       <>
         <h1>Ligação inválida</h1>
-        <p className="muted">Esta ligação expirou ou já foi usada. Peça um novo convite a um administrador ou <Link to="/login">entre</Link> com a sua palavra-passe.</p>
+        <p className="muted">Esta ligação expirou ou já foi usada. Não faz mal: peça um código novo e escolha a palavra-passe na mesma.</p>
+        <Link className="btn" to="/recover">Receber um código novo</Link>
+        <p className="muted small">Já tem palavra-passe? <Link to="/login">Entrar</Link></p>
       </>
     )
 

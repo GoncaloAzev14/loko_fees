@@ -87,6 +87,8 @@ export interface LedgerFilter {
 export interface AdminUser {
   user_id: string
   email: string
+  /** Invited but has not chosen a password yet. Missing while the database migration has not been run. */
+  pending?: boolean
 }
 
 export interface ArchivedSeason {
