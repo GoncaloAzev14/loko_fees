@@ -57,6 +57,40 @@ describe('admin management', () => {
     expect((await db.query('select 1 from admins')).rows).toHaveLength(3)
   })
 
+  it('flags admins who have not chosen a password yet as pending', async () => {
+    const db = await fixture()
+    await db.exec(`update auth.users set encrypted_password = 'hash' where id = '${ADMIN}'; update auth.users set encrypted_password = '' where id = '${OTHER_ADMIN}'`)
+    const rows = await as(db, { uid: ADMIN }, async () => (await db.query<{ email: string; pending: boolean }>('select email, pending from list_admins()')).rows)
+    expect(rows).toEqual([
+      { email: 'Ana@Club.pt', pending: false },
+      { email: 'bruno@club.pt', pending: true }, // empty password: invited, never finished
+    ])
+  })
+
+  it('treats a missing password as pending too', async () => {
+    const db = await fixture() // the fixture leaves encrypted_password null
+    const rows = await as(db, { uid: ADMIN }, async () => (await db.query<{ pending: boolean }>('select pending from list_admins()')).rows)
+    expect(rows.every((r) => r.pending)).toBe(true)
+  })
+
+  it('invite_state tells no account, unfinished invitation and active account apart', async () => {
+    const db = await fixture()
+    await db.exec(`update auth.users set encrypted_password = 'hash' where id = '${ADMIN}'; update auth.users set encrypted_password = '' where id = '${OTHER_ADMIN}'`)
+    const state = async (email: string) => (await db.query<{ s: string }>(`select invite_state('${email}') as s`)).rows[0].s
+    expect(await state(' ANA@club.pt ')).toBe('active')
+    expect(await state('bruno@club.pt')).toBe('pending')
+    expect(await state('nobody@club.pt')).toBe('none')
+  })
+
+  it('keeps invite_state away from app users', async () => {
+    const db = await fixture()
+    for (const who of ['anon', { uid: ADMIN }] as const) {
+      await as(db, who, async () => {
+        await expect(db.query(`select invite_state('ana@club.pt')`)).rejects.toThrow()
+      })
+    }
+  })
+
   it('keeps add_admin_by_email away from app users', async () => {
     const db = await fixture()
     for (const who of ['anon', { uid: ADMIN }] as const) {

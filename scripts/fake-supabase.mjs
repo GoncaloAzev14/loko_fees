@@ -8,6 +8,7 @@
 // treat it as a smoke-test aid, not as proof the hosted setup works.
 //
 // Logins: admin@loko.test / admin123 (admin), viewer@loko.test / viewer123 (not admin).
+// daniel@loko.test is an invited admin with no password yet: first access with the code 123456.
 import { readFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { PGlite, types } from '@electric-sql/pglite'
@@ -26,7 +27,7 @@ const db = new PGlite({
 })
 await db.exec(`
   create role anon nologin; create role authenticated nologin;
-  create schema auth; create table auth.users (id uuid primary key, email text);
+  create schema auth; create table auth.users (id uuid primary key, email text, encrypted_password text);
   create function auth.uid() returns uuid language sql stable as
     $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
   grant usage on schema auth, public to anon, authenticated;
@@ -35,8 +36,14 @@ await db.exec(`
 await db.exec(sql('../supabase/migrations/20261112000000_init.sql'))
 await db.exec(sql('../supabase/migrations/20261113000000_admin_management.sql'))
 await db.exec(sql('../supabase/migrations/20261114000000_season_archive_and_reset.sql'))
+await db.exec(sql('../supabase/migrations/20261115000000_admin_pending.sql'))
 await db.exec(sql('../supabase/seed.sql'))
-await db.exec(`insert into auth.users values ('${ADMIN}', 'admin@loko.test'), ('${VIEWER}', 'viewer@loko.test'); insert into admins values ('${ADMIN}');`)
+await db.exec(`insert into auth.users values ('${ADMIN}', 'admin@loko.test', 'x'), ('${VIEWER}', 'viewer@loko.test', 'x'); insert into admins values ('${ADMIN}');`)
+// Someone invited whose first link failed: an account without a password. Their emailed code is always 123456.
+const PENDING = '00000000-0000-0000-0000-0000000000d1'
+USERS['daniel@loko.test'] = { id: PENDING, password: null }
+await db.exec(`insert into auth.users values ('${PENDING}', 'daniel@loko.test', ''); insert into admins values ('${PENDING}');`)
+const CODE = '123456'
 
 // --- helpers ---
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url')
@@ -148,12 +155,29 @@ createServer(async (req, res) => {
   try {
     if (url.pathname === '/auth/v1/token') {
       const u = USERS[body?.email]
-      if (!u || u.password !== body.password) return send(400, { error: 'invalid_grant', error_description: 'Invalid login credentials', code: 'invalid_credentials' })
+      if (!u || u.password == null || u.password !== body.password) return send(400, { error: 'invalid_grant', error_description: 'Invalid login credentials', code: 'invalid_credentials' })
       return send(200, { access_token: jwt(u.id, body.email), token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: 'r-' + u.id, user: userOf(u.id, body.email) })
+    }
+    if (url.pathname === '/auth/v1/otp') {
+      const email = String(body?.email ?? '').trim().toLowerCase()
+      if (!USERS[email]) return send(422, { code: 'otp_disabled', error_code: 'otp_disabled', msg: 'Signups not allowed for otp' })
+      console.log(`[fake] would email the code ${CODE} to ${email}`)
+      return send(200, {})
+    }
+    if (url.pathname === '/auth/v1/verify') {
+      const email = String(body?.email ?? '').trim().toLowerCase()
+      const u = USERS[email]
+      // like the real thing, only some code types fit how the account was created
+      if (!u || body.token !== CODE || !['email', 'recovery'].includes(body.type)) return send(403, { code: 'otp_expired', error_code: 'otp_expired', msg: 'Token has expired or is invalid' })
+      return send(200, { access_token: jwt(u.id, email), token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: 'r-' + u.id, user: userOf(u.id, email) })
     }
     if (url.pathname === '/auth/v1/user') {
       const uid = uidFromAuth(req.headers.authorization)
       const email = Object.keys(USERS).find((e) => USERS[e].id === uid)
+      if (uid && req.method === 'PUT') {
+        USERS[email].password = body.password
+        await db.exec(`update auth.users set encrypted_password = 'x' where id = '${uid}'`)
+      }
       return uid ? send(200, userOf(uid, email)) : send(401, { message: 'no session' })
     }
     if (url.pathname === '/auth/v1/logout') return send(204)
@@ -166,8 +190,12 @@ createServer(async (req, res) => {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return send(400, { error: 'Email inválido.' })
       const existing = USERS[email]
       const id = existing?.id ?? crypto.randomUUID()
-      if (!existing) USERS[email] = { id, password: 'invited-' + id }
-      await db.exec(`insert into auth.users values ('${id}', '${email}') on conflict do nothing; insert into public.admins values ('${id}') on conflict do nothing;`)
+      if (!existing) USERS[email] = { id, password: null }
+      await db.exec(`insert into auth.users values ('${id}', '${email}', '') on conflict do nothing; insert into public.admins values ('${id}') on conflict do nothing;`)
+      if (existing && existing.password === null) {
+        console.log(`[fake] would email the code ${CODE} to ${email}`)
+        return send(200, { status: 'resent' })
+      }
       console.log(`[fake] would email an invitation to ${email} (redirect ${body.redirectTo})`)
       return send(200, { status: existing ? 'promoted' : 'invited' })
     }

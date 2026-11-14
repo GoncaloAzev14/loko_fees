@@ -2,7 +2,8 @@
 //
 // Only an existing admin can call it. It needs the service role key (injected by Supabase
 // into every Edge Function) because creating accounts is not something the browser may do.
-// If the email already has an account, that account is simply promoted.
+// If the email already has an account, that account is simply promoted. If that account never
+// chose a password (an invitation that did not work out), it is sent a fresh access code instead.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const cors = {
@@ -57,6 +58,19 @@ Deno.serve(async (req) => {
     // The email already has an account: just promote it.
     if (error.code === 'email_exists' || /already.*registered/i.test(error.message)) {
       if (!(await makeAdmin())) return json(500, { error: 'Não foi possível promover essa conta.' })
+
+      // An account without a password cannot sign in, so do not leave it stuck: email it a code.
+      const { data: state, error: stateError } = await service.rpc('invite_state', { p_email: email })
+      if (stateError) console.error('invite_state failed:', stateError.code, stateError.message)
+      if (state === 'pending') {
+        const anon = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { auth: { persistSession: false } })
+        const { error: otpError } = await anon.auth.signInWithOtp({
+          email,
+          options: { shouldCreateUser: false, emailRedirectTo: redirectTo },
+        })
+        if (otpError) return json(400, { error: otpError.message })
+        return json(200, { status: 'resent' })
+      }
       return json(200, { status: 'promoted' })
     }
     return json(400, { error: error.message })
