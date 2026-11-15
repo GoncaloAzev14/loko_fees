@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:test": "node scripts/dev-test.mjs",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc",
     "dev:fake": "node scripts/fake-supabase.mjs",
     "logo": "node scripts/build_logo.mjs",
-    "dev:fake:web": "vite --mode fake --port 5174 --strictPort"
+    "dev:fake:web": "vite --mode fake --port 5174 --strictPort",
+    "dev:staging": "vite --mode staging --port 5175 --strictPort"
   },
   "dependencies": {
     "@fontsource-variable/sora": "^5.3.0",

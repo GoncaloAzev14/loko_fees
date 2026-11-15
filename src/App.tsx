@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import EnvBanner from './components/EnvBanner'
 import Layout from './components/Layout'
 import RequireAdmin from './components/RequireAdmin'
 import Access from './pages/Access'
@@ -21,29 +22,32 @@ import Settings from './pages/admin/Settings'
 /** Public read-only screens, plus /admin/* which only admins can open. */
 export default function App() {
   return (
-    <Routes>
-      <Route path="login" element={<Login />} />
-      <Route path="recover" element={<Access />} />
-      <Route element={<Layout />}>
-        <Route index element={<Dashboard />} />
-        <Route path="players" element={<Players />} />
-        <Route path="players/:id" element={<PlayerDetail />} />
-        <Route path="fines" element={<Fines />} />
-        <Route path="caixa" element={<Caixa />} />
-        <Route path="set-password" element={<SetPassword />} />
-        <Route path="admin" element={<RequireAdmin />}>
-          <Route index element={<Navigate to="/" replace />} />
-          <Route path="fines/new" element={<AddFine />} />
-          <Route path="payments" element={<Payments />} />
-          <Route path="money" element={<Money />} />
-          <Route path="catalog" element={<Catalog />} />
-          <Route path="players" element={<Roster />} />
-          <Route path="admins" element={<Admins />} />
-          <Route path="archive" element={<Archive />} />
-          <Route path="settings" element={<Settings />} />
+    <>
+      <EnvBanner />
+      <Routes>
+        <Route path="login" element={<Login />} />
+        <Route path="recover" element={<Access />} />
+        <Route element={<Layout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="players" element={<Players />} />
+          <Route path="players/:id" element={<PlayerDetail />} />
+          <Route path="fines" element={<Fines />} />
+          <Route path="caixa" element={<Caixa />} />
+          <Route path="set-password" element={<SetPassword />} />
+          <Route path="admin" element={<RequireAdmin />}>
+            <Route index element={<Navigate to="/" replace />} />
+            <Route path="fines/new" element={<AddFine />} />
+            <Route path="payments" element={<Payments />} />
+            <Route path="money" element={<Money />} />
+            <Route path="catalog" element={<Catalog />} />
+            <Route path="players" element={<Roster />} />
+            <Route path="admins" element={<Admins />} />
+            <Route path="archive" element={<Archive />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </>
   )
 }
