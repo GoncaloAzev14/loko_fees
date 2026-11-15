@@ -27,7 +27,7 @@ const db = new PGlite({
 })
 await db.exec(`
   create role anon nologin; create role authenticated nologin;
-  create schema auth; create table auth.users (id uuid primary key, email text, encrypted_password text, invited_at timestamptz);
+  create schema auth; create table auth.users (id uuid primary key, email text, encrypted_password text, invited_at timestamptz, created_at timestamptz default now());
   create function auth.uid() returns uuid language sql stable as
     $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
   grant usage on schema auth, public to anon, authenticated;
@@ -38,8 +38,9 @@ await db.exec(sql('../supabase/migrations/20261113000000_admin_management.sql'))
 await db.exec(sql('../supabase/migrations/20261114000000_season_archive_and_reset.sql'))
 await db.exec(sql('../supabase/migrations/20261115000000_admin_pending.sql'))
 await db.exec(sql('../supabase/migrations/20261116000000_admin_accept_invite.sql'))
+await db.exec(sql('../supabase/migrations/20261117000000_main_admin.sql'))
 await db.exec(sql('../supabase/seed.sql'))
-await db.exec(`insert into auth.users values ('${ADMIN}', 'admin@loko.test', 'x'), ('${VIEWER}', 'viewer@loko.test', 'x'); insert into admins values ('${ADMIN}');`)
+await db.exec(`insert into auth.users values ('${ADMIN}', 'admin@loko.test', 'x'), ('${VIEWER}', 'viewer@loko.test', 'x'); insert into admins values ('${ADMIN}'); update admins set is_owner = true where user_id = '${ADMIN}';`)
 // Someone invited whose first link failed: an account without a password. Their emailed code is always 123456.
 const PENDING = '00000000-0000-0000-0000-0000000000d1'
 USERS['daniel@loko.test'] = { id: PENDING, password: null }

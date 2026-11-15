@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { as, newDb } from './db'
 
@@ -172,5 +173,44 @@ describe('admin management', () => {
         await expect(db.query(`select add_admin_by_email('carla@club.pt')`)).rejects.toThrow()
       })
     }
+  })
+
+  it('the main admin cannot be removed, not even by another admin', async () => {
+    const db = await fixture()
+    await db.exec(`update admins set is_owner = true where user_id = '${ADMIN}'`)
+    await as(db, { uid: OTHER_ADMIN }, async () => {
+      await expect(db.query(`select remove_admin('${ADMIN}')`)).rejects.toThrow(/principal/)
+    })
+    expect((await db.query('select 1 from admins')).rows).toHaveLength(2)
+    // everyone else can still be removed
+    await as(db, { uid: ADMIN }, async () => {
+      await db.query(`select remove_admin('${OTHER_ADMIN}')`)
+    })
+    expect((await db.query('select 1 from admins')).rows).toHaveLength(1)
+  })
+
+  it('lists the main admin first and says who it is', async () => {
+    const db = await fixture()
+    await db.exec(`update admins set is_owner = true where user_id = '${OTHER_ADMIN}'`)
+    const rows = await as(db, { uid: ADMIN }, async () => (await db.query<{ email: string; is_owner: boolean }>('select email, is_owner from list_admins()')).rows)
+    expect(rows).toEqual([
+      { email: 'bruno@club.pt', is_owner: true },
+      { email: 'Ana@Club.pt', is_owner: false },
+    ])
+  })
+
+  it('the migration picks the earliest account that is an accepted admin as the main admin', async () => {
+    const db = await fixture()
+    await db.exec(`
+      update auth.users set created_at = '2026-01-03' where id = '${ADMIN}';
+      update auth.users set created_at = '2026-01-02' where id = '${OTHER_ADMIN}';
+      update auth.users set created_at = '2026-01-01' where id = '${USER}';
+      update admins set is_owner = false;
+    `)
+    await db.query(`select add_admin_by_email('carla@club.pt')`) // earliest account, but only invited: pending
+    const sql = readFileSync(new URL('../migrations/20261117000000_main_admin.sql', import.meta.url), 'utf8')
+    await db.exec(sql.match(/update public\.admins set is_owner = true[\s\S]*?;/)![0])
+    const owners = (await db.query<{ user_id: string }>('select user_id from admins where is_owner')).rows
+    expect(owners).toEqual([{ user_id: OTHER_ADMIN }])
   })
 })
