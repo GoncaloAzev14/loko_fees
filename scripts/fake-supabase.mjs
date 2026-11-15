@@ -123,7 +123,10 @@ async function rest(req, url, body) {
       const keys = cols.length ? cols : [...new Set(list.flatMap(Object.keys))]
       const values = list.map((r) => '(' + keys.map((k) => (k in r ? `$${args.push(r[k])}` : 'default')).join(', ') + ')').join(', ')
       let sqlText = `insert into ${t} (${keys.map(ident).join(', ')}) values ${values}`
-      if (prefer.includes('resolution=merge-duplicates')) {
+      if (prefer.includes('resolution=ignore-duplicates')) {
+        // how the app re-sends entries it saved while offline: the same id again changes nothing
+        sqlText += ` on conflict (${(url.searchParams.get('on_conflict') ?? 'id').split(',').map(ident).join(', ')}) do nothing`
+      } else if (prefer.includes('resolution=merge-duplicates')) {
         const target = url.searchParams.get('on_conflict') ?? 'id'
         sqlText += ` on conflict (${target.split(',').map(ident).join(', ')}) do update set ${keys.filter((k) => !target.split(',').includes(k)).map((k) => `${ident(k)} = excluded.${ident(k)}`).join(', ')}`
       }

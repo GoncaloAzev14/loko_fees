@@ -1,12 +1,14 @@
 import { FunctionsHttpError } from '@supabase/supabase-js'
+import { ApiError } from './errors'
 import { supabase } from './supabase'
+import { submit } from './sync'
 import type {
   AdminUser, ArchivedFineType, ArchivedPlayer, ArchivedSeason, Balance, Expense, FineType, Income, LedgerFilter, LedgerRow, Payment, Role, Settings, Summary,
 } from './types'
 
-async function run<T>(q: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<T> {
-  const { data, error } = await q
-  if (error) throw new Error(error.message)
+async function run<T>(q: PromiseLike<{ data: T | null; error: { message: string; code?: string } | null; status?: number }>): Promise<T> {
+  const { data, error, status } = await q
+  if (error) throw new ApiError(error.message, error.code ?? '', status ?? 0)
   return data as T
 }
 
@@ -68,32 +70,43 @@ export interface NewFines {
   description?: string
 }
 
+// The day-to-day money entries below go through `submit`: straight to the server when it can be
+// reached, otherwise saved on the phone and sent later (see lib/sync.ts). Every new row gets its id
+// here, so sending it twice can never create it twice.
+const newId = () => crypto.randomUUID()
+
 export const addFines = (n: NewFines) =>
-  run(supabase.from('fines').insert(
+  submit(
     n.playerIds.map((player_id) => ({
-      player_id,
-      fine_type_id: n.fineTypeId,
-      amount: n.amount,
-      fined_on: n.finedOn,
-      description: n.description?.trim() || null,
+      op: 'insert' as const,
+      table: 'fines' as const,
+      row: {
+        id: newId(),
+        player_id,
+        fine_type_id: n.fineTypeId,
+        amount: n.amount,
+        fined_on: n.finedOn,
+        description: n.description?.trim() || null,
+      },
     })),
-  ))
+  )
 
-export const setFineCancelled = (id: string, cancelled: boolean) =>
-  run(supabase.from('fines').update({ cancelled }).eq('id', id))
+export const setFineCancelled = (id: string, cancelled: boolean) => submit([{ op: 'cancel', rowId: id, cancelled }])
 
-export const deleteFine = (id: string) => run(supabase.from('fines').delete().eq('id', id))
+export const deleteFine = (id: string) => submit([{ op: 'delete', table: 'fines', rowId: id }])
 
-export const addPayment = (p: Omit<Payment, 'id' | 'note'> & { note?: string }) =>
-  run(supabase.from('payments').insert({ ...p, note: p.note?.trim() || null }))
+export const addPayment = (p: Omit<Payment, 'id' | 'note' | 'sync'> & { note?: string }) =>
+  submit([{ op: 'insert', table: 'payments', row: { id: newId(), ...p, note: p.note?.trim() || null } }])
 
-export const deletePayment = (id: string) => run(supabase.from('payments').delete().eq('id', id))
+export const deletePayment = (id: string) => submit([{ op: 'delete', table: 'payments', rowId: id }])
 
-export const addIncome = (i: Omit<Income, 'id'>) => run(supabase.from('incomes').insert(i))
-export const deleteIncome = (id: string) => run(supabase.from('incomes').delete().eq('id', id))
+export const addIncome = (i: Omit<Income, 'id' | 'sync'>) =>
+  submit([{ op: 'insert', table: 'incomes', row: { id: newId(), ...i } }])
+export const deleteIncome = (id: string) => submit([{ op: 'delete', table: 'incomes', rowId: id }])
 
-export const addExpense = (e: Omit<Expense, 'id'>) => run(supabase.from('expenses').insert(e))
-export const deleteExpense = (id: string) => run(supabase.from('expenses').delete().eq('id', id))
+export const addExpense = (e: Omit<Expense, 'id' | 'sync'>) =>
+  submit([{ op: 'insert', table: 'expenses', row: { id: newId(), ...e } }])
+export const deleteExpense = (id: string) => submit([{ op: 'delete', table: 'expenses', rowId: id }])
 
 export const saveFineType = (t: Partial<FineType> & Pick<FineType, 'name' | 'default_amount'>) =>
   run(supabase.from('fine_types').upsert(t))

@@ -1,6 +1,12 @@
 export type Role = 'player' | 'staff'
 export type FineStatus = 'paid' | 'pending' | 'overdue' | 'cancelled'
 
+/**
+ * Set on rows the screen shows from the phone's outbox rather than from the server: a new row waiting to
+ * be sent, or a change (delete, cancel, restore) to a row that is waiting to be sent.
+ */
+export type SyncMark = 'queued' | 'deleting' | 'cancelling' | 'restoring'
+
 export interface Balance {
   player_id: string
   name: string
@@ -42,6 +48,7 @@ export interface LedgerRow {
   paid_amount: number
   remaining: number
   status: FineStatus
+  sync?: SyncMark
 }
 
 export interface Payment {
@@ -50,6 +57,7 @@ export interface Payment {
   amount: number
   paid_on: string
   note: string | null
+  sync?: SyncMark
 }
 
 export interface Income {
@@ -58,6 +66,7 @@ export interface Income {
   amount: number
   received_on: string
   description: string
+  sync?: SyncMark
 }
 
 export interface Expense {
@@ -65,6 +74,7 @@ export interface Expense {
   amount: number
   spent_on: string
   description: string
+  sync?: SyncMark
 }
 
 export interface Summary {
