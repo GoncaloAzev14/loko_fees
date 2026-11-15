@@ -37,6 +37,13 @@ language sql security definer set search_path = public as $$
   update public.admins set accepted_at = now() where user_id = auth.uid() and accepted_at is null;
 $$;
 
+-- Lets a signed-in person ask whether their own invitation is still pending (to show the right
+-- message). True only for someone an admin invited; never reveals anything about other people.
+create function public.my_invite_pending() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.admins where user_id = auth.uid() and accepted_at is null);
+$$;
+
 create or replace function public.list_admins() returns table (user_id uuid, email text, pending boolean)
 language sql stable security definer set search_path = public as $$
   select a.user_id, u.email::text, a.accepted_at is null
@@ -57,3 +64,5 @@ $$;
 
 revoke all on function public.accept_admin_invite() from public, anon;
 grant execute on function public.accept_admin_invite() to authenticated;
+revoke all on function public.my_invite_pending() from public, anon;
+grant execute on function public.my_invite_pending() to authenticated;

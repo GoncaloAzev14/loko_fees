@@ -105,6 +105,20 @@ describe('admin management', () => {
     })
   })
 
+  it('my_invite_pending is true only for the signed-in person with a pending invitation', async () => {
+    const db = await fixture()
+    await db.query(`select add_admin_by_email('carla@club.pt')`)
+    const stranger = '00000000-0000-0000-0000-0000000000f2'
+    await db.exec(`insert into auth.users values ('${stranger}', 'dora@club.pt')`)
+    const pending = (uid: string) => as(db, { uid }, async () => (await db.query<{ p: boolean }>('select my_invite_pending() as p')).rows[0].p)
+    expect(await pending(USER)).toBe(true)
+    expect(await pending(ADMIN)).toBe(false) // already an admin
+    expect(await pending(stranger)).toBe(false) // never invited
+    await as(db, 'anon', async () => {
+      await expect(db.query('select my_invite_pending()')).rejects.toThrow()
+    })
+  })
+
   it('inviting again never turns an accepted admin back into a pending one', async () => {
     const db = await fixture()
     await db.query(`select add_admin_by_email('ana@club.pt')`)
