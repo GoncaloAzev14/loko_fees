@@ -32,7 +32,7 @@ It imitates Supabase, it is not Supabase. Real email delivery, the exact behavio
 
 ### A second Supabase project for realistic testing (optional)
 
-A free Supabase account can hold two active projects. A second one, kept only for testing, behaves exactly like production but holds nothing real.
+A free Supabase account has allowed two active projects (check the current limit). A second one, kept only for testing, behaves exactly like production but holds nothing real.
 
 1. Create a new project in Supabase (name it for example `loko-fees-test`). Never put real members in it.
 2. In its SQL Editor run every file in `supabase/migrations/`, in order, once each. Add the demo data with `supabase/seed.sql` if you want some (never do this in production).
