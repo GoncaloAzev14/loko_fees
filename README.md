@@ -7,6 +7,8 @@ Anyone can look things up without logging in; admins log in to register fines an
 
 **Live site:** https://goncaloazev14.github.io/loko_fees/
 
+**Documentation:** [docs/](docs/README.md): [architecture](docs/architecture.md) · [data model](docs/data-model.md) · [sign-in and admins](docs/auth-and-admins.md) · [operations](docs/operations.md) · [development](docs/development.md)
+
 **Contents:** [Deploy, step by step](#deploy-step-by-step) · [Updating later](#updating-later) · [Starting with real data](#starting-with-real-data) · [Troubleshooting](#troubleshooting) · [What the app does](#what-the-app-does) · [Rules implemented](#rules-implemented) · [Run locally](#run-locally) · [Demo data](#demo-data) · [Scripts](#scripts)
 
 ---
@@ -61,8 +63,10 @@ select has_table_privilege('authenticated', 'public.players', 'DELETE');
 3. Make that user an admin. In the **SQL Editor** run (with your email):
 
    ```sql
-   insert into admins select id from auth.users where email = 'you@example.com';
+   insert into admins (user_id, is_owner) select id, true from auth.users where email = 'you@example.com';
    ```
+
+   `is_owner` makes you the main admin, who can never be removed from the app.
 
    A person who can log in but is not in `admins` sees the public screens only and cannot change anything.
 4. **Authentication → URL Configuration**:
@@ -250,7 +254,7 @@ curl -s http://127.0.0.1:54321/auth/v1/admin/users \
   -d '{"email":"admin@example.com","password":"change-me","email_confirm":true}'
 # 2. make them an admin
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
-  -c "insert into admins select id from auth.users where email = 'admin@example.com'"
+  -c "insert into admins (user_id, is_owner) select id, true from auth.users where email = 'admin@example.com'"
 ```
 
 **No Docker?** `npm run dev:fake` serves a stand-in backend on the same port (an in-process Postgres running the same migrations and seed; logins `admin@loko.test` / `admin123` and `viewer@loko.test` / `viewer123`; use any value as the key). It is only a smoke-test aid, not a replacement for Supabase. To point a second copy of the app at it without touching your real `.env`, put the same two variables in `.env.fake` (git-ignored) and run `npm run dev:fake:web` (port 5174, `--mode fake`).
