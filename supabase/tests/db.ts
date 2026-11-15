@@ -10,7 +10,7 @@ export async function newDb(opts: { seed?: boolean } = {}) {
     create role anon nologin;
     create role authenticated nologin;
     create schema auth;
-    create table auth.users (id uuid primary key, email text, encrypted_password text);
+    create table auth.users (id uuid primary key, email text, encrypted_password text, invited_at timestamptz);
     create function auth.uid() returns uuid language sql stable as
       $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
     grant usage on schema auth, public to anon, authenticated;
@@ -20,6 +20,7 @@ export async function newDb(opts: { seed?: boolean } = {}) {
   await db.exec(read('../migrations/20261113000000_admin_management.sql'))
   await db.exec(read('../migrations/20261114000000_season_archive_and_reset.sql'))
   await db.exec(read('../migrations/20261115000000_admin_pending.sql'))
+  await db.exec(read('../migrations/20261116000000_admin_accept_invite.sql'))
   if (opts.seed) await db.exec(read('../seed.sql'))
   return db
 }

@@ -27,7 +27,7 @@ const db = new PGlite({
 })
 await db.exec(`
   create role anon nologin; create role authenticated nologin;
-  create schema auth; create table auth.users (id uuid primary key, email text, encrypted_password text);
+  create schema auth; create table auth.users (id uuid primary key, email text, encrypted_password text, invited_at timestamptz);
   create function auth.uid() returns uuid language sql stable as
     $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
   grant usage on schema auth, public to anon, authenticated;
@@ -37,12 +37,13 @@ await db.exec(sql('../supabase/migrations/20261112000000_init.sql'))
 await db.exec(sql('../supabase/migrations/20261113000000_admin_management.sql'))
 await db.exec(sql('../supabase/migrations/20261114000000_season_archive_and_reset.sql'))
 await db.exec(sql('../supabase/migrations/20261115000000_admin_pending.sql'))
+await db.exec(sql('../supabase/migrations/20261116000000_admin_accept_invite.sql'))
 await db.exec(sql('../supabase/seed.sql'))
 await db.exec(`insert into auth.users values ('${ADMIN}', 'admin@loko.test', 'x'), ('${VIEWER}', 'viewer@loko.test', 'x'); insert into admins values ('${ADMIN}');`)
 // Someone invited whose first link failed: an account without a password. Their emailed code is always 123456.
 const PENDING = '00000000-0000-0000-0000-0000000000d1'
 USERS['daniel@loko.test'] = { id: PENDING, password: null }
-await db.exec(`insert into auth.users values ('${PENDING}', 'daniel@loko.test', ''); insert into admins values ('${PENDING}');`)
+await db.exec(`insert into auth.users values ('${PENDING}', 'daniel@loko.test', 'x', now()); insert into admins values ('${PENDING}', null);`)
 const CODE = '123456'
 
 // --- helpers ---
@@ -191,13 +192,14 @@ createServer(async (req, res) => {
       const existing = USERS[email]
       const id = existing?.id ?? crypto.randomUUID()
       if (!existing) USERS[email] = { id, password: null }
-      await db.exec(`insert into auth.users values ('${id}', '${email}', '') on conflict do nothing; insert into public.admins values ('${id}') on conflict do nothing;`)
-      if (existing && existing.password === null) {
-        console.log(`[fake] would email the code ${CODE} to ${email}`)
-        return send(200, { status: 'resent' })
+      await db.exec(`insert into auth.users values ('${id}', '${email}', '', now()) on conflict do nothing; insert into public.admins values ('${id}', null) on conflict do nothing;`)
+      if (!existing) {
+        console.log(`[fake] would email an invitation to ${email} (redirect ${body.redirectTo})`)
+        return send(200, { status: 'invited' })
       }
-      console.log(`[fake] would email an invitation to ${email} (redirect ${body.redirectTo})`)
-      return send(200, { status: existing ? 'promoted' : 'invited' })
+      const pending = (await db.query(`select 1 from public.admins where user_id = '${id}' and accepted_at is null`)).rows.length > 0
+      if (pending) console.log(`[fake] would email the code ${CODE} to ${email}`)
+      return send(200, { status: pending ? 'resent' : 'already_admin' })
     }
     if (url.pathname.startsWith('/rest/v1/')) {
       const [status, payload] = await rest(req, url, body)

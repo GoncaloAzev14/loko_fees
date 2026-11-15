@@ -57,28 +57,88 @@ describe('admin management', () => {
     expect((await db.query('select 1 from admins')).rows).toHaveLength(3)
   })
 
-  it('flags admins who have not chosen a password yet as pending', async () => {
+  it('an invitation gives no rights until it is accepted', async () => {
     const db = await fixture()
-    await db.exec(`update auth.users set encrypted_password = 'hash' where id = '${ADMIN}'; update auth.users set encrypted_password = '' where id = '${OTHER_ADMIN}'`)
+    await db.query(`select add_admin_by_email('carla@club.pt')`)
+    const isAdmin = (uid: string) => as(db, { uid }, async () => (await db.query<{ a: boolean }>('select is_admin() as a')).rows[0].a)
+    expect(await isAdmin(USER)).toBe(false) // invited, not accepted
+    expect(await isAdmin(ADMIN)).toBe(true) // added by hand: active straight away
+    // ...and a pending invitee cannot do what admins do
+    await as(db, { uid: USER }, async () => {
+      await expect(db.query(`insert into fine_types (name, default_amount) values ('x', 1)`)).rejects.toThrow()
+    })
+  })
+
+  it('lists pending invitations as pending, and accepted admins as active', async () => {
+    const db = await fixture()
+    await db.query(`select add_admin_by_email('carla@club.pt')`)
     const rows = await as(db, { uid: ADMIN }, async () => (await db.query<{ email: string; pending: boolean }>('select email, pending from list_admins()')).rows)
     expect(rows).toEqual([
       { email: 'Ana@Club.pt', pending: false },
-      { email: 'bruno@club.pt', pending: true }, // empty password: invited, never finished
+      { email: 'bruno@club.pt', pending: false },
+      { email: 'carla@club.pt', pending: true },
     ])
   })
 
-  it('treats a missing password as pending too', async () => {
-    const db = await fixture() // the fixture leaves encrypted_password null
+  it('a pending person becomes an admin by accepting their own invitation', async () => {
+    const db = await fixture()
+    await db.query(`select add_admin_by_email('carla@club.pt')`)
+    await as(db, { uid: USER }, async () => {
+      await db.query('select accept_admin_invite()')
+      expect((await db.query<{ a: boolean }>('select is_admin() as a')).rows[0].a).toBe(true)
+    })
     const rows = await as(db, { uid: ADMIN }, async () => (await db.query<{ pending: boolean }>('select pending from list_admins()')).rows)
-    expect(rows.every((r) => r.pending)).toBe(true)
+    expect(rows.some((r) => r.pending)).toBe(false)
   })
 
-  it('invite_state tells no account, unfinished invitation and active account apart', async () => {
+  it('accepting does nothing for someone who was never invited, and is closed to visitors', async () => {
     const db = await fixture()
-    await db.exec(`update auth.users set encrypted_password = 'hash' where id = '${ADMIN}'; update auth.users set encrypted_password = '' where id = '${OTHER_ADMIN}'`)
+    const stranger = '00000000-0000-0000-0000-0000000000f1'
+    await db.exec(`insert into auth.users values ('${stranger}', 'dora@club.pt')`)
+    await as(db, { uid: stranger }, async () => {
+      await db.query('select accept_admin_invite()')
+      expect((await db.query<{ a: boolean }>('select is_admin() as a')).rows[0].a).toBe(false)
+    })
+    expect((await db.query('select 1 from admins')).rows).toHaveLength(2)
+    await as(db, 'anon', async () => {
+      await expect(db.query('select accept_admin_invite()')).rejects.toThrow()
+    })
+  })
+
+  it('inviting again never turns an accepted admin back into a pending one', async () => {
+    const db = await fixture()
+    await db.query(`select add_admin_by_email('ana@club.pt')`)
+    const rows = await as(db, { uid: ADMIN }, async () => (await db.query<{ pending: boolean }>('select pending from list_admins()')).rows)
+    expect(rows.some((r) => r.pending)).toBe(false)
+  })
+
+  it('cancelling a pending invitation removes it', async () => {
+    const db = await fixture()
+    await db.query(`select add_admin_by_email('carla@club.pt')`)
+    await as(db, { uid: ADMIN }, async () => {
+      await db.query(`select remove_admin('${USER}')`)
+    })
+    expect((await db.query('select 1 from admins')).rows).toHaveLength(2)
+  })
+
+  it('migration marks people already invited from the app as pending again, and leaves the first admin alone', async () => {
+    const db = await fixture()
+    // state as it was before the change: both admins accepted by default; Bruno had been invited
+    await db.exec(`update auth.users set invited_at = now() where id = '${OTHER_ADMIN}'`)
+    await db.exec(`update admins set accepted_at = null from auth.users u where u.id = admins.user_id and u.invited_at is not null`)
+    const rows = await as(db, { uid: ADMIN }, async () => (await db.query<{ email: string; pending: boolean }>('select email, pending from list_admins()')).rows)
+    expect(rows).toEqual([
+      { email: 'Ana@Club.pt', pending: false },
+      { email: 'bruno@club.pt', pending: true },
+    ])
+  })
+
+  it('invite_state tells no entry, pending invitation and accepted admin apart', async () => {
+    const db = await fixture()
+    await db.query(`select add_admin_by_email('carla@club.pt')`)
     const state = async (email: string) => (await db.query<{ s: string }>(`select invite_state('${email}') as s`)).rows[0].s
-    expect(await state(' ANA@club.pt ')).toBe('active')
-    expect(await state('bruno@club.pt')).toBe('pending')
+    expect(await state(' ANA@club.pt ')).toBe('admin')
+    expect(await state('carla@club.pt')).toBe('pending')
     expect(await state('nobody@club.pt')).toBe('none')
   })
 

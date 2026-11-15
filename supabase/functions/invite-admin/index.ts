@@ -2,8 +2,9 @@
 //
 // Only an existing admin can call it. It needs the service role key (injected by Supabase
 // into every Edge Function) because creating accounts is not something the browser may do.
-// If the email already has an account, that account is simply promoted. If that account never
-// chose a password (an invitation that did not work out), it is sent a fresh access code instead.
+// The invitation is recorded as pending: the person becomes an admin when they first sign in or
+// choose a password (the app does that). If the email already has an account whose invitation is
+// still pending, it is sent a fresh access code; if it is already an admin, nothing is sent.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const cors = {
@@ -55,11 +56,11 @@ Deno.serve(async (req) => {
   }
 
   if (error) {
-    // The email already has an account: just promote it.
+    // The email already has an account: record the invitation (a no-op for an existing admin).
     if (error.code === 'email_exists' || /already.*registered/i.test(error.message)) {
       if (!(await makeAdmin())) return json(500, { error: 'Não foi possível promover essa conta.' })
 
-      // An account without a password cannot sign in, so do not leave it stuck: email it a code.
+      // Still pending: do not leave the person stuck, email them a code to finish with.
       const { data: state, error: stateError } = await service.rpc('invite_state', { p_email: email })
       if (stateError) console.error('invite_state failed:', stateError.code, stateError.message)
       if (state === 'pending') {
@@ -71,7 +72,7 @@ Deno.serve(async (req) => {
         if (otpError) return json(400, { error: otpError.message })
         return json(200, { status: 'resent' })
       }
-      return json(200, { status: 'promoted' })
+      return json(200, { status: 'already_admin' })
     }
     return json(400, { error: error.message })
   }
