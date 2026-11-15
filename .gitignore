@@ -6,3 +6,5 @@ dev-dist
 !.env.example
 .DS_Store
 *.tsbuildinfo
+# the club's real spreadsheet: personal data, keep it out of the repository
+*.xlsx

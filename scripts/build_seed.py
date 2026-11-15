@@ -1,114 +1,147 @@
-"""Generate supabase/seed.sql (demo data) from the club's Excel sheet.
+"""Generate supabase/seed.sql: demo data for development and tests.
 
-    pip install openpyxl
-    python scripts/build_seed.py "Lokomotiv 26-27.xlsx"
+    python3 scripts/build_seed.py
 
-Conversions:
-  * 'Liquidado? = Sim' rows become one payment each (the app settles payments against
-    fines oldest-first, so per-fine status can differ slightly from the sheet; per-player
-    totals do not).
-  * Prizes / referee gift become incomes, not fines.
-  * 'Multa de Falta de Pagamento' rows become late fees for October, dated on the day
-    after the October due date (8 Nov).
-  * The sheet's hand-typed box value (K2, 124 €) is NOT reproduced: the paid rows add up to more
-    and the sheet lists no expenses, so inventing one would be made-up data. Log real expenses in
-    the app instead.
-  * The sheet's credit table (Rodrigo Mendes 2) becomes an extra payment.
+Everything in it is INVENTED. The names are made up, and the fines, payments and income are produced
+by a fixed random seed, so the file describes no real person and can be shared freely. It has the
+same shape as a small club's first weeks (about 20 players and 2 staff, a catalog of fines, a few
+collections of money, one prize, one gift, one player with credit) so every screen has something to show.
+
+The late fees are not written here: the last line of the seed asks the database to apply them with
+the real rule, so the demo is consistent with what the app does.
+
+Running this again gives the same file for the same Python version; another version may give
+different numbers. Nothing relies on the exact values (see supabase/tests/seed.test.ts).
 """
-import collections
 import datetime as dt
+import random
 import sys
 
-import openpyxl
+SEED = 20261
+FIRST_DAY = dt.date(2026, 10, 1)
+LAST_DAY = dt.date(2026, 11, 8)       # the demo is "as of" this day; late fees are applied for it
+CREDIT_DAY = dt.date(2026, 11, 6)
 
-INCOME_TYPES = {"Prémio de Vitória", "Valor de Arbitragem - Oferta"}
-LATE_FEE_TYPE = "Multa de Falta de Pagamento"
-STAFF = {"Paulo Silva (Mister)", "André Fisio"}
-RENAMES = {"Marcus": "Marcos"}  # typo in the sheet's credit table
-LATE_FEE_DATE = dt.date(2026, 11, 8)
-LATE_FEE_MONTH = dt.date(2026, 10, 1)
+PLAYERS = [
+    "Aurélio Campos", "Bento Freitas", "Caetano Lopes", "Duarte Matos", "Eusébio Pires", "Fausto Rego",
+    "Gaspar Neves", "Hélder Sampaio", "Ivo Barbosa", "Jacinto Vaz", "Lino Antunes", "Márcio Teles",
+    "Nelson Ribas", "Osvaldo Peixoto", "Pedro Dias", "Quintino Faria", "Rúben Calado", "Salvador Brito",
+    "Telmo Carvalho", "Ulisses Moura", "Valter Lemos",
+]
+STAFF = ["Xavier Quaresma (Mister)", "Zé Fisio"]
+
+# The club's catalog of fines: (name, default amount, how often it comes up). Rules, not people.
+CATALOG = [
+    ("Atraso", 1, 3),
+    ("Atraso Concentração", 3, 3),
+    ("Atraso ao treino", 1, 3),
+    ("Derrota", 2, 2),
+    ("Donativo Vitória", 10, 2),
+    ("Falta de Assinatura Convocatória", 1, 2),
+    ("Faltar ao treino (-3 horas)", 3, 1),
+    ("Fato de Treino", 1, 2),
+    ("Multa de Cartão Vermelho", 5, 1),
+]
+
+# Days something was recorded or collected.
+EVENT_DAYS = [dt.date(2026, 10, d) for d in (1, 6, 10, 17, 24, 31)] + [dt.date(2026, 11, d) for d in (1, 3, 6)]
+
+INCOMES = [  # (description, amount, day)
+    ("Valor de Arbitragem - Oferta", 40, dt.date(2026, 9, 26)),
+    ("Prémio de Vitória", 100, dt.date(2026, 10, 3)),
+]
 
 
 def q(s):
     return "'" + str(s).replace("'", "''") + "'"
 
 
-def num(x):
-    return f"{x:g}"
+def pay_probability(day):
+    """Older fines have mostly been paid; recent ones less so."""
+    if day < dt.date(2026, 10, 20):
+        return 0.8
+    if day < dt.date(2026, 11, 1):
+        return 0.6
+    return 0.35
 
 
-def main(path, out):
-    ws = openpyxl.load_workbook(path, data_only=True)["Multas"]
-    box = ws["K2"].value
+def generate(rng):
+    names = PLAYERS + STAFF
+    types = [(n, a) for n, a, _ in CATALOG]
+    weights = [w for _, _, w in CATALOG]
 
-    roster = [ws[f"M{r}"].value for r in range(6, 40) if ws[f"M{r}"].value]
-    credits = {RENAMES.get(ws[f"R{r}"].value, ws[f"R{r}"].value): ws[f"S{r}"].value
-               for r in range(6, 40) if ws[f"R{r}"].value}
+    fines = []  # dicts: player, type, amount, day, paid
+    for day in EVENT_DAYS:
+        for _ in range(rng.randint(4, 11)):
+            name, default = rng.choices(types, weights)[0]
+            amount = default - 1 if default > 1 and rng.random() < 0.1 else default
+            fines.append(dict(player=rng.choice(names), type=name, amount=amount, day=day,
+                              paid=rng.random() < pay_probability(day)))
 
-    rows = []
-    for r in range(6, 200):
-        date, who, desc, amount = (ws[f"{c}{r}"].value for c in "BHIJ")
-        if who is None:
-            continue
-        rows.append(dict(date=date.date(), paid=ws[f"E{r}"].value == "Sim", who=who,
-                         desc=desc, amount=amount))
+    # One player ends with credit: everything they were fined is paid, plus a little extra.
+    credit_player = rng.choice(PLAYERS)
+    for f in fines:
+        if f["player"] == credit_player:
+            f["paid"] = True
 
-    fines = [x for x in rows if x["desc"] not in INCOME_TYPES and x["desc"] != LATE_FEE_TYPE]
-    late = [x for x in rows if x["desc"] == LATE_FEE_TYPE]
-    incomes = [x for x in rows if x["desc"] in INCOME_TYPES]
+    payments = []  # (player, amount, day, note)
+    for f in fines:
+        if f["paid"]:
+            later = [d for d in EVENT_DAYS if f["day"] <= d <= CREDIT_DAY]
+            payments.append((f["player"], f["amount"], rng.choice(later), None))
+    payments.append((credit_player, 2, CREDIT_DAY, "Crédito de exemplo"))
 
-    by_type = collections.defaultdict(list)
-    for x in fines:
-        by_type[x["desc"]].append(x["amount"])
-    defaults = {t: sorted(collections.Counter(v).most_common(), key=lambda c: (-c[1], c[0]))[0][0]
-                for t, v in by_type.items()}
+    income_players = rng.sample(PLAYERS, len(INCOMES))
+    incomes = [(who, amount, day, desc) for who, (desc, amount, day) in zip(income_players, INCOMES)]
+    return names, fines, payments, incomes
 
-    payments = [(x["who"], x["amount"], x["date"], None) for x in fines + late
-                if x["paid"] and x["amount"] > 0]
-    for who, amount in credits.items():
-        if amount:
-            payments.append((who, amount, dt.date(2026, 11, 6), "Crédito (importado do Excel)"))
-    total_in = sum(p[1] for p in payments) + sum(x["amount"] for x in incomes)
 
+def render(names, fines, payments, incomes):
     o = []
-    o.append("-- Demo data generated by scripts/build_seed.py from 'Lokomotiv 26-27.xlsx'.\n")
-    o.append("insert into public.players (name, role) values")
-    o.append(",\n".join(f"  ({q(n)}, {q('staff' if n in STAFF else 'player')})" for n in roster) + ";\n")
-    o.append("insert into public.fine_types (name, default_amount) values")
-    o.append(",\n".join(f"  ({q(t)}, {num(a)})" for t, a in sorted(defaults.items())) + ";\n")
+    o.append("-- Demo data. ALL INVENTED: the people, fines, payments and income below do not exist.")
+    o.append("-- Generated by scripts/build_seed.py (a fixed random seed), not taken from any real club.\n")
 
-    o.append("insert into public.fines (player_id, fine_type_id, kind, amount, fined_on, late_for_month)")
-    o.append("select p.id, t.id, v.kind, v.amount, v.fined_on::date, v.late_for_month::date")
+    o.append("insert into public.players (name, role) values")
+    o.append(",\n".join(f"  ({q(n)}, {q('staff' if n in STAFF else 'player')})" for n in names) + ";\n")
+
+    o.append("insert into public.fine_types (name, default_amount) values")
+    o.append(",\n".join(f"  ({q(n)}, {a})" for n, a, _ in sorted(CATALOG)) + ";\n")
+
+    o.append("insert into public.fines (player_id, fine_type_id, kind, amount, fined_on)")
+    o.append("select p.id, t.id, 'fine', v.amount, v.fined_on::date")
     o.append("from (values")
-    vals = [f"  ({i}, {q(x['who'])}, {q(x['desc'])}, 'fine', {num(x['amount'])}, {q(x['date'])}, null)"
-            for i, x in enumerate(fines)]
-    vals += [f"  ({len(fines) + i}, {q(x['who'])}, null, 'late_fee', {num(x['amount'])}, "
-             f"{q(LATE_FEE_DATE)}, {q(LATE_FEE_MONTH)})" for i, x in enumerate(late)]
-    o.append(",\n".join(vals))
-    o.append(") as v(ord, player, type, kind, amount, fined_on, late_for_month)")
+    o.append(",\n".join(
+        f"  ({i}, {q(f['player'])}, {q(f['type'])}, {f['amount']}, {q(f['day'])})" for i, f in enumerate(fines)))
+    o.append(") as v(ord, player, type, amount, fined_on)")
     o.append("join public.players p on p.name = v.player")
-    o.append("left join public.fine_types t on t.name = v.type")
+    o.append("join public.fine_types t on t.name = v.type")
     o.append("order by v.ord;\n")
 
     o.append("insert into public.payments (player_id, amount, paid_on, note)")
     o.append("select p.id, v.amount, v.paid_on::date, v.note")
     o.append("from (values")
-    o.append(",\n".join(f"  ({q(w)}, {num(a)}, {q(d)}, {q(n) if n else 'null'})" for w, a, d, n in payments))
+    o.append(",\n".join(f"  ({q(w)}, {a}, {q(d)}, {q(n) if n else 'null'})" for w, a, d, n in payments))
     o.append(") as v(player, amount, paid_on, note)")
     o.append("join public.players p on p.name = v.player;\n")
 
     o.append("insert into public.incomes (player_id, amount, received_on, description)")
     o.append("select p.id, v.amount, v.received_on::date, v.description")
     o.append("from (values")
-    o.append(",\n".join(f"  ({q(x['who'])}, {num(x['amount'])}, {q(x['date'])}, {q(x['desc'])})" for x in incomes))
+    o.append(",\n".join(f"  ({q(w)}, {a}, {q(d)}, {q(desc)})" for w, a, d, desc in incomes))
     o.append(") as v(player, amount, received_on, description)")
     o.append("join public.players p on p.name = v.player;\n")
 
+    o.append("-- Late fees come from the real rule, as of the last day of the demo, so the data matches the app.")
+    o.append(f"select public.apply_late_fees({q(LAST_DAY)});")
+    return "\n".join(o) + "\n"
+
+
+def main(out):
+    names, fines, payments, incomes = generate(random.Random(SEED))
     with open(out, "w", encoding="utf-8") as fh:
-        fh.write("\n".join(o) + "\n")
-    print(f"{len(roster)} players, {len(fines)} fines, {len(late)} late fees, "
-          f"{len(payments)} payments, {len(incomes)} incomes; money in={total_in} (sheet box cell says {box}, not reproduced)")
+        fh.write(render(names, fines, payments, incomes))
+    print(f"{len(names)} people, {len(fines)} fines, {len(payments)} payments, {len(incomes)} incomes -> {out}")
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else "supabase/seed.sql")
+    main(sys.argv[1] if len(sys.argv) > 1 else "supabase/seed.sql")

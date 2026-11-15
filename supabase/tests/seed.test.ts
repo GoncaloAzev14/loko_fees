@@ -1,40 +1,57 @@
 import { describe, expect, it } from 'vitest'
 import { newDb } from './db'
 
-// The demo data must reproduce the figures in 'Lokomotiv 26-27.xlsx'.
+// The demo data is invented (scripts/build_seed.py). These tests check that it is usable and
+// consistent, not any particular figure, so regenerating it does not break them.
 describe('demo seed', async () => {
   const db = await newDb({ seed: true })
   const one = async <T extends object>(sql: string) => (await db.query<T>(sql)).rows[0]
+  const count = async (sql: string) => (await db.query(sql)).rows.length
 
-  it('has no invented expenses: the box is everything paid in', async () => {
-    expect((await db.query(`select 1 from expenses`)).rows).toHaveLength(0)
-    expect((await one<{ box: number }>(`select box::float from club_summary`)).box).toBe(284)
+  it('has a small club: players and staff, a catalog, and nothing inactive', async () => {
+    expect(await count(`select 1 from players where role = 'player' and active`)).toBe(21)
+    expect(await count(`select 1 from players where role = 'staff' and active`)).toBe(2)
+    expect(await count(`select 1 from players where not active`)).toBe(0)
+    expect(await count(`select 1 from fine_types`)).toBe(9)
+    expect(await count(`select name from players group by name having count(*) > 1`)).toBe(0) // names are unique
   })
 
-  it('has the sheet totals for fines and income', async () => {
-    const r = await one<{ fined: number; income: number }>(
-      `select (select sum(amount) from fines)::float as fined, (select sum(amount) from incomes)::float as income`)
-    expect(r).toEqual({ fined: 250, income: 140 }) // sheet total 390 = 250 fines + 140 prizes/gifts
+  it('has fines, payments and income inside the demo period, all with an amount', async () => {
+    expect(await count(`select 1 from fines where kind = 'fine'`)).toBeGreaterThan(30)
+    expect(await count(`select 1 from payments`)).toBeGreaterThan(20)
+    expect(await count(`select 1 from incomes`)).toBe(2)
+    expect(await count(`select 1 from fines where amount <= 0`)).toBe(0)
+    expect(await count(`select 1 from fines where fined_on not between '2026-10-01' and '2026-11-08'`)).toBe(0)
   })
 
-  it('keeps the credit of Rodrigo Mendes', async () => {
-    expect(await one(`select outstanding::float, credit::float from player_balance where name = 'Rodrigo Mendes'`))
-      .toEqual({ outstanding: 0, credit: 2 })
+  it('has no expenses, so the box is everything paid in', async () => {
+    expect(await count(`select 1 from expenses`)).toBe(0)
+    const r = await one<{ box: number; paid_in: number }>(
+      `select box::float, ((select sum(amount) from payments) + (select sum(amount) from incomes))::float as paid_in from club_summary`)
+    expect(r.box).toBeGreaterThan(0)
+    expect(r.box).toBe(r.paid_in)
   })
 
-  it('has no stray players or typos', async () => {
-    expect((await db.query(`select 1 from players`)).rows).toHaveLength(23)
-    expect((await db.query(`select 1 from players where name = 'Marcus'`)).rows).toHaveLength(0)
+  it('shows every kind of situation: paid, still owed, overdue and one player with credit', async () => {
+    expect(await count(`select 1 from fine_ledger where paid_amount > 0`)).toBeGreaterThan(0)
+    expect(await count(`select 1 from fine_ledger where remaining > 0`)).toBeGreaterThan(0)
+    expect(await count(`select 1 from player_balance where overdue > 0`)).toBeGreaterThan(0)
+    expect((await db.query<{ credit: number }>(`select credit::float from player_balance where credit > 0`)).rows).toEqual([{ credit: 2 }])
   })
 
-  it('imports the sheet\'s 7 late fees; the app rule would also fine two players the sheet missed', async () => {
-    const lateFeePlayers = async () =>
-      (await db.query<{ name: string }>(
-        `select p.name from fines f join players p on p.id = f.player_id where f.kind = 'late_fee' order by 1`)).rows.map((r) => r.name)
-    const before = await lateFeePlayers()
-    expect(before).toHaveLength(7)
-    await db.query(`select apply_late_fees('2026-11-12')`)
-    // João has an unpaid October red card, Miguel Bombeiro an unpaid October lateness: both overdue, neither fined in the sheet.
-    expect((await lateFeePlayers()).filter((n) => !before.includes(n))).toEqual(['João', 'Miguel Bombeiro'])
+  it('already has the late fees due on the last demo day, so applying the rule again adds none', async () => {
+    expect(await count(`select 1 from fines where kind = 'late_fee'`)).toBeGreaterThan(0)
+    expect((await one<{ n: number }>(`select apply_late_fees('2026-11-08') as n`)).n).toBe(0)
+  })
+
+  it('fines a player late only when an October fine of theirs is still unpaid after its due date', async () => {
+    const rows = (await db.query<{ remaining: number }>(
+      `select (select coalesce(sum(l.remaining), 0)
+                 from fine_ledger l
+                where l.player_id = f.player_id and l.kind = 'fine' and not l.cancelled
+                  and date_trunc('month', l.fined_on) = date '2026-10-01')::float as remaining
+         from fines f where f.kind = 'late_fee'`)).rows
+    expect(rows.length).toBeGreaterThan(0)
+    expect(rows.every((r) => r.remaining > 0)).toBe(true)
   })
 })
