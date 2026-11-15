@@ -40,7 +40,8 @@ export default function Login() {
     <AuthFrame title="Área de administração">
       {session ? (
         <div className="card">
-          <p className="error" role="alert">Esta conta não tem permissões de administrador.</p>
+          <p className="error" role="alert">Esta conta ainda não tem acesso de administrador.</p>
+          <p className="muted small">Se recebeu um convite, termine o <Link to="/recover" onClick={signOut}>primeiro acesso</Link>: escolha a palavra-passe com o código do email.</p>
           <button className="btn secondary" onClick={signOut}>Terminar sessão</button>
         </div>
       ) : (

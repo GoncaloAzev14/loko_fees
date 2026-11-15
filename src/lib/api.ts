@@ -115,10 +115,11 @@ export const removeAdmin = (userId: string) => run(supabase.rpc('remove_admin', 
 
 /**
  * Emails an invitation and makes the person an admin.
- * 'promoted' = they already had a working account; 'resent' = they had one without a password,
- * so they were sent a fresh access code.
+ * The invitation stays pending until the person first signs in or chooses a password.
+ * 'invited' = a new invitation email; 'resent' = they already had an account whose invitation is
+ * still pending, so they were sent a fresh access code; 'already_admin' = nothing to send.
  */
-export async function inviteAdmin(email: string): Promise<'invited' | 'promoted' | 'resent'> {
+export async function inviteAdmin(email: string): Promise<'invited' | 'resent' | 'already_admin'> {
   const { data, error } = await supabase.functions.invoke('invite-admin', {
     body: { email, redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}set-password` },
   })

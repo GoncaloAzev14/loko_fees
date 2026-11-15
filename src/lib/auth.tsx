@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Session } from '@supabase/supabase-js'
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { supabase } from './supabase'
 
 interface AuthState {
@@ -8,6 +8,8 @@ interface AuthState {
   session: Session | null
   isAdmin: boolean
   signIn: (email: string, password: string) => Promise<void>
+  /** Call after the person has chosen a password: accepts a pending admin invitation and re-checks the rights. */
+  completeFirstAccess: () => void
   signOut: () => Promise<void>
 }
 
@@ -19,6 +21,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessionLoaded, setSessionLoaded] = useState(false)
   // null while we are still asking the database whether this user is an admin
   const [admin, setAdmin] = useState<boolean | null>(null)
+  // An invited person only becomes an admin once they sign in with their password or choose one.
+  // These two make the next rights check accept a pending invitation first.
+  const acceptNext = useRef(false)
+  const [recheck, setRecheck] = useState(0)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -35,8 +41,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAdmin(null)
     if (!uid) return
     supabase.rpc('is_admin').then(async ({ data }) => {
+      let isAdmin = data === true
+      if (!isAdmin && acceptNext.current) {
+        // errors are ignored on purpose: before the migration there is nothing to accept
+        await supabase.rpc('accept_admin_invite')
+        isAdmin = (await supabase.rpc('is_admin')).data === true
+      }
+      acceptNext.current = false
       if (cancelled) return
-      const isAdmin = data === true
       setAdmin(isAdmin)
       if (isAdmin) {
         // Late fees are normally added by a daily job; this covers the days it did not run.
@@ -47,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [uid, qc])
+  }, [uid, recheck, qc])
 
   const value = useMemo<AuthState>(
     () => ({
@@ -55,8 +67,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       isAdmin: admin === true,
       signIn: async (email, password) => {
+        acceptNext.current = true
         const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw new Error('Email ou palavra-passe incorretos.')
+        if (error) {
+          acceptNext.current = false
+          throw new Error('Email ou palavra-passe incorretos.')
+        }
+      },
+      completeFirstAccess: () => {
+        acceptNext.current = true
+        setRecheck((n) => n + 1)
       },
       signOut: async () => {
         await supabase.auth.signOut()

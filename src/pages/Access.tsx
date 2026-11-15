@@ -11,7 +11,7 @@ import { useAuth } from '../lib/auth'
  * for a code by email, then types it here with a new password. Can be repeated as often as needed.
  */
 export default function Access() {
-  const { loading, isAdmin } = useAuth()
+  const { loading, isAdmin, completeFirstAccess } = useAuth()
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const [step, setStep] = useState<'email' | 'code'>('email')
@@ -46,6 +46,7 @@ export default function Access() {
     setError(null)
     try {
       await finishAccess(email, code, password)
+      completeFirstAccess()
       navigate('/', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível guardar a palavra-passe.')

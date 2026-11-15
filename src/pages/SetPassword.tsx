@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabase'
  * so all that is left is choosing a password.
  */
 export default function SetPassword() {
-  const { loading, session } = useAuth()
+  const { loading, session, completeFirstAccess } = useAuth()
   const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [repeat, setRepeat] = useState('')
@@ -36,6 +36,7 @@ export default function SetPassword() {
     const { error } = await supabase.auth.updateUser({ password })
     setBusy(false)
     if (error) return setError(error.message)
+    completeFirstAccess()
     navigate('/', { replace: true })
   }
 

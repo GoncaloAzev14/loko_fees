@@ -15,7 +15,7 @@ export default function Admins() {
     setDone(
       status === 'invited' ? `Convite enviado para ${to}.`
       : status === 'resent' ? `Enviámos um novo código a ${to}.`
-      : `${to} já tinha conta e passou a administrador.`,
+      : `${to} já é administrador.`,
     )
   })
   const remove = useAction(removeAdmin)
@@ -32,7 +32,7 @@ export default function Admins() {
       <form className="card form" onSubmit={submit}>
         <label className="field" htmlFor="email">Convidar por email</label>
         <input id="email" type="email" required autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <p className="muted small">A pessoa recebe um email com uma ligação e um código para escolher a palavra-passe.</p>
+        <p className="muted small">A pessoa recebe um email com uma ligação e um código. Só passa a administrador depois de escolher a palavra-passe ou entrar pela primeira vez.</p>
         <ErrorNote error={invite.error} />
         {done && <p className="good" role="status">{done}</p>}
         <button className="btn" disabled={invite.busy}>{invite.busy ? 'A enviar…' : 'Enviar convite'}</button>
@@ -61,9 +61,11 @@ export default function Admins() {
                         <button
                           className="link danger"
                           disabled={remove.busy}
-                          onClick={() => confirm(`Retirar o acesso de administrador a ${a.email}?`) && remove.run(a.user_id)}
+                          onClick={() =>
+                            confirm(a.pending ? `Cancelar o convite a ${a.email}?` : `Retirar o acesso de administrador a ${a.email}?`) && remove.run(a.user_id)
+                          }
                         >
-                          Retirar acesso
+                          {a.pending ? 'Cancelar convite' : 'Retirar acesso'}
                         </button>
                       </div>
                     )}
