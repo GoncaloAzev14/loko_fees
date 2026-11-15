@@ -38,7 +38,7 @@ export default function Players() {
           return (
             <ul className="list">
               {shown.map((b) => (
-                <li key={b.player_id} className={`row ${b.active ? '' : 'cancelled'}`}>
+                <li key={b.player_id} className={`row clickable ${b.active ? '' : 'cancelled'}`}>
                   <Avatar name={b.name} />
                   <div className="row-main">
                     <Link className="row-title" to={`/players/${b.player_id}`}>{b.name}</Link>

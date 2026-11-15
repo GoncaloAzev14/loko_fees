@@ -6,15 +6,19 @@ import { ErrorNote } from '../components/ui'
 import { finishAccess, requestAccessCode } from '../lib/api'
 import { useAuth } from '../lib/auth'
 
+type Step = 'choose' | 'email' | 'code'
+
 /**
- * First access after an invitation, or a forgotten password. No link has to work: the person asks
- * for a code by email, then types it here with a new password. Can be repeated as often as needed.
+ * First access after an invitation, or a forgotten password. No link has to work: the person gets a
+ * code by email, then types it here with a new password. It can be repeated as often as needed.
+ * Two ways in: "send me a code" or "I already have one".
  */
 export default function Access() {
   const { loading, isAdmin, completeFirstAccess } = useAuth()
   const navigate = useNavigate()
   const [params] = useSearchParams()
-  const [step, setStep] = useState<'email' | 'code'>('email')
+  const [step, setStep] = useState<Step>('choose')
+  const [sent, setSent] = useState(false) // a code was just requested from this page
   const [email, setEmail] = useState(params.get('email') ?? '')
   const [code, setCode] = useState('')
   const [password, setPassword] = useState('')
@@ -25,12 +29,18 @@ export default function Access() {
   if (loading) return <p className="muted pad" style={{ textAlign: 'center' }}>A carregar…</p>
   if (isAdmin) return <Navigate to="/" replace />
 
+  const go = (next: Step) => {
+    setStep(next)
+    setError(null)
+  }
+
   async function send(e: FormEvent) {
     e.preventDefault()
     setBusy(true)
     setError(null)
     try {
       await requestAccessCode(email)
+      setSent(true)
       setStep('code')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível enviar o código.')
@@ -55,32 +65,50 @@ export default function Access() {
     }
   }
 
-  const back = () => {
-    setStep('email')
-    setError(null)
-  }
+  const emailField = (
+    <>
+      <label className="lf-label" htmlFor="email">Email</label>
+      <div className="lf">
+        <MailIcon className="ic sm" />
+        <input
+          id="email" type="email" inputMode="email" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+          placeholder="o.seu@email.com" required value={email} onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+    </>
+  )
 
   return (
     <AuthFrame title="Primeiro acesso">
-      {step === 'email' ? (
+      {step === 'choose' && (
+        <>
+          <p className="muted small">Foi convidado por um administrador? Escolha como quer continuar.</p>
+          <button className="btn login-btn" onClick={() => go('email')}>Enviar-me um código</button>
+          <button className="btn secondary login-btn next" onClick={() => { setSent(false); go('code') }}>Já tenho um código</button>
+          <Link className="lf-link" to="/login">Voltar a Entrar</Link>
+        </>
+      )}
+
+      {step === 'email' && (
         <form onSubmit={send}>
           <p className="muted small">Escreva o email do convite. Enviamos-lhe um código para escolher a palavra-passe.</p>
-          <label className="lf-label" htmlFor="email">Email</label>
-          <div className="lf">
-            <MailIcon className="ic sm" />
-            <input
-              id="email" type="email" inputMode="email" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false}
-              placeholder="o.seu@email.com" required value={email} onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
+          {emailField}
           <ErrorNote error={error} />
           <button className="btn login-btn" disabled={busy}>{busy ? 'A enviar…' : 'Enviar código'}</button>
-          <button type="button" className="lf-link" disabled={!email.trim()} onClick={() => setStep('code')}>Já tenho um código</button>
-          <Link className="lf-link" to="/login">Voltar a Entrar</Link>
+          <button type="button" className="lf-link" onClick={() => go('choose')}>Voltar</button>
         </form>
-      ) : (
+      )}
+
+      {step === 'code' && (
         <form onSubmit={finish}>
-          <p className="muted small" role="status">Se <strong>{email.trim()}</strong> estiver convidado, enviámos um código. Pode demorar um minuto.</p>
+          {sent ? (
+            <p className="muted small" role="status">Se <strong>{email.trim()}</strong> estiver convidado, enviámos um código. Pode demorar um minuto.</p>
+          ) : (
+            <>
+              <p className="muted small">Escreva o email do convite e o código que recebeu.</p>
+              {emailField}
+            </>
+          )}
           <label className="lf-label" htmlFor="code">Código</label>
           <div className="lf">
             <MailIcon className="ic sm" />
@@ -108,7 +136,7 @@ export default function Access() {
 
           <ErrorNote error={error} />
           <button className="btn login-btn" disabled={busy}>{busy ? 'A guardar…' : 'Guardar e entrar'}</button>
-          <button type="button" className="lf-link" onClick={back}>Pedir um código novo</button>
+          <button type="button" className="lf-link" onClick={() => go('email')}>{sent ? 'Pedir um código novo' : 'Não tenho um código'}</button>
         </form>
       )}
     </AuthFrame>

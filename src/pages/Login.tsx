@@ -91,7 +91,7 @@ export default function Login() {
 
           <ErrorNote error={error} />
           <button className="btn login-btn" disabled={busy}>{busy ? 'A entrar…' : 'Entrar'}</button>
-          <Link className="lf-link" to="/recover">Primeiro acesso ou palavra-passe esquecida?</Link>
+          <Link className="lf-link" to="/recover">Primeiro acesso</Link>
         </form>
       )}
     </AuthFrame>
