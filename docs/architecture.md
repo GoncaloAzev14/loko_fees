@@ -78,8 +78,8 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 
 | Route | Screen | Who |
 | --- | --- | --- |
-| `/` | Dashboard: box, owed, overdue, credit, debt chart | everyone |
-| `/players`, `/players/:id` | Roster, and one player's debts and history | everyone |
+| `/` | Dashboard: the box, how many players are in debt, overdue or up to date, and the biggest debt | everyone |
+| `/players`, `/players/:id` | Roster with search and filters, and one player's debts, credit and history | everyone |
 | `/fines` | Fines filtered by date, player, type, status | everyone |
 | `/caixa` | Every payment, income and expense | everyone |
 | `/login` | Admin sign-in | everyone |
