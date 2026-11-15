@@ -216,6 +216,7 @@ a.row-title { color: var(--text); }
 .badge.paid { background: rgba(95, 211, 141, 0.16); color: var(--good); }
 .badge.overdue { background: var(--brand); color: var(--on-brand); }
 .badge.cancelled { background: var(--line); color: var(--muted); }
+.badge.owner { margin-left: 8px; background: var(--brand-soft); border: 1px solid var(--brand-line); color: var(--brand); }
 .badge.pending { margin-left: 8px; background: transparent; border: 1px solid var(--brand-line); color: var(--brand); }
 
 .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 4px; }

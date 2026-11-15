@@ -40,6 +40,7 @@ Open **SQL Editor → New query**, paste the **whole contents** of each file bel
 | 3 | `20261114000000_season_archive_and_reset.sql` | the season name, closing a season with an archive, deleting unused players and fine types |
 | 4 | `20261115000000_admin_pending.sql` | the helpers behind the pending-invitation list and resending a code |
 | 5 | `20261116000000_admin_accept_invite.sql` | an invited person is only an admin after their first sign-in or after choosing a password; until then the invitation is pending |
+| 6 | `20261117000000_main_admin.sql` | the first admin is marked as the main admin and cannot be removed from the app |
 
 (Prefer the command line? `npx supabase link --project-ref <ref>` then `npx supabase db push` applies the same files.)
 

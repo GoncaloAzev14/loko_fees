@@ -89,6 +89,8 @@ export interface AdminUser {
   email: string
   /** Invited but has not chosen a password yet. Missing while the database migration has not been run. */
   pending?: boolean
+  /** The club's main admin: cannot be removed. Missing while the database migration has not been run. */
+  is_owner?: boolean
 }
 
 export interface ArchivedSeason {

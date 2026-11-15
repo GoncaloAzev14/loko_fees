@@ -49,9 +49,10 @@ export default function Admins() {
                   <div className="row-main">
                     <div className="row-title">
                       {a.email}{me && ' (você)'}
+                      {a.is_owner && <span className="badge owner">Principal</span>}
                       {a.pending && <span className="badge pending">Convite pendente</span>}
                     </div>
-                    {!me && (
+                    {!me && !a.is_owner && (
                       <div className="row-actions">
                         {a.pending && (
                           <button className="link" disabled={invite.busy} onClick={() => { setDone(null); invite.run(a.email) }}>
