@@ -38,7 +38,8 @@ Open **SQL Editor → New query**, paste the **whole contents** of each file bel
 | 1 | `20261112000000_init.sql` | tables, access rules (everyone reads, only admins write), the fines ledger views, late-fee function |
 | 2 | `20261113000000_admin_management.sql` | list, remove and promote admins from the app |
 | 3 | `20261114000000_season_archive_and_reset.sql` | the season name, closing a season with an archive, deleting unused players and fine types |
-| 4 | `20261115000000_admin_pending.sql` | shows which invited admins have not chosen a password yet, so they can be sent a new code |
+| 4 | `20261115000000_admin_pending.sql` | the helpers behind the pending-invitation list and resending a code |
+| 5 | `20261116000000_admin_accept_invite.sql` | an invited person is only an admin after their first sign-in or after choosing a password; until then the invitation is pending |
 
 (Prefer the command line? `npx supabase link --project-ref <ref>` then `npx supabase db push` applies the same files.)
 
@@ -188,6 +189,7 @@ At the end of each season use **Menu → Definições → Fechar época**: it ar
 | *Não foi possível carregar os dados* everywhere after a quiet period | Free Supabase projects pause after about a week without activity. Open the Supabase dashboard and click **Restore project**. |
 | The invitation email never arrives | Check the SMTP settings (step 4), look in spam, and remember the limit of 30 emails per hour. Without custom SMTP only members of your Supabase organization receive mail. |
 | The invitation link says expired or opens the wrong page | Links are single-use and can be used up by email scanners. The person opens the app, chooses **Entrar → Primeiro acesso**, asks for a code and sets the password there. Or an admin presses **Reenviar convite** on **Administradores**. Also check **Site URL** and **Redirect URLs** (step 3.4). |
+| An invited person shows as *Convite pendente* and cannot see admin screens | By design: an invitation only becomes admin access when the person signs in with their password or chooses one on **Primeiro acesso**. Use **Reenviar convite** to send a new code, or **Cancelar convite** to withdraw it. |
 | The email has a link but no code | The email templates were not updated: step 4b. |
 | *Código inválido ou expirado* | The code is only valid for a limited time and only the latest one works. Ask for a new one on **Primeiro acesso**. |
 | Inviting says *O convite foi enviado, mas não foi possível dar acesso de administrador* (older versions: *falhou a atribuição*) | The invitation email went out but the account was not added to `admins`. Redeploy the function (`npx supabase functions deploy invite-admin --no-verify-jwt`) and make sure migration 2 (`…_admin_management.sql`) was run. To fix a person already invited, run `insert into admins select id from auth.users where email = 'their@email' on conflict do nothing;` in the SQL Editor. |
