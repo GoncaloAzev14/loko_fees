@@ -4,7 +4,8 @@ import { SlidersIcon } from '../components/icons'
 import { Async, PlayerSelect } from '../components/ui'
 import { money, monthRange } from '../lib/format'
 import { STATUS_LABEL } from '../lib/labels'
-import { useBalances, useFineTypes, useLedger } from '../lib/hooks'
+import { useBalances, useFineTypes, useLedger, useQueuedEntries } from '../lib/hooks'
+import { withQueuedFines } from '../lib/overlay'
 import type { FineStatus } from '../lib/types'
 
 /** Who got fined, when and why. The filters stay pinned under the header while the list scrolls. */
@@ -27,6 +28,7 @@ export default function Fines() {
     [range, playerId, fineTypeId, status],
   )
   const ledger = useLedger(filter)
+  const queued = useQueuedEntries()
   const extra = [playerId, fineTypeId, status].filter(Boolean).length
   const period = (r: { from: string; to: string }) => range.from === r.from && range.to === r.to
 
@@ -89,7 +91,7 @@ export default function Fines() {
         </Async>
       </div>
 
-      <Async q={ledger}>{(rows) => <FineList rows={rows} groupByDate />}</Async>
+      <Async q={ledger}>{(rows) => <FineList rows={withQueuedFines(rows, queued, filter)} groupByDate />}</Async>
     </>
   )
 }

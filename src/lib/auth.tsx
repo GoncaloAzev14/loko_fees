@@ -1,6 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Session } from '@supabase/supabase-js'
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { isNetworkFailure } from './errors'
+import { rememberAdmin, rememberedAdmin, storedSession } from './offlineAuth'
 import { supabase } from './supabase'
 
 interface AuthState {
@@ -27,11 +29,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [recheck, setRecheck] = useState(0)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
+    // Offline, Supabase has no session once its access token has run out and cannot be refreshed.
+    // The sign-in is still stored on the phone: carry on as that person until there is a connection.
+    const orStored = (s: Session | null, offline: boolean) => s ?? (offline ? storedSession() : null)
+    supabase.auth.getSession().then(({ data, error }) => {
+      setSession(orStored(data.session, navigator.onLine === false || isNetworkFailure(error, error?.status)))
       setSessionLoaded(true)
     })
-    const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s))
+    const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(orStored(s, navigator.onLine === false)))
     return () => data.subscription.unsubscribe()
   }, [])
 
@@ -40,17 +45,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
     setAdmin(null)
     if (!uid) return
-    supabase.rpc('is_admin').then(async ({ data }) => {
-      let isAdmin = data === true
-      if (!isAdmin && acceptNext.current) {
+    supabase.rpc('is_admin').then(async ({ data, error, status }) => {
+      // Cannot ask the server (offline): use its last answer for this person. This only shapes the
+      // screens; the server still decides whether any change is allowed when it is sent.
+      const unreachable = isNetworkFailure(error, status)
+      let isAdmin = unreachable ? rememberedAdmin(uid) === true : data === true
+      if (!unreachable && !isAdmin && acceptNext.current) {
         // errors are ignored on purpose: before the migration there is nothing to accept
         await supabase.rpc('accept_admin_invite')
         isAdmin = (await supabase.rpc('is_admin')).data === true
       }
       acceptNext.current = false
       if (cancelled) return
+      if (!unreachable) rememberAdmin(uid, isAdmin)
       setAdmin(isAdmin)
-      if (isAdmin) {
+      if (isAdmin && !unreachable) {
         // Late fees are normally added by a daily job; this covers the days it did not run.
         await supabase.rpc('apply_late_fees_admin')
         qc.invalidateQueries()
@@ -60,6 +69,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cancelled = true
     }
   }, [uid, recheck, qc])
+
+  // Back online: ask again, quietly (no loading screen), in case rights changed while away.
+  useEffect(() => {
+    if (!uid) return
+    const ask = () =>
+      supabase.rpc('is_admin').then(({ data, error, status }) => {
+        if (isNetworkFailure(error, status)) return
+        rememberAdmin(uid, data === true)
+        setAdmin(data === true)
+      })
+    window.addEventListener('online', ask)
+    return () => window.removeEventListener('online', ask)
+  }, [uid])
 
   const value = useMemo<AuthState>(
     () => ({
@@ -71,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) {
           acceptNext.current = false
+          if (isNetworkFailure(error, error.status)) throw new Error('Sem ligação. Para entrar é preciso internet.')
           throw new Error('Email ou palavra-passe incorretos.')
         }
       },

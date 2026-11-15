@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { PlusIcon } from '../../components/icons'
-import { Async, ErrorNote } from '../../components/ui'
+import { Async, ErrorNote, SyncBadge } from '../../components/ui'
 import { addExpense, addIncome, deleteExpense, deleteIncome } from '../../lib/api'
 import { formatDate, money, parseAmount, todayISO } from '../../lib/format'
-import { useAction, useBalances, useExpenses, useIncomes, useLookups } from '../../lib/hooks'
+import { useAction, useBalances, useExpenses, useIncomes, useLookups, useQueuedEntries } from '../../lib/hooks'
+import { withQueuedExpenses, withQueuedIncomes } from '../../lib/overlay'
 
 type Kind = 'in' | 'out'
 
@@ -101,32 +102,39 @@ function ExpenseForm() {
 
 function IncomeList() {
   const q = useIncomes()
+  const queued = useQueuedEntries()
   const { players } = useLookups()
   const del = useAction(deleteIncome)
   return (
     <>
       <ErrorNote error={del.error} />
       <Async q={q}>
-        {(rows) =>
-          rows.length === 0 ? (
+        {(serverRows) => {
+          const rows = withQueuedIncomes(serverRows, queued)
+          return rows.length === 0 ? (
             <p className="empty">Ainda não há receitas.</p>
           ) : (
             <ul className="list">
               {rows.map((i) => (
-                <li key={i.id} className="row">
+                <li key={i.id} className={`row${i.sync ? ' waiting' : ''}`}>
                   <div className="row-main">
                     <div className="row-title">{i.description}</div>
                     <div className="row-sub">{formatDate(i.received_on)}{i.player_id && ` · ${players.get(i.player_id)?.name ?? ''}`}</div>
-                    <div className="row-actions">
-                      <button className="link danger" onClick={() => confirm('Apagar esta receita?') && del.run(i.id)}>Apagar</button>
-                    </div>
+                    {i.sync !== 'deleting' && (
+                      <div className="row-actions">
+                        <button className="link danger" onClick={() => confirm('Apagar esta receita?') && del.run(i.id)}>Apagar</button>
+                      </div>
+                    )}
                   </div>
-                  <div className="row-side amount good">+{money(i.amount)}</div>
+                  <div className="row-side">
+                    <div className="amount good">+{money(i.amount)}</div>
+                    {i.sync && <SyncBadge sync={i.sync} />}
+                  </div>
                 </li>
               ))}
             </ul>
           )
-        }
+        }}
       </Async>
     </>
   )
@@ -134,31 +142,38 @@ function IncomeList() {
 
 function ExpenseList() {
   const q = useExpenses()
+  const queued = useQueuedEntries()
   const del = useAction(deleteExpense)
   return (
     <>
       <ErrorNote error={del.error} />
       <Async q={q}>
-        {(rows) =>
-          rows.length === 0 ? (
+        {(serverRows) => {
+          const rows = withQueuedExpenses(serverRows, queued)
+          return rows.length === 0 ? (
             <p className="empty">Ainda não há despesas.</p>
           ) : (
             <ul className="list">
               {rows.map((x) => (
-                <li key={x.id} className="row">
+                <li key={x.id} className={`row${x.sync ? ' waiting' : ''}`}>
                   <div className="row-main">
                     <div className="row-title">{x.description}</div>
                     <div className="row-sub">{formatDate(x.spent_on)}</div>
-                    <div className="row-actions">
-                      <button className="link danger" onClick={() => confirm('Apagar esta despesa?') && del.run(x.id)}>Apagar</button>
-                    </div>
+                    {x.sync !== 'deleting' && (
+                      <div className="row-actions">
+                        <button className="link danger" onClick={() => confirm('Apagar esta despesa?') && del.run(x.id)}>Apagar</button>
+                      </div>
+                    )}
                   </div>
-                  <div className="row-side amount bad">−{money(x.amount)}</div>
+                  <div className="row-side">
+                    <div className="amount bad">−{money(x.amount)}</div>
+                    {x.sync && <SyncBadge sync={x.sync} />}
+                  </div>
                 </li>
               ))}
             </ul>
           )
-        }
+        }}
       </Async>
     </>
   )

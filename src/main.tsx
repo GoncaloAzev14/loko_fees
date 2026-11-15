@@ -18,7 +18,9 @@ document.addEventListener('touchmove', (e) => e.touches.length > 1 && e.preventD
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: true } },
+  // offlineFirst: ask even without a connection, so the service worker can answer from what it saved
+  // (otherwise a reloaded app offline would wait for the network forever).
+  defaultOptions: { queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: true, networkMode: 'offlineFirst' } },
 })
 
 createRoot(document.getElementById('root')!).render(

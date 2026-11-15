@@ -2,7 +2,7 @@ import type { UseQueryResult } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { money, moneyParts } from '../lib/format'
 import { STATUS_LABEL } from '../lib/labels'
-import type { Balance, FineStatus } from '../lib/types'
+import type { Balance, FineStatus, SyncMark } from '../lib/types'
 
 /** Renders query data, or a loading / error state. */
 export function Async<T>({ q, children }: { q: UseQueryResult<T>; children: (data: T) => ReactNode }) {
@@ -40,6 +40,18 @@ export function StatusBadge({ status, remaining, amount }: { status: FineStatus;
       {partial && ` · faltam ${money(remaining)}`}
     </span>
   )
+}
+
+const SYNC_LABEL: Record<SyncMark, string> = {
+  queued: 'Por sincronizar',
+  deleting: 'A apagar…',
+  cancelling: 'A anular…',
+  restoring: 'A repor…',
+}
+
+/** Marks a row that comes from the phone's outbox: saved here, not yet on the server. */
+export function SyncBadge({ sync }: { sync: SyncMark }) {
+  return <span className="badge sync" title="Guardado no telemóvel. Segue quando houver ligação.">{SYNC_LABEL[sync]}</span>
 }
 
 export function BalanceLine({ b }: { b: Balance }) {

@@ -1,6 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import * as api from './api'
+import { useAuth } from './auth'
+import { getSyncStatus, outbox, subscribeSyncStatus } from './sync'
 import type { LedgerFilter } from './types'
 
 export const useSummary = () => useQuery({ queryKey: ['summary'], queryFn: api.getSummary })
@@ -56,8 +58,9 @@ export function useAction<A extends unknown[]>(fn: (...args: A) => Promise<unkno
     async (...args: A) => {
       setState({ busy: true, error: null })
       try {
-        await fnRef.current(...args)
-        await qc.invalidateQueries()
+        const result = await fnRef.current(...args)
+        // Saved on the phone to be sent later: nothing changed on the server, so there is nothing to read again.
+        if (!(result as { queued?: boolean } | undefined)?.queued) await qc.invalidateQueries()
         setState({ busy: false, error: null })
         return true
       } catch (e) {
@@ -69,3 +72,27 @@ export function useAction<A extends unknown[]>(fn: (...args: A) => Promise<unkno
   )
   return { run, ...state }
 }
+
+// --- offline: what is waiting to be sent, and whether the phone has a connection ---
+
+/** The signed-in person's changes that are saved on the phone and not yet on the server (refused ones included). */
+export function useQueuedEntries() {
+  const { session } = useAuth()
+  const uid = session?.user.id
+  const all = useSyncExternalStore(outbox.subscribe, outbox.all)
+  return useMemo(() => (uid ? all.filter((e) => e.uid === uid) : []), [all, uid])
+}
+
+const subscribeOnline = (notify: () => void) => {
+  window.addEventListener('online', notify)
+  window.addEventListener('offline', notify)
+  return () => {
+    window.removeEventListener('online', notify)
+    window.removeEventListener('offline', notify)
+  }
+}
+/** What the phone says about its connection. It can say yes while the server is out of reach: see useSyncStatus. */
+export const useOnline = () => useSyncExternalStore(subscribeOnline, () => navigator.onLine)
+
+/** Is a sync running, and did the last attempt fail to reach the server. */
+export const useSyncStatus = () => useSyncExternalStore(subscribeSyncStatus, getSyncStatus)

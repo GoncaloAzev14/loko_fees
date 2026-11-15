@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import EnvBanner from './components/EnvBanner'
+import SyncManager from './components/SyncManager'
 import Layout from './components/Layout'
 import RequireAdmin from './components/RequireAdmin'
 import Access from './pages/Access'
@@ -24,6 +25,7 @@ export default function App() {
   return (
     <>
       <EnvBanner />
+      <SyncManager />
       <Routes>
         <Route path="login" element={<Login />} />
         <Route path="recover" element={<Access />} />

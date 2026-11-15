@@ -3,11 +3,12 @@ import { Link, useParams } from 'react-router-dom'
 import DebtChart from '../components/DebtChart'
 import { FineList } from '../components/FineList'
 import { ChevronLeftIcon, PlusIcon } from '../components/icons'
-import { Async, Avatar } from '../components/ui'
+import { Async, Avatar, SyncBadge } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { formatDate, money } from '../lib/format'
-import { useBalances, useLedger, usePayments } from '../lib/hooks'
-import type { Balance, FineStatus } from '../lib/types'
+import { useBalances, useLedger, usePayments, useQueuedEntries } from '../lib/hooks'
+import { withQueuedFines, withQueuedPayments } from '../lib/overlay'
+import type { Balance, FineStatus, LedgerRow } from '../lib/types'
 
 function headline(b: Balance) {
   if (b.credit > 0) return <>{b.name} tem <em>{money(b.credit)}</em> de crédito</>
@@ -21,6 +22,7 @@ export default function PlayerDetail() {
   const balances = useBalances()
   const ledger = useLedger({ playerId: id })
   const payments = usePayments(id)
+  const queued = useQueuedEntries()
   const [tab, setTab] = useState<'fines' | 'payments'>('fines')
   const [open, setOpen] = useState(true) // hide settled fines
 
@@ -31,6 +33,7 @@ export default function PlayerDetail() {
         if (!b) return <p className="muted pad">Jogador não encontrado. <Link to="/players">Voltar</Link></p>
         const hidden: FineStatus[] = ['paid', 'cancelled']
         const fineCount = ledger.data?.filter((r) => r.status !== 'cancelled').length
+        const shownFines = (rows: LedgerRow[]) => withQueuedFines(rows, queued, { playerId: id }) // plus what is waiting to be sent
         return (
           <>
             <p><Link to="/players" className="actions"><ChevronLeftIcon className="ic sm" />Jogadores</Link></p>
@@ -73,29 +76,33 @@ export default function PlayerDetail() {
                     <label className="check">
                       <input type="checkbox" checked={open} onChange={(e) => setOpen(e.target.checked)} /> Só por pagar
                     </label>
-                    <FineList showPlayer={false} rows={open ? rows.filter((r) => !hidden.includes(r.status)) : rows} />
+                    <FineList showPlayer={false} rows={open ? shownFines(rows).filter((r) => !hidden.includes(r.status)) : shownFines(rows)} />
                   </>
                 )}
               </Async>
             ) : (
               <Async q={payments}>
-                {(rows) =>
-                  rows.length === 0 ? (
+                {(serverRows) => {
+                  const rows = withQueuedPayments(serverRows, queued, id)
+                  return rows.length === 0 ? (
                     <p className="muted pad">Sem pagamentos registados.</p>
                   ) : (
                     <ul className="list">
                       {rows.map((p) => (
-                        <li key={p.id} className="row">
+                        <li key={p.id} className={`row${p.sync ? ' waiting' : ''}`}>
                           <div className="row-main">
                             <div className="row-title">{formatDate(p.paid_on)}</div>
                             {p.note && <div className="row-sub">{p.note}</div>}
                           </div>
-                          <div className="row-side amount good">+{money(p.amount)}</div>
+                          <div className="row-side">
+                            <div className="amount good">+{money(p.amount)}</div>
+                            {p.sync && <SyncBadge sync={p.sync} />}
+                          </div>
                         </li>
                       ))}
                     </ul>
                   )
-                }
+                }}
               </Async>
             )}
           </>

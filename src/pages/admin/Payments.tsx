@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Async, BalanceLine, ErrorNote, PlayerSelect } from '../../components/ui'
+import { Async, BalanceLine, ErrorNote, PlayerSelect, SyncBadge } from '../../components/ui'
 import { addPayment, deletePayment } from '../../lib/api'
 import { formatDate, money, parseAmount, todayISO } from '../../lib/format'
-import { useAction, useBalances, useLookups, usePayments } from '../../lib/hooks'
+import { useAction, useBalances, useLookups, usePayments, useQueuedEntries } from '../../lib/hooks'
+import { withQueuedPayments } from '../../lib/overlay'
 
 /** Record money received from a player. The form stays pinned while the list scrolls. */
 export default function Payments() {
@@ -11,6 +12,7 @@ export default function Payments() {
   const balances = useBalances()
   const payments = usePayments()
   const { players } = useLookups()
+  const queued = useQueuedEntries()
   const [playerId, setPlayerId] = useState(params.get('player') ?? '')
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(todayISO())
@@ -73,18 +75,23 @@ export default function Payments() {
       <Async q={payments}>
         {(rows) => (
           <ul className="list">
-            {rows.slice(0, 30).map((p) => (
-              <li key={p.id} className="row">
+            {withQueuedPayments(rows, queued).slice(0, 30).map((p) => (
+              <li key={p.id} className={`row${p.sync ? ' waiting' : ''}`}>
                 <div className="row-main">
                   <div className="row-title">{players.get(p.player_id)?.name ?? '…'}</div>
                   <div className="row-sub">
                     {formatDate(p.paid_on)}{p.note && ` · ${p.note}`}
                   </div>
-                  <div className="row-actions">
-                    <button className="link danger" disabled={del.busy} onClick={() => confirm('Apagar este pagamento?') && del.run(p.id)}>Apagar</button>
-                  </div>
+                  {p.sync !== 'deleting' && (
+                    <div className="row-actions">
+                      <button className="link danger" disabled={del.busy} onClick={() => confirm('Apagar este pagamento?') && del.run(p.id)}>Apagar</button>
+                    </div>
+                  )}
                 </div>
-                <div className="row-side amount good">{money(p.amount)}</div>
+                <div className="row-side">
+                  <div className="amount good">{money(p.amount)}</div>
+                  {p.sync && <SyncBadge sync={p.sync} />}
+                </div>
               </li>
             ))}
           </ul>

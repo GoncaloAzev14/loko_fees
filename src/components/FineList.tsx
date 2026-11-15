@@ -5,7 +5,7 @@ import { deleteFine, setFineCancelled } from '../lib/api'
 import { useAction, useLookups } from '../lib/hooks'
 import { fineName } from '../lib/labels'
 import type { LedgerRow } from '../lib/types'
-import { ErrorNote, StatusBadge } from './ui'
+import { ErrorNote, StatusBadge, SyncBadge } from './ui'
 
 /** Fines with their status. Admins also get cancel / delete buttons. */
 export function FineList({ rows, showPlayer = true, groupByDate = false }: { rows: LedgerRow[]; showPlayer?: boolean; groupByDate?: boolean }) {
@@ -17,7 +17,7 @@ export function FineList({ rows, showPlayer = true, groupByDate = false }: { row
   if (rows.length === 0) return <p className="muted pad">Sem multas para mostrar.</p>
 
   const item = (r: LedgerRow) => (
-    <li key={r.id} className={`row ${r.status}`}>
+    <li key={r.id} className={`row ${r.status}${r.sync ? ' waiting' : ''}`}>
       <div className="row-main">
         <div className="row-title">
           {showPlayer && (
@@ -29,9 +29,9 @@ export function FineList({ rows, showPlayer = true, groupByDate = false }: { row
         <div className="row-sub">
           {!groupByDate && <>{formatDate(r.fined_on)} · </>}
           {r.description && <>{r.description} · </>}
-          vence {formatDate(r.due_on)}
+          {r.due_on ? <>vence {formatDate(r.due_on)}</> : 'guardada no telemóvel'}
         </div>
-        {isAdmin && (
+        {isAdmin && (!r.sync || r.sync === 'queued') && (
           <div className="row-actions">
             <button className="link" disabled={cancel.busy} onClick={() => cancel.run(r.id, !r.cancelled)}>
               {r.cancelled ? 'Repor' : 'Anular'}
@@ -48,7 +48,7 @@ export function FineList({ rows, showPlayer = true, groupByDate = false }: { row
       </div>
       <div className="row-side">
         <div className="amount">{money(r.amount)}</div>
-        <StatusBadge status={r.status} remaining={r.remaining} amount={r.amount} />
+        {r.sync ? <SyncBadge sync={r.sync} /> : <StatusBadge status={r.status} remaining={r.remaining} amount={r.amount} />}
       </div>
     </li>
   )
