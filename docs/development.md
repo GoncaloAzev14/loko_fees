@@ -20,7 +20,31 @@ npm run dev:test
 - The app opens at http://localhost:5174, backed by an in-memory Postgres that runs the real migrations and the demo seed. Production is not involved and cannot be reached: the test address is handed to the app directly, so no `.env` file is read.
 - It is **fresh on every start**. Break things freely, press Ctrl+C, run it again.
 - A blue strip across the top says "Ambiente de teste · dados fictícios", so a test window is never mistaken for the real one.
-- The logins and the emailed code are listed in [the stand-in backend section](#3-the-stand-in-backend-no-docker). "Emails" are printed in the terminal instead of being sent.
+- It starts with [demo data](#what-is-in-the-dummy-data) and three test accounts, listed in [the stand-in backend section](#3-the-stand-in-backend-no-docker). "Emails" are printed in the terminal instead of being sent.
+
+### What is in the dummy data
+
+The dummy database starts from [`supabase/seed.sql`](../supabase/seed.sql), which is built from the club's own spreadsheet. So it is realistic, but it is **not invented**: the names, fines and payments come from that sheet.
+
+| What | Starting content |
+| --- | --- |
+| People | 23: 21 players and 2 technical staff, all active |
+| Fine types | 9, with their default amounts |
+| Fines | 91 regular fines and 7 late fees, dated 1 October to 8 November 2026 |
+| Payments | 48, adding up to 144 € |
+| Income | 2 entries (prizes and a gift), adding up to 140 € |
+| Expenses | none |
+| Settings | late fee 5 €, due day 7, season 2026/27 |
+| The box | 284 € in, 0 € out, so 284 € |
+| Owed | 108 € in total, of which 38 € overdue, and 2 € of player credit |
+
+Three things to know when you look at it:
+
+- **Amounts are fixed, statuses are not.** Whether a fine is *pending* or *overdue* is worked out against today's date, so the split between them changes as time passes. The totals above are what the data adds up to before any late fees are applied.
+- **The first admin login adds late fees.** Opening the app as an admin applies the late fees that are due today, so the amount owed rises a little the first time. That is the real behaviour, not a fault.
+- **Everything resets on restart.** Entries you add, fines you cancel and seasons you close are all lost when you stop `npm run dev:test`, which is the point.
+
+To try a different starting point, change `supabase/seed.sql`. The tests in `supabase/tests/seed.test.ts` check the sheet's totals, so they have to change with it. The accounts are not in the seed: they are created by `scripts/fake-supabase.mjs`.
 
 ### If you run the app against the real project by mistake
 
