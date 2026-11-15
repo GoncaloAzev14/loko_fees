@@ -8,7 +8,7 @@ Reference for how FC Lokomotiv's fines and box app is built and run. For the fir
 | [Data model](data-model.md) | The tables, views and functions, who can read and write what, and the money rules |
 | [Sign-in and admins](auth-and-admins.md) | How admins are invited, what "pending" means, first access with a code, the main admin |
 | [Operations](operations.md) | Releasing a change, running migrations, deploying the function, Supabase settings, reading production |
-| [Development](development.md) | Running it locally, the tests, how to change things safely |
+| [Development](development.md) | Running it locally, **testing with a dummy database that cannot touch production**, the tests, how to change things safely |
 
 ## The project in one paragraph
 

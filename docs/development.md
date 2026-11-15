@@ -2,11 +2,54 @@
 
 How to run, test and change the project locally.
 
+- [Testing without touching production](#testing-without-touching-production)
 - [Running it](#running-it)
 - [Tests](#tests)
 - [Changing things](#changing-things)
 - [Scripts and generated files](#scripts-and-generated-files)
 - [Working with git](#working-with-git)
+
+## Testing without touching production
+
+For day-to-day work use the dummy database. One command starts it and the app together:
+
+```bash
+npm run dev:test
+```
+
+- The app opens at http://localhost:5174, backed by an in-memory Postgres that runs the real migrations and the demo seed. Production is not involved and cannot be reached: the test address is handed to the app directly, so no `.env` file is read.
+- It is **fresh on every start**. Break things freely, press Ctrl+C, run it again.
+- A blue strip across the top says "Ambiente de teste · dados fictícios", so a test window is never mistaken for the real one.
+- The logins and the emailed code are listed in [the stand-in backend section](#3-the-stand-in-backend-no-docker). "Emails" are printed in the terminal instead of being sent.
+
+### If you run the app against the real project by mistake
+
+`npm run dev` uses whatever is in `.env`. If that points at the hosted Supabase project, the app shows a red strip, **"Atenção: a usar a base de dados REAL"**: everything clicked in that window changes the real data. The published site never shows either strip.
+
+### What the dummy database cannot show you
+
+It imitates Supabase, it is not Supabase. Real email delivery, the exact behaviour of Supabase Auth (codes, invitation links, rate limits) and the Edge Function cannot be tested on it. For those, use a second Supabase project.
+
+### A second Supabase project for realistic testing (optional)
+
+A free Supabase account can hold two active projects. A second one, kept only for testing, behaves exactly like production but holds nothing real.
+
+1. Create a new project in Supabase (name it for example `loko-fees-test`). Never put real members in it.
+2. In its SQL Editor run every file in `supabase/migrations/`, in order, once each. Add the demo data with `supabase/seed.sql` if you want some (never do this in production).
+3. Create a user (Authentication, Users, Add user, tick Auto Confirm) and make it the main admin: `insert into admins (user_id, is_owner) select id, true from auth.users where email = 'you@example.com';`
+4. Authentication, URL Configuration: set **Site URL** to `http://localhost:5175` and add `http://localhost:5175/set-password` to **Redirect URLs**.
+5. To test real emails, set up SMTP and the four email templates here too ([operations](operations.md#supabase-dashboard-settings)). Using your own address as the only invited person keeps it harmless.
+6. Deploy the function to it: `npx supabase functions deploy invite-admin --no-verify-jwt --remote=<test project ref>`. Take care to give the **test** project's reference, not production's.
+7. Create `.env.staging` (git-ignored) with that project's URL and publishable key:
+
+   ```
+   VITE_SUPABASE_URL=https://<test project ref>.supabase.co
+   VITE_SUPABASE_ANON_KEY=<its publishable key>
+   ```
+
+8. Run `npm run dev:staging`. The app opens at http://localhost:5175 with a blue "Ambiente de teste · projeto de teste" strip.
+
+Keep the test project's migrations in step with production: when you add a migration, run it in both.
 
 ## Running it
 
@@ -16,7 +59,7 @@ Needs Node 20 or newer. Install once:
 npm install
 ```
 
-There are three ways to have a backend. Pick one.
+There are three ways to have a backend. For normal work, prefer `npm run dev:test` above, which is the third one set up for you.
 
 ### 1. The real Supabase project
 
@@ -45,6 +88,9 @@ The README's [Run locally](../README.md#run-locally) section shows how to create
 ```bash
 npm run dev:fake         # backend on http://127.0.0.1:54321
 npm run dev:fake:web     # the app on http://localhost:5174, in Vite's "fake" mode
+
+# or both in one go, without needing .env.fake:
+npm run dev:test
 ```
 
 `dev:fake:web` reads `.env.fake` (git-ignored) so it never touches your real `.env` or the server on port 5173. Put these two lines in it (the key can be any text):
