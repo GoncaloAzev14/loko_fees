@@ -69,26 +69,3 @@ export function useAction<A extends unknown[]>(fn: (...args: A) => Promise<unkno
   )
   return { run, ...state }
 }
-
-/** useState persisted in localStorage; silently falls back to memory if storage is blocked. */
-export function useLocalState(key: string, initial: string) {
-  const [value, setValue] = useState(() => {
-    try {
-      return localStorage.getItem(key) ?? initial
-    } catch {
-      return initial
-    }
-  })
-  const set = useCallback(
-    (v: string) => {
-      setValue(v)
-      try {
-        localStorage.setItem(key, v)
-      } catch {
-        /* ignore */
-      }
-    },
-    [key],
-  )
-  return [value, set] as const
-}

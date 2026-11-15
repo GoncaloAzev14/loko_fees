@@ -1,15 +1,13 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { AlertIcon, ArrowRightIcon, CheckIcon, SearchIcon, UsersIcon } from '../components/icons'
-import { Async, Avatar, BalanceLine, BigMoney, PlayerSelect } from '../components/ui'
+import { Link } from 'react-router-dom'
+import { AlertIcon, ArrowRightIcon, CheckIcon, UsersIcon } from '../components/icons'
+import { Async, BigMoney } from '../components/ui'
 import { formatDate, money } from '../lib/format'
-import { useBalances, useLedger, useLocalState, useSummary } from '../lib/hooks'
+import { useBalances, useLedger, useSummary } from '../lib/hooks'
 import type { Balance } from '../lib/types'
 
 export default function Dashboard() {
   const summary = useSummary()
   const balances = useBalances()
-  const [playerId, setPlayerId] = useLocalState('loko.player', '')
-  const navigate = useNavigate()
 
   return (
     <>
@@ -28,7 +26,6 @@ export default function Dashboard() {
 
       <Async q={balances}>
         {(list) => {
-          const me = list.find((b) => b.player_id === playerId)
           const active = list.filter((b) => b.active)
           const debtors = active.filter((b) => b.outstanding > 0).sort((a, b) => b.outstanding - a.outstanding)
           const overdue = active.filter((b) => b.overdue > 0)
@@ -36,13 +33,6 @@ export default function Dashboard() {
           const sum = (xs: Balance[], k: 'outstanding' | 'overdue') => xs.reduce((s, b) => s + b[k], 0)
           return (
             <>
-              <div className="srch">
-                <SearchIcon className="ic sm" />
-                <PlayerSelect ariaLabel="Ver um jogador" balances={list} value={playerId} onChange={setPlayerId} placeholder="Ver um jogador" />
-                <button className="go" disabled={!me} onClick={() => me && navigate(`/players/${me.player_id}`)}>Ver</button>
-              </div>
-              {me && <p className="me"><strong>{me.name}</strong>: <BalanceLine b={me} /></p>}
-
               <h2>Estado das dívidas</h2>
               <div className="trio">
                 <div className="t3">
@@ -64,23 +54,6 @@ export default function Dashboard() {
                 <>
                   <h2>Maior dívida</h2>
                   <TopDebt b={debtors[0]} />
-                  {debtors.length > 1 && (
-                    <>
-                      <h2>Outras dívidas</h2>
-                      <ul className="list">
-                        {debtors.slice(1, 5).map((b) => (
-                          <li key={b.player_id} className="row">
-                            <Avatar name={b.name} />
-                            <div className="row-main">
-                              <Link className="row-title" to={`/players/${b.player_id}`}>{b.name}</Link>
-                              {b.overdue > 0 && <div className="row-sub">{money(b.overdue)} vencido</div>}
-                            </div>
-                            <div className="row-side amount bad">{money(b.outstanding)}</div>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
                 </>
               )}
             </>

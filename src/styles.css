@@ -313,7 +313,6 @@ input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); opaci
 }
 .srch select { border: 0; background-color: transparent; min-height: 0; padding: 0 30px 0 0; flex: 1; background-position: calc(100% - 10px) 50%, calc(100% - 5px) 50%; box-shadow: none; }
 .srch:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(242, 92, 31, 0.18); }
-.me { margin: 12px 2px 0; }
 
 .chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px; }
 .chips.wrap { flex-wrap: wrap; overflow: visible; }
