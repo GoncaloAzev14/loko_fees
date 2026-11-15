@@ -53,6 +53,8 @@ src/
     hooks.ts                 TanStack Query hooks over api.ts
     auth.tsx                 session, admin check, sign in / out
     types.ts                 shapes of the data
+    outbox.ts, sync.ts       offline: the queue of saved entries and sending them (see offline.md)
+    overlay.ts, errors.ts    waiting entries shown in lists; "try later" versus "no"
     format.ts, season.ts, ... small pure helpers (with tests)
   styles.css                 the whole theme
 supabase/
@@ -68,7 +70,7 @@ docs/                        this documentation
 
 ## One layer for the backend
 
-Screens never call Supabase directly. They use hooks in `lib/hooks.ts`, which call functions in `lib/api.ts`. That file is the whole contract with the backend, so a change to a table or function usually touches `api.ts`, `types.ts` and one page.
+Screens never call Supabase directly. They use hooks in `lib/hooks.ts`, which call functions in `lib/api.ts`. That file is the whole contract with the backend, so a change to a table or function usually touches `api.ts`, `types.ts` and one page. The everyday money writes in it go through `lib/sync.ts`, which sends them straight away or, offline, saves them for later.
 
 Reads go to the three views (`fine_ledger`, `player_balance`, `club_summary`) and plain tables. Anything involving a rule (settling payments, late fees, closing a season, admin changes) is done **in the database**, never recomputed in the browser.
 
@@ -104,7 +106,9 @@ The page itself never scrolls: `body` is fixed and `#root` is the only scroller,
 
 ## Offline and updates
 
-The service worker caches the app files and keeps the last answers from the REST API (`NetworkFirst`, 5 second timeout, 30 days), so the app opens and shows the last data without a connection. Writes need a connection.
+The service worker caches the app files and keeps the last answers from the REST API (`NetworkFirst`, 5 second timeout, 30 days), so the app opens and shows the last data without a connection. The app asks for data even when offline (`networkMode: 'offlineFirst'`), so those saved answers are used.
+
+Admins can keep working offline: the day-to-day entries (fines, payments, income, expenses, and cancelling or deleting them) are saved on the phone and sent when the connection returns, safely and in order. Everything else, including sign-in, needs a connection. The full picture is in [offline](offline.md).
 
 Updates are automatic. An installed iPhone app picks up a new version after being closed and reopened (twice in practice). The home-screen icon only changes by removing the app and adding it again.
 
