@@ -24,27 +24,28 @@ npm run dev:test
 
 ### What is in the dummy data
 
-The dummy database starts from [`supabase/seed.sql`](../supabase/seed.sql), which is built from the club's own spreadsheet. So it is realistic, but it is **not invented**: the names, fines and payments come from that sheet.
+The dummy database starts from [`supabase/seed.sql`](../supabase/seed.sql). **Everything in it is invented**: the names are made up, and the fines, payments and income are produced by a script with a fixed random seed. It describes no real person or club, so it can be shared freely. (Any resemblance to a real name is a coincidence.)
 
 | What | Starting content |
 | --- | --- |
 | People | 23: 21 players and 2 technical staff, all active |
-| Fine types | 9, with their default amounts |
-| Fines | 91 regular fines and 7 late fees, dated 1 October to 8 November 2026 |
-| Payments | 48, adding up to 144 € |
-| Income | 2 entries (prizes and a gift), adding up to 140 € |
+| Fine types | 9, the club's catalog of rules with default amounts (rules, not personal data) |
+| Fines | 71 regular fines and 8 late fees, dated 1 October to 8 November 2026 |
+| Payments | 46, adding up to 171 € |
+| Income | 2 entries (a prize and a gift), adding up to 140 € |
 | Expenses | none |
+| Credit | one player has 2 € of credit |
 | Settings | late fee 5 €, due day 7, season 2026/27 |
-| The box | 284 € in, 0 € out, so 284 € |
-| Owed | 108 € in total, of which 38 € overdue, and 2 € of player credit |
+| The box | 311 € in, 0 € out, so 311 € |
+| Owed | 117 € in total, of which 43 € overdue, from 15 players |
 
 Three things to know when you look at it:
 
-- **Amounts are fixed, statuses are not.** Whether a fine is *pending* or *overdue* is worked out against today's date, so the split between them changes as time passes. The totals above are what the data adds up to before any late fees are applied.
-- **The first admin login adds late fees.** Opening the app as an admin applies the late fees that are due today, so the amount owed rises a little the first time. That is the real behaviour, not a fault.
+- **Amounts are fixed, statuses are not.** Whether a fine is *pending* or *overdue* is worked out against today's date, so the split between them changes as time passes. The totals above do not change.
+- **Late fees are already in.** The last line of the seed applies the late fees due on 8 November with the real rule, so the demo is consistent with the app. As time passes, opening the app as an admin adds the next ones when they fall due (for November's fines, after 7 December).
 - **Everything resets on restart.** Entries you add, fines you cancel and seasons you close are all lost when you stop `npm run dev:test`, which is the point.
 
-To try a different starting point, change `supabase/seed.sql`. The tests in `supabase/tests/seed.test.ts` check the sheet's totals, so they have to change with it. The accounts are not in the seed: they are created by `scripts/fake-supabase.mjs`.
+To change the starting point, edit the lists at the top of [`scripts/build_seed.py`](../scripts/build_seed.py) or its seed number, and run `python3 scripts/build_seed.py`. The figures above come from the current seed, so regenerating may change them; the tests in `supabase/tests/seed.test.ts` check that the data is consistent, not exact numbers. The test accounts are not in the seed: they are created by `scripts/fake-supabase.mjs`.
 
 ### If you run the app against the real project by mistake
 
@@ -183,9 +184,9 @@ Notes on the front end:
 | Command | Does |
 | --- | --- |
 | `npm run logo` | Rebuilds the logo, app icons and favicon from `branding/original.png` (the club crest). Writes into `public/` and `branding/`. |
-| `python scripts/build_seed.py "Lokomotiv 26-27.xlsx"` | Regenerates `supabase/seed.sql` (demo data) from the club's spreadsheet. Needs `pip install openpyxl`. |
+| `python3 scripts/build_seed.py` | Regenerates `supabase/seed.sql`, the invented demo data. No dependencies. |
 
-`supabase/seed.sql` is demo data. **Never run it on a real club's database.**
+`supabase/seed.sql` is invented demo data. **Never run it on a real club's database.**
 
 ## Working with git
 
