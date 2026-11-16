@@ -45,7 +45,7 @@ The pieces, in the order that matters:
 2. **Send or save.** Every everyday write goes through one function. With a connection and an empty outbox it sends straight away and a refusal is shown as before. Otherwise it saves. Changes are never sent out of order: while anything is waiting, new changes queue behind it. ([`lib/sync.ts`](../src/lib/sync.ts))
 3. **Sending twice must not double the money.** Every new row gets its own id on the phone, and is sent as "insert, and do nothing if that id exists". If an answer is lost on the way and the entry is sent again, it is still one row. Deletes and cancels are harmless to repeat. This is tested against the database.
 4. **Tidying the queue.** Deleting something that was never sent just removes it from the outbox; cancelling it edits it; a later cancel replaces an earlier one. Nothing pointless is sent.
-5. **When it sends.** When the phone says it is back online, when the app comes to the front, every 30 seconds while something waits, at start-up, and on the **Sincronizar** button. ([`components/SyncManager.tsx`](../src/components/SyncManager.tsx))
+5. **When it sends.** When the phone says it is back online, when the app comes to the front, every 30 seconds while something waits, at start-up, and on the **Sincronizar agora** button. ([`components/SyncManager.tsx`](../src/components/SyncManager.tsx))
 6. **After sending**, every list and total is read again from the server.
 
 Reading offline is handled separately. A service worker keeps the app itself and the last answer of every page, and the app asks for data even when offline so that saved answers are used ([`vite.config.ts`](../vite.config.ts), [`main.tsx`](../src/main.tsx)). The sign-in is kept on the phone, and so is the last answer to "is this person an admin?", so the admin screens stay available ([`lib/offlineAuth.ts`](../src/lib/offlineAuth.ts)). That cached answer only decides what is shown. The server still decides, entry by entry, what is allowed when they are sent.
@@ -53,8 +53,8 @@ Reading offline is handled separately. A service worker keeps the app itself and
 ## What the screen shows
 
 - **Lists** (the fines list, a player's page, Caixa, payments, income and expenses) show waiting entries straight away, marked **Por sincronizar**. A fine, payment, income or expense waiting to be deleted shows **A apagar…** and a waiting cancel shows **A anular…** or **A repor…**.
-- **Totals do not move yet.** The box, who owes what, and whether a fine is pending, overdue or paid are all worked out by the database. They change after the entries are sent, and the bar says so. This keeps the money rules in one place instead of copying them into the app.
-- **A bar** above the tab bar appears when there is something to say: *Sem ligação*, how many entries wait, *A sincronizar…*, or *Servidor sem resposta* when the phone thinks it is online but the server cannot be reached. Tapping it opens the list of waiting entries, where each can be discarded.
+- **Totals do not move yet.** The box, who owes what, and whether a fine is pending, overdue or paid are all worked out by the database. They change after the entries are sent, and the panel says so. This keeps the money rules in one place instead of copying them into the app.
+- **A small chip in the header**, next to *Sair*, appears only when there is something to say: *Offline*, how many entries wait (*Offline · 2*, *2 por enviar*), *A sincronizar*, or *Sem resposta* when the phone thinks it is online but the server cannot be reached. It sits in the header, not over the page, so it never covers a button. Tapping it opens a panel with the full message and the list of waiting entries, where each can be discarded; tapping outside closes it. On wide screens the chip is under the menu in the sidebar.
 - **Not accepted** entries stay in that list with the server's reason, and can be tried again or discarded.
 
 ## Limits you should know about
@@ -78,15 +78,16 @@ If the server **cannot be reached** (no answer, a gateway error, an expired sess
 | File | Role |
 | --- | --- |
 | `lib/outbox.ts` | The queue: storage, folding changes together, sending in order. Pure logic over an injected storage. |
-| `lib/sync.ts` | Send or save, the sending itself, the status the bar shows. |
+| `lib/sync.ts` | Send or save, the sending itself, the status the chip shows. |
 | `lib/errors.ts` | `ApiError`, and the single rule for "try later" versus "no". |
 | `lib/overlay.ts` | Puts waiting entries on top of lists, for display only. |
 | `lib/offlineAuth.ts` | The stored sign-in and the remembered admin answer. |
-| `components/SyncManager.tsx` | Triggers the sending, draws the bar and the sheet. |
+| `components/SyncManager.tsx` | Triggers the sending. Draws nothing. |
+| `components/SyncChip.tsx` | The header chip and its panel. |
 
 **Adding another write that works offline:** make it a draft in `lib/api.ts` (insert with a new id, delete, or cancel), add its table to `Table` in `outbox.ts` if it is new, and show it in the list through `lib/overlay.ts`. Anything needing the database to compute a result, or that must not be done blind (settings, seasons, admins), should stay online-only.
 
-**Trying it by hand.** Run `npm run dev:test`, sign in as the main admin, then switch the browser's network to Offline in its developer tools. Register a fine or a payment, see it marked, switch back to Online, and watch the bar send it. To simulate a server that is down while the phone says online, stop the backend process instead.
+**Trying it by hand.** Run `npm run dev:test`, sign in as the main admin, then switch the browser's network to Offline in its developer tools. Register a fine or a payment, see it marked, switch back to Online, and watch the chip send it. To simulate a server that is down while the phone says online, stop the backend process instead.
 
 **Tests.** `src/lib/outbox.test.ts` (the queue and its folding rules), `src/lib/sync.test.ts` (saving, order, retries, refusals, no session, two users, with a stand-in for the server), `src/lib/overlay.test.ts` (what lists show) and `supabase/tests/offline.test.ts` (sending the same entry twice makes one row, under the real access rules).
 

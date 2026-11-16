@@ -96,3 +96,12 @@ export const useOnline = () => useSyncExternalStore(subscribeOnline, () => navig
 
 /** Is a sync running, and did the last attempt fail to reach the server. */
 export const useSyncStatus = () => useSyncExternalStore(subscribeSyncStatus, getSyncStatus)
+
+/** Everything the sync indicator needs: what waits, what was refused, the connection, and whether a sync runs. */
+export function useSyncSummary() {
+  const entries = useQueuedEntries()
+  const online = useOnline()
+  const status = useSyncStatus()
+  const waiting = entries.filter((e) => !e.failed).length
+  return { entries, online, status, waiting, failed: entries.length - waiting }
+}

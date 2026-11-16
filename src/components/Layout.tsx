@@ -5,6 +5,7 @@ import { useClubName } from '../lib/hooks'
 import { ADMIN_LINKS } from './adminLinks'
 import { HomeIcon, LoginIcon, ReceiptIcon, UsersIcon, WalletIcon } from './icons'
 import Logo from './Logo'
+import SyncChip from './SyncChip'
 import TabBar from './TabBar'
 
 const nav = ({ isActive }: { isActive: boolean }) => (isActive ? 'active' : undefined)
@@ -14,7 +15,7 @@ function Brand() {
   return (
     <div className="brand">
       <Logo className="brand-logo" />
-      {name}
+      <span className="brand-name">{name}</span>
     </div>
   )
 }
@@ -59,13 +60,17 @@ export default function Layout() {
             <NavLink to="/login" className={nav}><LoginIcon />Entrar (admin)</NavLink>
           )}
         </nav>
+        <SyncChip />
         {session && <button className="link signout" onClick={signOut}>Terminar sessão</button>}
       </aside>
 
       <header className="topbar">
         <div className="topbar-in">
           <Brand />
-          {session && <button className="link" onClick={signOut}>Sair</button>}
+          <div className="topbar-end">
+            <SyncChip />
+            {session && <button className="link" onClick={signOut}>Sair</button>}
+          </div>
         </div>
       </header>
 
