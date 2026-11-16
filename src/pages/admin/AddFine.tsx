@@ -70,11 +70,11 @@ export default function AddFine() {
                   </div>
 
                   <div className="cf-row">
-                    <label className="field-inline" style={{ flex: '0 0 148px' }}>
+                    <label className="field-inline" style={{ flex: '0 0 170px' }}>
                       <span>Data</span>
                       <input type="date" aria-label="Data" required value={date} onChange={(e) => setDate(e.target.value)} />
                     </label>
-                    <input aria-label="Descrição (opcional)" placeholder="Descrição (opcional)" value={description} onChange={(e) => setDescription(e.target.value)} />
+                    <input aria-label="Descrição (opcional)" placeholder="Descrição" value={description} onChange={(e) => setDescription(e.target.value)} />
                   </div>
 
                   <div className="field-row" style={{ marginTop: 4 }}>
