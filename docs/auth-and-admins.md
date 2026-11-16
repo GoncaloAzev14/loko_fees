@@ -73,6 +73,8 @@ There are two ways in. Both end with a password and an accepted invitation.
 
 **1. The link in the email.** It signs the person in (without a password) and lands on `/set-password`, where they choose one. Links work **once**, and email scanners can use them up, so there is a second way.
 
+**The link and the code in one email are the same one-time key.** Using either spends both: someone who opens the link and then types the code is told the code is invalid or expired. The email says to use only one. If the person is already signed in by the link, they do not need a code at all: the app takes them to choose a password (see below).
+
 **2. Primeiro acesso (`/recover`), with a code.** No link needed:
 
 ```mermaid
@@ -106,6 +108,14 @@ Details that matter:
 Step 2 is the only way a pending invitation becomes active. A plain session (for example from opening the invitation link and doing nothing) never accepts it.
 
 A signed-in person who is not an admin and has a pending invitation sees "O seu convite ainda não foi concluído" on the login page with a link to finish. Anyone else signed in but not an admin just sees that they have no admin rights. The pending check only ever reports on the caller's own invitation.
+
+### Signed in by the link, but no password yet
+
+Opening the link signs the person in, but they are not an admin until they choose a password. The app handles that state on purpose:
+
+- The first time the app opens for them, it takes them straight to **Escolher palavra-passe**. After that they can look around freely.
+- If they go to the login page, it says "O seu convite ainda não foi concluído" with a button to **Escolher palavra-passe**. It never signs them out: their session is the proof of their email, and a code that is already spent cannot replace it.
+- Choosing a password accepts the invitation, and they are an admin from then on.
 
 ## The main admin
 

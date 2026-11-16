@@ -102,9 +102,14 @@ An invitation link works only once, and email scanners (Outlook is known for it)
 <h2>FC Lokomotiv</h2>
 <p>O seu código de acesso:</p>
 <p style="font-size:28px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
-<p>Na app, escolha <b>Entrar → Primeiro acesso</b>, escreva o seu email e este código, e escolha a palavra-passe.</p>
-<p>Em alternativa, <a href="{{ .ConfirmationURL }}">abra esta ligação</a> (só funciona uma vez).</p>
+<p>Use <b>só uma</b> destas duas formas. São o mesmo acesso: usar uma deixa a outra de valer.</p>
+<ol>
+  <li>Na app, escolha <b>Entrar → Primeiro acesso → Já tenho um código</b>, escreva o seu email, este código e a palavra-passe; <b>ou</b></li>
+  <li><a href="{{ .ConfirmationURL }}">abra esta ligação</a> e escolha a palavra-passe.</li>
+</ol>
 ```
+
+The code and the link in one email are **the same one-time key**: whichever is used first spends both. That is why the text says to use only one. Saying so matters, because someone who taps the link and then types the code gets "invalid or expired" for a code that looks perfectly fine.
 
 Also open **Authentication → Sign In / Providers → Email** and raise **Email OTP Expiration** to `86400` (24 hours) so a code does not run out the same hour.
 
@@ -196,7 +201,7 @@ At the end of each season use **Menu → Definições → Fechar época**: it ar
 | The invitation link says expired or opens the wrong page | Links are single-use and can be used up by email scanners. The person opens the app, chooses **Entrar → Primeiro acesso**, asks for a code and sets the password there. Or an admin presses **Reenviar convite** on **Administradores**. Also check **Site URL** and **Redirect URLs** (step 3.4). |
 | An invited person shows as *Convite pendente* and cannot see admin screens | By design: an invitation only becomes admin access when the person signs in with their password or chooses one on **Primeiro acesso**. Use **Reenviar convite** to send a new code, or **Cancelar convite** to withdraw it. |
 | The email has a link but no code | The email templates were not updated: step 4b. |
-| *Código inválido ou expirado* | The code is only valid for a limited time and only the latest one works. Ask for a new one on **Primeiro acesso**. |
+| *Código inválido ou expirado*, for a code that was just typed correctly | Most often the **link in the same email was opened first**: the link and the code are one key, and using either spends both. Otherwise the code is old (only the newest one works). Ask for a new code on **Primeiro acesso**, or press **Reenviar convite**, and use only one way. If the person is already signed in by the link, the app takes them to choose a password; no code is needed. |
 | Inviting says *O convite foi enviado, mas não foi possível dar acesso de administrador* (older versions: *falhou a atribuição*) | The invitation email went out but the account was not added to `admins`. Redeploy the function (`npx supabase functions deploy invite-admin --no-verify-jwt`) and make sure migration 2 (`…_admin_management.sql`) was run. To fix a person already invited, run `insert into admins select id from auth.users where email = 'their@email' on conflict do nothing;` in the SQL Editor. |
 | Inviting fails with *Invalid JWT* | Redeploy the function with `npx supabase functions deploy invite-admin --no-verify-jwt`. |
 | The deploy Action fails at *Get Pages site* | Pages is not enabled for Actions. Settings → Pages → Source: **GitHub Actions**, then **Re-run all jobs**. |
