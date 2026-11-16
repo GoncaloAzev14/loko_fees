@@ -79,7 +79,7 @@ There are two ways in. Both end with a password and an accepted invitation.
 flowchart TD
     A[Login screen: Primeiro acesso] --> B{Choose}
     B -->|Enviar-me um código| C[Type email]
-    C --> D[Email sent with a 6-digit code]
+    C --> D[Email sent with a numeric code]
     D --> E[Type code and new password]
     B -->|Já tenho um código| F[Type email, code and new password]
     E --> G[Code signs the person in]

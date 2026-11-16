@@ -81,6 +81,9 @@ These live only in the dashboard. If invitations misbehave, check them first.
 | Custom SMTP | Authentication, Emails, SMTP Settings | Your own sender (Gmail with an app password, or Resend). Without it only members of your Supabase organization receive mail, at a very low rate. |
 | Email templates | Authentication, Emails, Templates | **Invite user, Confirm signup, Magic link, Reset password** all show the code. Text in the [README](../README.md#4b-put-a-code-in-the-invitation-emails). |
 | Email OTP expiration | Authentication, Sign In / Providers, Email | `86400` (24 hours) so a code does not run out the same hour. |
+| Minimum password length | Authentication, Sign In / Providers, Email | `10`. The app asks for the same, but only the server enforces it. |
+| Password requirements | Authentication, Sign In / Providers, Email | Letters and digits. |
+| Rate limit for sign-ups and sign-ins | Authentication, Rate Limits | `10` per 5 minutes per IP (the default is 30). |
 
 Why all four templates: which one Supabase uses for a code depends on whether the account has ever been confirmed, so the code must be in each.
 

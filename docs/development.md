@@ -131,7 +131,7 @@ Accounts it knows:
 | --- | --- | --- |
 | `admin@loko.test` | `admin123` | The main admin |
 | `viewer@loko.test` | `viewer123` | Signed in, not an admin |
-| `daniel@loko.test` | none | An invited admin with a pending invitation. On **Primeiro acesso** the emailed code is always `123456`. |
+| `daniel@loko.test` | none | An invited admin with a pending invitation. On **Primeiro acesso** the emailed code is always `12345678`. |
 
 "Emails" are printed in the backend's console instead of being sent. Inviting a new address creates a pending admin you can then finish through **Primeiro acesso** with the same code.
 

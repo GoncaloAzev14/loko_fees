@@ -7,6 +7,7 @@ Reference for how FC Lokomotiv's fines and box app is built and run. For the fir
 | [Architecture](architecture.md) | How the pieces fit, the folder layout, the routes, how it is built and deployed |
 | [Data model](data-model.md) | The tables, views and functions, who can read and write what, and the money rules |
 | [Sign-in and admins](auth-and-admins.md) | How admins are invited, what "pending" means, first access with a code, the main admin |
+| [Security](security.md) | What protects the app, the settings that must stay as they are, the content-security policy, known gaps (no two-factor yet), how to check it again |
 | [Working offline](offline.md) | What works without a connection, how entries are saved and sent later, what the screen shows, the limits |
 | [Operations](operations.md) | Releasing a change, running migrations, deploying the function, Supabase settings, reading production |
 | [Development](development.md) | Running it locally, **testing with a dummy database (with demo data) that cannot touch production**, the tests, how to change things safely |

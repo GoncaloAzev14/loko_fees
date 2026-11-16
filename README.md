@@ -7,7 +7,7 @@ Anyone can look things up without logging in; admins log in to register fines an
 
 **Live site:** https://goncaloazev14.github.io/loko_fees/
 
-**Documentation:** [docs/](docs/README.md): [architecture](docs/architecture.md) · [data model](docs/data-model.md) · [sign-in and admins](docs/auth-and-admins.md) · [operations](docs/operations.md) · [development](docs/development.md) · [offline](docs/offline.md)
+**Documentation:** [docs/](docs/README.md): [architecture](docs/architecture.md) · [data model](docs/data-model.md) · [sign-in and admins](docs/auth-and-admins.md) · [operations](docs/operations.md) · [development](docs/development.md) · [offline](docs/offline.md) · [security](docs/security.md)
 
 **Contents:** [Deploy, step by step](#deploy-step-by-step) · [Updating later](#updating-later) · [Starting with real data](#starting-with-real-data) · [Troubleshooting](#troubleshooting) · [What the app does](#what-the-app-does) · [Rules implemented](#rules-implemented) · [Run locally](#run-locally) · [Demo data](#demo-data) · [Scripts](#scripts)
 
@@ -201,6 +201,7 @@ At the end of each season use **Menu → Definições → Fechar época**: it ar
 | Inviting fails with *Invalid JWT* | Redeploy the function with `npx supabase functions deploy invite-admin --no-verify-jwt`. |
 | The deploy Action fails at *Get Pages site* | Pages is not enabled for Actions. Settings → Pages → Source: **GitHub Actions**, then **Re-run all jobs**. |
 | The deploy Action fails at the tests | Fix the failing test first; the workflow only publishes when `npm test` passes. |
+| Data will not load, or the console says *Refused to connect … Content Security Policy* | The published page only allows requests to the site and to the Supabase project it was built with (`VITE_SUPABASE_URL` in the workflow). A new outside address has to be added on purpose, see [security](docs/security.md#the-content-security-policy). |
 | White page, or files not found, after deploying | The base path does not match the URL. Project sites live under `/<repo>/` (automatic); a `<user>.github.io` repository needs `BASE_PATH: /`. |
 | The phone still shows the old icon or version | The installed app caches aggressively: reload twice, or remove it from the home screen and add it again. |
 

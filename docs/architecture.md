@@ -116,4 +116,6 @@ Updates are automatic. An installed iPhone app picks up a new version after bein
 
 On every push to `main`, [`deploy.yml`](../.github/workflows/deploy.yml) runs the tests, builds with `BASE_PATH=/<repo>/`, copies `index.html` to `404.html` (Pages has no single-page fallback, so deep links need it) and publishes. The Supabase URL and the publishable key are written in the workflow: they are public by design.
 
+The published page carries a strict content-security policy (a meta tag added at build time by `vite.config.ts`): it may run only its own scripts and talk only to itself and the Supabase project. See [security](security.md#the-content-security-policy) before adding an outside script, font or API.
+
 Database changes and the Edge Function are **not** deployed by this workflow. See [operations](operations.md).
