@@ -97,4 +97,10 @@ describe('finishAccess', () => {
     auth.update = { error: { message: 'Password should be at least 8 characters' } }
     await expect(finishAccess('a@b.pt', '123456', 'short')).rejects.toThrow('Password should be at least 8 characters')
   })
+
+  it('puts the server\'s weak-password refusal in our words, with the rule', async () => {
+    auth.verify = [ok]
+    auth.update = { error: { code: 'weak_password', message: 'Password should be at least 10 characters.' } }
+    await expect(finishAccess('a@b.pt', '123456', 'abc12345')).rejects.toThrow('A palavra-passe é demasiado fraca. Pelo menos 10 caracteres, com letras e números.')
+  })
 })

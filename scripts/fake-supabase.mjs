@@ -8,7 +8,7 @@
 // treat it as a smoke-test aid, not as proof the hosted setup works.
 //
 // Logins: admin@loko.test / admin123 (admin), viewer@loko.test / viewer123 (not admin).
-// daniel@loko.test is an invited admin with no password yet: first access with the code 123456.
+// daniel@loko.test is an invited admin with no password yet: first access with the code 12345678.
 import { readFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { PGlite, types } from '@electric-sql/pglite'
@@ -41,11 +41,11 @@ await db.exec(sql('../supabase/migrations/20261116000000_admin_accept_invite.sql
 await db.exec(sql('../supabase/migrations/20261117000000_main_admin.sql'))
 await db.exec(sql('../supabase/seed.sql'))
 await db.exec(`insert into auth.users values ('${ADMIN}', 'admin@loko.test', 'x'), ('${VIEWER}', 'viewer@loko.test', 'x'); insert into admins values ('${ADMIN}'); update admins set is_owner = true where user_id = '${ADMIN}';`)
-// Someone invited whose first link failed: an account without a password. Their emailed code is always 123456.
+// Someone invited whose first link failed: an account without a password. Their emailed code is always 12345678 (the live project sends 8 digits).
 const PENDING = '00000000-0000-0000-0000-0000000000d1'
 USERS['daniel@loko.test'] = { id: PENDING, password: null }
 await db.exec(`insert into auth.users values ('${PENDING}', 'daniel@loko.test', 'x', now()); insert into admins values ('${PENDING}', null);`)
-const CODE = '123456'
+const CODE = '12345678'
 
 // --- helpers ---
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url')

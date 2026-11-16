@@ -51,7 +51,7 @@ setTimeout(() => {
 
     admin@loko.test   / admin123    main admin
     viewer@loko.test  / viewer123   signed in, not an admin
-    daniel@loko.test                pending invitation: Entrar > Primeiro acesso, code 123456
+    daniel@loko.test                pending invitation: Entrar > Primeiro acesso, code 12345678
 
   Emails are printed here instead of being sent. Ctrl+C stops both.
 `)

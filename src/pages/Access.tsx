@@ -5,6 +5,7 @@ import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from '../components/icons'
 import { ErrorNote } from '../components/ui'
 import { finishAccess, requestAccessCode } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { MIN_PASSWORD_LENGTH, PASSWORD_HINT, passwordProblem } from '../lib/password'
 
 type Step = 'choose' | 'email' | 'code'
 
@@ -51,7 +52,8 @@ export default function Access() {
 
   async function finish(e: FormEvent) {
     e.preventDefault()
-    if (password.length < 8) return setError('A palavra-passe deve ter pelo menos 8 caracteres.')
+    const problem = passwordProblem(password)
+    if (problem) return setError(problem)
     setBusy(true)
     setError(null)
     try {
@@ -114,7 +116,7 @@ export default function Access() {
             <MailIcon className="ic sm" />
             <input
               id="code" className="code-input" inputMode="numeric" autoComplete="one-time-code" autoCapitalize="none" autoCorrect="off" spellCheck={false}
-              placeholder="000000" required value={code} onChange={(e) => setCode(e.target.value)}
+              placeholder="código do email" required value={code} onChange={(e) => setCode(e.target.value)}
             />
           </div>
 
@@ -122,8 +124,8 @@ export default function Access() {
           <div className="lf">
             <LockIcon className="ic sm" />
             <input
-              id="password" type={show ? 'text' : 'password'} autoComplete="new-password" minLength={8}
-              placeholder="mínimo 8 caracteres" required value={password} onChange={(e) => setPassword(e.target.value)}
+              id="password" type={show ? 'text' : 'password'} autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH}
+              placeholder={`mínimo ${MIN_PASSWORD_LENGTH} caracteres`} required value={password} onChange={(e) => setPassword(e.target.value)}
             />
             <button
               type="button" className="lf-eye" aria-pressed={show}
@@ -133,6 +135,7 @@ export default function Access() {
               {show ? <EyeOffIcon /> : <EyeIcon />}
             </button>
           </div>
+          <p className="muted small" style={{ margin: '0.4rem 0 0' }}>{PASSWORD_HINT}</p>
 
           <ErrorNote error={error} />
           <button className="btn login-btn" disabled={busy}>{busy ? 'A guardar…' : 'Guardar e entrar'}</button>

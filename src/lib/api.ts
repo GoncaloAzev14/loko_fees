@@ -1,5 +1,6 @@
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { ApiError } from './errors'
+import { passwordErrorMessage } from './password'
 import { supabase } from './supabase'
 import { submit } from './sync'
 import type {
@@ -187,7 +188,7 @@ export async function finishAccess(email: string, code: string, password: string
   }
   if (!verified) throw new Error('Código inválido ou expirado. Peça um novo código.')
   const { error } = await supabase.auth.updateUser({ password })
-  if (error) throw new Error(error.message)
+  if (error) throw new Error(passwordErrorMessage(error))
 }
 
 // --- deleting (only allowed while nothing depends on the row) ---
