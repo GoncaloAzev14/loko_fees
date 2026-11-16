@@ -88,7 +88,7 @@ describe('finishAccess', () => {
 
   it('fails with a clear message, and saves no password, when no type accepts the code', async () => {
     auth.verify = [bad, bad, bad, bad]
-    await expect(finishAccess('a@b.pt', '000000', 'newpassword')).rejects.toThrow('Código inválido ou expirado. Peça um novo código.')
+    await expect(finishAccess('a@b.pt', '000000', 'newpassword')).rejects.toThrow(/Código inválido ou expirado.*peça um código novo/)
     expect(auth.updateCalls).toHaveLength(0)
   })
 

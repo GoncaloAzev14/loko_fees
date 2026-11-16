@@ -1,6 +1,8 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import EnvBanner from './components/EnvBanner'
 import SyncManager from './components/SyncManager'
+import { useAuth } from './lib/auth'
 import Layout from './components/Layout'
 import RequireAdmin from './components/RequireAdmin'
 import Access from './pages/Access'
@@ -20,12 +22,35 @@ import Payments from './pages/admin/Payments'
 import Roster from './pages/admin/Roster'
 import Settings from './pages/admin/Settings'
 
+/**
+ * Someone the invitation link signed in has not chosen a password yet, so they are not an admin yet.
+ * The first time the app opens for them, take them straight to choosing one, instead of leaving them
+ * on a page that looks as if nothing happened. Only once: after that they can look around freely.
+ */
+function InviteNudge() {
+  const { pendingInvite } = useAuth()
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const done = useRef(false)
+  useEffect(() => {
+    if (!pendingInvite) {
+      done.current = false
+      return
+    }
+    if (done.current || pathname === '/recover') return // on the first-access page they are already doing it
+    done.current = true
+    if (pathname !== '/set-password') navigate('/set-password', { replace: true })
+  }, [pendingInvite, pathname, navigate])
+  return null
+}
+
 /** Public read-only screens, plus /admin/* which only admins can open. */
 export default function App() {
   return (
     <>
       <EnvBanner />
       <SyncManager />
+      <InviteNudge />
       <Routes>
         <Route path="login" element={<Login />} />
         <Route path="recover" element={<Access />} />

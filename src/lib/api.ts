@@ -148,12 +148,6 @@ export async function inviteAdmin(email: string): Promise<'invited' | 'resent' |
   return data.status
 }
 
-/** Whether the signed-in person has an admin invitation they have not finished yet. */
-export async function hasPendingInvite(): Promise<boolean> {
-  const { data, error } = await supabase.rpc('my_invite_pending')
-  return !error && data === true // before the migration there is no such function: not pending
-}
-
 // --- first access / forgotten password (no login needed, works from a code in an email) ---
 
 /** The emailed code is single-use per type; which type applies depends on how the account was created. */
@@ -186,7 +180,7 @@ export async function finishAccess(email: string, code: string, password: string
       break
     }
   }
-  if (!verified) throw new Error('Código inválido ou expirado. Peça um novo código.')
+  if (!verified) throw new Error('Código inválido ou expirado. Se já abriu a ligação do mesmo email, o código deixou de valer: peça um código novo.')
   const { error } = await supabase.auth.updateUser({ password })
   if (error) throw new Error(passwordErrorMessage(error))
 }

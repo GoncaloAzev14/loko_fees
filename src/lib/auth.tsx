@@ -9,6 +9,8 @@ interface AuthState {
   loading: boolean
   session: Session | null
   isAdmin: boolean
+  /** Signed in (for example through the invitation link) with an admin invitation not finished yet: no password chosen. */
+  pendingInvite: boolean
   signIn: (email: string, password: string) => Promise<void>
   /** Call after the person has chosen a password: accepts a pending admin invitation and re-checks the rights. */
   completeFirstAccess: () => void
@@ -23,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessionLoaded, setSessionLoaded] = useState(false)
   // null while we are still asking the database whether this user is an admin
   const [admin, setAdmin] = useState<boolean | null>(null)
+  const [pendingInvite, setPendingInvite] = useState(false)
   // An invited person only becomes an admin once they sign in with their password or choose one.
   // These two make the next rights check accept a pending invitation first.
   const acceptNext = useRef(false)
@@ -44,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false
     setAdmin(null)
+    setPendingInvite(false)
     if (!uid) return
     supabase.rpc('is_admin').then(async ({ data, error, status }) => {
       // Cannot ask the server (offline): use its last answer for this person. This only shapes the
@@ -59,6 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (cancelled) return
       if (!unreachable) rememberAdmin(uid, isAdmin)
       setAdmin(isAdmin)
+      if (!isAdmin && !unreachable) {
+        // Someone the invitation link signed in, who has not chosen a password yet, should be taken to do so.
+        const pending = await supabase.rpc('my_invite_pending')
+        if (!cancelled) setPendingInvite(pending.data === true)
+      }
       if (isAdmin && !unreachable) {
         // Late fees are normally added by a daily job; this covers the days it did not run.
         await supabase.rpc('apply_late_fees_admin')
@@ -88,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading: !sessionLoaded || (Boolean(uid) && admin === null),
       session,
       isAdmin: admin === true,
+      pendingInvite,
       signIn: async (email, password) => {
         acceptNext.current = true
         const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -106,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         qc.invalidateQueries()
       },
     }),
-    [sessionLoaded, uid, admin, session, qc],
+    [sessionLoaded, uid, admin, pendingInvite, session, qc],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

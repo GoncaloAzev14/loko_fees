@@ -3,30 +3,18 @@ import { Link, Navigate } from 'react-router-dom'
 import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from '../components/icons'
 import AuthFrame from '../components/AuthFrame'
 import { ErrorNote } from '../components/ui'
-import { hasPendingInvite } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { useClubName } from '../lib/hooks'
 
 /** Admin sign-in. A full screen of its own: no header or tab bar around it. */
 export default function Login() {
-  const { loading, session, isAdmin, signIn, signOut } = useAuth()
+  const { loading, session, isAdmin, pendingInvite, signIn, signOut } = useAuth()
   const club = useClubName()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  // Only someone an admin invited has a pending invitation, so only they are pointed to first access.
-  const [pendingInvite, setPendingInvite] = useState(false)
-  const uid = session?.user.id
-  useEffect(() => {
-    let cancelled = false
-    setPendingInvite(false)
-    if (uid && !isAdmin) hasPendingInvite().then((p) => !cancelled && setPendingInvite(p))
-    return () => {
-      cancelled = true
-    }
-  }, [uid, isAdmin])
 
   useEffect(() => {
     document.title = club
@@ -55,7 +43,8 @@ export default function Login() {
           {pendingInvite ? (
             <>
               <p className="error" role="alert">O seu convite ainda não foi concluído.</p>
-              <p className="muted small">Termine o <Link to="/recover" onClick={signOut}>primeiro acesso</Link>: escolha a palavra-passe com o código do email.</p>
+              <p className="muted small">Já está dentro: falta só escolher a palavra-passe.</p>
+              <Link className="btn login-btn" to="/set-password">Escolher palavra-passe</Link>
             </>
           ) : (
             <p className="error" role="alert">Esta conta não tem permissões de administrador.</p>

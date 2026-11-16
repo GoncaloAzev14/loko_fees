@@ -45,6 +45,7 @@ export default function SetPassword() {
   return (
     <>
       <h1>Escolher palavra-passe</h1>
+      <p className="muted">Falta só isto para concluir o convite. Depois entra sempre com o email e esta palavra-passe.</p>
       <form className="card form" onSubmit={submit}>
         <label className="field" htmlFor="pw">Nova palavra-passe</label>
         <input id="pw" type="password" autoComplete="new-password" required minLength={MIN_PASSWORD_LENGTH} value={password} onChange={(e) => setPassword(e.target.value)} />
