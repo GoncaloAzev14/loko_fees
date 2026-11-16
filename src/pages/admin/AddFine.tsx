@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ArrowRightIcon, ChevronRightIcon } from '../../components/icons'
+import SlideToConfirm from '../../components/SlideToConfirm'
 import { Async, ErrorNote } from '../../components/ui'
 import { addFines } from '../../lib/api'
 import { money, parseAmount, todayISO } from '../../lib/format'
@@ -18,6 +18,7 @@ export default function AddFine() {
   const [selected, setSelected] = useState<Set<string>>(() => new Set(params.get('player') ? [params.get('player')!] : []))
   const [done, setDone] = useState<string | null>(null)
   const save = useAction(addFines)
+  const formRef = useRef<HTMLFormElement>(null)
   const amountValue = parseAmount(amount)
 
   const allSelected = (active: { player_id: string }[]) => active.length > 0 && active.every((p) => selected.has(p.player_id))
@@ -51,7 +52,7 @@ export default function AddFine() {
             {(players) => {
               const active = players.filter((p) => p.active)
               return (
-                <form className="cf fill-form" onSubmit={submit}>
+                <form className="cf fill-form" ref={formRef} onSubmit={submit}>
                   <div className="cf-row">
                     <select
                       aria-label="Motivo" required value={typeId}
@@ -99,14 +100,19 @@ export default function AddFine() {
 
                   <ErrorNote error={save.error} />
                   {done && <p className="good form-msg" role="status">{done}</p>}
-                  <button className="cta" style={{ marginTop: 4 }} disabled={save.busy || !typeId || selected.size === 0}>
-                    <span className="cir"><ArrowRightIcon /></span>
-                    <span className="tx">
-                      {save.busy ? 'A guardar…' : `Registar${selected.size ? ` (${selected.size})` : ''}`}
-                      <small>{selected.size === 1 ? '1 jogador' : `${selected.size} jogadores`}{amountValue >= 0 && ` · ${money(amountValue * selected.size)}`}</small>
-                    </span>
-                    <ChevronRightIcon />
-                  </button>
+                  <SlideToConfirm
+                    label="Deslize para registar"
+                    busyLabel="A guardar…"
+                    detail={`${selected.size === 1 ? '1 jogador' : `${selected.size} jogadores`}${amountValue >= 0 ? ` · ${money(amountValue * selected.size)}` : ''}`}
+                    busy={save.busy}
+                    disabled={!typeId || selected.size === 0}
+                    onConfirm={() => {
+                      const form = formRef.current
+                      if (!form || !form.reportValidity()) return false // shows what is missing
+                      if (form.requestSubmit) form.requestSubmit()
+                      else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))
+                    }}
+                  />
                 </form>
               )
             }}
