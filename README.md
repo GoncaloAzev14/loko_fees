@@ -9,7 +9,54 @@ Anyone can look things up without logging in; admins log in to register fines an
 
 **Documentation:** [docs/](docs/README.md): [architecture](docs/architecture.md) · [data model](docs/data-model.md) · [sign-in and admins](docs/auth-and-admins.md) · [operations](docs/operations.md) · [development](docs/development.md) · [offline](docs/offline.md) · [security](docs/security.md)
 
-**Contents:** [Deploy, step by step](#deploy-step-by-step) · [Updating later](#updating-later) · [Starting with real data](#starting-with-real-data) · [Troubleshooting](#troubleshooting) · [What the app does](#what-the-app-does) · [Rules implemented](#rules-implemented) · [Run locally](#run-locally) · [Demo data](#demo-data) · [Scripts](#scripts)
+**Contents:** [Quick start (dev mode)](#quick-start-dev-mode) · [Deploy, step by step](#deploy-step-by-step) · [Updating later](#updating-later) · [Starting with real data](#starting-with-real-data) · [Troubleshooting](#troubleshooting) · [What the app does](#what-the-app-does) · [Rules implemented](#rules-implemented) · [Run locally](#run-locally) · [Demo data](#demo-data) · [Scripts](#scripts)
+
+---
+
+## Quick start (dev mode)
+
+Work on the app on your computer with **dummy data**. No Supabase account, no Docker and no `.env` file are needed, and production cannot be reached.
+
+**You need:** [Node.js](https://nodejs.org) 20 or newer (it includes `npm`) and this repository.
+
+```bash
+git clone https://github.com/GoncaloAzev14/loko_fees.git
+cd loko_fees
+npm install        # once, and again whenever package.json changes
+npm run dev:test   # starts the dummy backend and the app together
+```
+
+Then open **http://localhost:5174/**. A blue strip, "Ambiente de teste · dados fictícios", confirms you are on the dummy data. Stop with `Ctrl+C`.
+
+| Address | What it is |
+| --- | --- |
+| http://localhost:5174/ | The app (hot reload: edits to `src/` show up at once) |
+| http://127.0.0.1:54321 | The dummy backend, an API only. It has no web page, so there is nothing to open in a browser |
+
+**Test accounts** (they exist only in the dummy backend):
+
+| Email | Password | What it is |
+| --- | --- | --- |
+| `admin@loko.test` | `admin123` | Main admin: can write everything |
+| `viewer@loko.test` | `viewer123` | Signed in, but not an admin |
+| `daniel@loko.test` | (none) | Invited admin who has not chosen a password yet: use **Primeiro acesso** with the code `12345678` |
+
+**Good to know**
+- **Everything resets on every start.** The data lives in memory, so anything you add or delete is gone after `Ctrl+C`. That is the point.
+- **Inviting an admin** on **Administradores** works, but no email is sent. The invited person cannot finish signing up, so for a second working admin add one in `scripts/fake-supabase.mjs`.
+- **Port already in use** (`5174` or `54321`): another copy is still running. Stop it, or find it with `lsof -i :5174`.
+- **Phone-sized view:** open the browser's developer tools and switch on the device toolbar.
+
+**Other commands**
+
+| Command | Does |
+| --- | --- |
+| `npx vitest run --no-file-parallelism` | All tests (database tests run against an in-memory Postgres). Run them one file at a time, or they may time out |
+| `npx tsc -b` | Type check |
+| `npm run build` | Production build, as GitHub Pages gets it |
+| `npm run dev` | The app against the **real** Supabase project from `.env`: avoid it for experiments |
+
+More detail (what is in the dummy data, what it cannot show you, using a real local Supabase): [docs/development.md](docs/development.md).
 
 ---
 
