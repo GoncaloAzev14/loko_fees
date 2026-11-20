@@ -31,6 +31,11 @@ describe('describeChange', () => {
     expect(describeChange(change({ action: 'update', old_row: { ...base, amount: 1, cancelled: false }, new_row: { ...base, cancelled: false } }), players, types).title).toBe('Alterou multa')
   })
 
+  it('shows how a payment was made in the history', () => {
+    expect(describeChange(change({ table_name: 'payments', new_row: { player_id: 'p1', amount: 40, method: 'mbway' } }), players, types).detail).toBe('Ana · 40,00 € · MB WAY')
+    expect(describeChange(change({ table_name: 'payments', new_row: { player_id: 'p1', amount: 40, method: null } }), players, types).detail).toBe('Ana · 40,00 €')
+  })
+
   it('describes payments, income, expenses, people and settings', () => {
     expect(describeChange(change({ table_name: 'payments', new_row: { player_id: 'p1', amount: 40 } }), players, types)).toEqual({ title: 'Adicionou pagamento', detail: 'Ana · 40,00 €' })
     expect(describeChange(change({ table_name: 'incomes', new_row: { description: 'Prémio', amount: 100, player_id: null } }), players, types)).toEqual({ title: 'Adicionou receita', detail: 'Prémio · 100,00 €' })

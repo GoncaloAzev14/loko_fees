@@ -1,4 +1,5 @@
 import { money } from './format'
+import { payMethodLabel } from './labels'
 import type { Change } from './types'
 
 type Row = Record<string, unknown>
@@ -39,7 +40,7 @@ export function describeChange(c: Change, players: Map<string, string>, types: M
       detail = [player, row.kind === 'late_fee' ? '' : types.get(str(row.fine_type_id)), amount(row.amount)].filter(Boolean).join(' · ')
       break
     case 'payments':
-      detail = [player, amount(row.amount)].filter(Boolean).join(' · ')
+      detail = [player, amount(row.amount), payMethodLabel(row.method)].filter(Boolean).join(' · ')
       break
     case 'incomes':
     case 'expenses':

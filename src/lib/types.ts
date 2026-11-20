@@ -53,12 +53,17 @@ export interface LedgerRow {
   sync?: SyncMark
 }
 
+/** How a payment was made. Only these two exist. */
+export type PayMethod = 'mbway' | 'dinheiro'
+
 export interface Payment {
   id: string
   player_id: string
   amount: number
   paid_on: string
   note: string | null
+  /** empty for the payments recorded before the method was asked */
+  method?: PayMethod | null
   sync?: SyncMark
 }
 

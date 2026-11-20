@@ -8,7 +8,9 @@ import { formatDate, money, parseAmount, todayISO } from '../../lib/format'
 import Folded from '../../components/Folded'
 import { SearchIcon, TrashIcon, XIcon } from '../../components/icons'
 import IconButton from '../../components/IconButton'
+import { PAY_METHODS, PAY_METHOD_LABEL, payMethodLabel } from '../../lib/labels'
 import { groupByMonth, matchesQuery } from '../../lib/paymentsView'
+import type { PayMethod } from '../../lib/types'
 import { useAction, useBalances, useLookups, usePayments, useQueuedEntries } from '../../lib/hooks'
 import { withQueuedPayments } from '../../lib/overlay'
 
@@ -23,6 +25,7 @@ export default function Payments() {
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(todayISO())
   const [note, setNote] = useState('')
+  const [method, setMethod] = useState<PayMethod | ''>('') // no default: the admin has to pick one every time
   const [filterPlayer, setFilterPlayer] = useState('') // which player's payments to list; empty = everyone
   const [query, setQuery] = useState('')
   const save = useAction(addPayment, (_r, p) => `Pagamento de ${money(p.amount)} registado`)
@@ -32,10 +35,11 @@ export default function Payments() {
   async function submit(e: FormEvent) {
     e.preventDefault()
     const value = parseAmount(amount)
-    if (!playerId || !(value > 0)) return
-    if (await save.run({ player_id: playerId, amount: value, paid_on: date, note })) {
+    if (!playerId || !(value > 0) || !method) return
+    if (await save.run({ player_id: playerId, amount: value, paid_on: date, note, method })) {
       setAmount('')
       setNote('')
+      setMethod('')
     }
   }
 
@@ -64,6 +68,14 @@ export default function Payments() {
                     <input type="date" aria-label="Data" required value={date} onChange={(e) => setDate(e.target.value)} />
                   </label>
                 </div>
+                <fieldset className="seg two" aria-label="Forma de pagamento">
+                  {PAY_METHODS.map((m) => (
+                    <label key={m}>
+                      <input type="radio" name="method" value={m} required checked={method === m} onChange={() => setMethod(m)} />
+                      <span>{PAY_METHOD_LABEL[m]}</span>
+                    </label>
+                  ))}
+                </fieldset>
                 <div className="cf-row">
                   <input aria-label="Nota (opcional)" placeholder="Nota (opcional)" value={note} onChange={(e) => setNote(e.target.value)} />
                   <button className="cf-btn" disabled={save.busy}>{save.busy ? '…' : 'Registar'}</button>
@@ -123,7 +135,7 @@ export default function Payments() {
                     <div className="row-main">
                       <div className="row-title">{players.get(p.player_id)?.name ?? '…'}</div>
                       <div className="row-sub">
-                        {formatDate(p.paid_on)}{p.note && ` · ${p.note}`}
+                        {[formatDate(p.paid_on), payMethodLabel(p.method), p.note].filter(Boolean).join(' · ')}
                       </div>
                       {p.sync !== 'deleting' && (
                         <div className="row-actions">

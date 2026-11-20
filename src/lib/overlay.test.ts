@@ -75,6 +75,16 @@ describe('payments, income and expenses', () => {
     expect(withQueuedPayments(rows, entries).map((p) => p.id)).toContain('other')
   })
 
+  it('keeps how a waiting payment was made, and ignores anything that is not MB WAY or cash', () => {
+    const out = withQueuedPayments([], [
+      insert('payments', { id: 'm', player_id: 'p1', amount: 5, paid_on: '2026-11-02', method: 'mbway' }),
+      insert('payments', { id: 'd', player_id: 'p1', amount: 5, paid_on: '2026-11-03', method: 'dinheiro' }),
+      insert('payments', { id: 'x', player_id: 'p1', amount: 5, paid_on: '2026-11-04', method: 'cartao' }),
+      insert('payments', { id: 'n', player_id: 'p1', amount: 5, paid_on: '2026-11-05' }),
+    ])
+    expect(Object.fromEntries(out.map((p) => [p.id, p.method]))).toEqual({ m: 'mbway', d: 'dinheiro', x: null, n: null })
+  })
+
   it('never cuts a long list short: every payment comes back, old ones included', () => {
     const many = Array.from({ length: 300 }, (_, i) => pay({ id: `p${i}`, paid_on: `2026-${String(1 + (i % 12)).padStart(2, '0')}-10` }))
     expect(withQueuedPayments(many, [])).toHaveLength(300)

@@ -25,6 +25,7 @@ export async function newDb(opts: { seed?: boolean } = {}) {
   await db.exec(read('../migrations/20261118000000_late_fee_waivers.sql'))
   await db.exec(read('../migrations/20261119000000_change_log.sql'))
   await db.exec(read('../migrations/20261120000000_late_fee_switch.sql'))
+  await db.exec(read('../migrations/20261121000000_payment_method.sql'))
   if (opts.seed) await db.exec(read('../seed.sql'))
   return db
 }

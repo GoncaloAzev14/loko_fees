@@ -1,4 +1,5 @@
 import { money } from './format'
+import { payMethodLabel } from './labels'
 import type { Entry } from './outbox'
 
 const TABLE_LABEL = { fines: 'multa', payments: 'pagamento', incomes: 'receita', expenses: 'despesa' } as const
@@ -11,7 +12,7 @@ export function describeEntry(e: Entry, playerName: (id: string) => string | und
   const who = typeof r.player_id === 'string' ? playerName(r.player_id) : undefined
   const what =
     e.table === 'fines' ? typeName(String(r.fine_type_id))
-    : e.table === 'payments' ? 'Pagamento'
+    : e.table === 'payments' ? ['Pagamento', payMethodLabel(r.method)].filter(Boolean).join(' ')
     : String(r.description ?? (e.table === 'incomes' ? 'Receita' : 'Despesa'))
   return [what, who].filter(Boolean).join(' · ') + ` · ${money(Number(r.amount) || 0)}`
 }

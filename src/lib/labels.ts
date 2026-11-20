@@ -1,4 +1,4 @@
-import type { FineStatus, FineType, LedgerRow } from './types'
+import type { FineStatus, FineType, LedgerRow, PayMethod } from './types'
 import { parseDate } from './format'
 
 export const STATUS_LABEL: Record<FineStatus, string> = {
@@ -7,6 +7,11 @@ export const STATUS_LABEL: Record<FineStatus, string> = {
   overdue: 'Vencida',
   cancelled: 'Anulada',
 }
+
+export const PAY_METHODS: PayMethod[] = ['mbway', 'dinheiro']
+export const PAY_METHOD_LABEL: Record<PayMethod, string> = { mbway: 'MB WAY', dinheiro: 'Dinheiro' }
+/** The saved value as a label, or nothing for an older payment that has none (or anything unknown). */
+export const payMethodLabel = (m: unknown) => (m === 'mbway' || m === 'dinheiro' ? PAY_METHOD_LABEL[m] : undefined)
 
 const monthName = new Intl.DateTimeFormat('pt-PT', { month: 'long' })
 

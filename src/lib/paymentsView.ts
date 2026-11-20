@@ -1,4 +1,5 @@
 import { groupRows, type Group } from './groups'
+import { payMethodLabel } from './labels'
 
 export type MonthGroup<T> = Group<T>
 
@@ -18,7 +19,7 @@ const amountForms = (n: number) => [String(n), n.toFixed(2), n.toFixed(2).replac
  * month's name. Empty search matches everything.
  */
 export function matchesQuery(
-  payment: { amount: number; paid_on: string; note: string | null },
+  payment: { amount: number; paid_on: string; note: string | null; method?: string | null },
   playerName: string,
   monthLabel: string,
   formattedDate: string,
@@ -26,6 +27,6 @@ export function matchesQuery(
 ): boolean {
   const words = normalize(query).split(/\s+/).filter(Boolean)
   if (words.length === 0) return true
-  const haystack = normalize([playerName, payment.note ?? '', ...amountForms(payment.amount), formattedDate, payment.paid_on, monthLabel].join(' '))
+  const haystack = normalize([playerName, payment.note ?? '', payMethodLabel(payment.method) ?? '', ...amountForms(payment.amount), formattedDate, payment.paid_on, monthLabel].join(' '))
   return words.every((w) => haystack.includes(w))
 }

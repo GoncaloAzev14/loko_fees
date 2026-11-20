@@ -7,6 +7,7 @@ import { ChevronLeftIcon, PlusIcon } from '../components/icons'
 import { Async, Avatar, SyncBadge } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { formatDate, money } from '../lib/format'
+import { payMethodLabel } from '../lib/labels'
 import { useBalances, useIncomes, useLedger, usePayments, useQueuedEntries } from '../lib/hooks'
 import { withQueuedFines, withQueuedIncomes, withQueuedPayments } from '../lib/overlay'
 import type { Balance, FineStatus, LedgerRow } from '../lib/types'
@@ -119,7 +120,7 @@ export default function PlayerDetail() {
                         <li key={p.id} className={`row${p.sync ? ' waiting' : ''}`}>
                           <div className="row-main">
                             <div className="row-title">{formatDate(p.paid_on)}</div>
-                            {p.note && <div className="row-sub">{p.note}</div>}
+                            {(p.method || p.note) && <div className="row-sub">{[payMethodLabel(p.method), p.note].filter(Boolean).join(' · ')}</div>}
                           </div>
                           <div className="row-side">
                             <div className="amount good">+{money(p.amount)}</div>

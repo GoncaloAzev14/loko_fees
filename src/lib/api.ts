@@ -5,7 +5,7 @@ import { supabase } from './supabase'
 import { submit } from './sync'
 import { newUuid } from './uuid'
 import type {
-  AdminUser, ArchivedFineType, Change, ArchivedPlayer, ArchivedSeason, Balance, Expense, FineType, Income, LedgerFilter, LedgerRow, Payment, Role, Settings, Summary,
+  AdminUser, ArchivedFineType, Change, ArchivedPlayer, ArchivedSeason, Balance, Expense, FineType, Income, LedgerFilter, LedgerRow, Payment, PayMethod, Role, Settings, Summary,
 } from './types'
 
 async function run<T>(q: PromiseLike<{ data: T | null; error: { message: string; code?: string } | null; status?: number }>): Promise<T> {
@@ -93,7 +93,7 @@ export const setFineCancelled = (id: string, cancelled: boolean) => submit([{ op
 
 export const deleteFine = (id: string) => submit([{ op: 'delete', table: 'fines', rowId: id }])
 
-export const addPayment = (p: Omit<Payment, 'id' | 'note' | 'sync'> & { note?: string }) =>
+export const addPayment = (p: Omit<Payment, 'id' | 'note' | 'sync' | 'method'> & { note?: string; method: PayMethod }) =>
   submit([{ op: 'insert', table: 'payments', row: { id: newId(), ...p, note: p.note?.trim() || null } }])
 
 export const deletePayment = (id: string) => submit([{ op: 'delete', table: 'payments', rowId: id }])

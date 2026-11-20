@@ -68,6 +68,7 @@ erDiagram
         numeric amount "greater than 0"
         date paid_on
         text note
+        text method "mbway or dinheiro"
     }
     INCOMES {
         uuid id PK
@@ -124,7 +125,7 @@ erDiagram
 | Table | Purpose | Notes |
 | --- | --- | --- |
 | `fines` | One row per fine **and** per automatic late fee. | `kind = 'fine'` needs a `fine_type_id`; `kind = 'late_fee'` needs `late_for_month` (a check constraint enforces both). `cancelled` hides a fine without deleting it. |
-| `payments` | Money a player has paid. Always positive. | Not tied to a specific fine; see [how payments settle fines](#payments-settle-fines-oldest-first). |
+| `payments` | Money a player has paid. Always positive. `method` says how: `mbway` or `dinheiro`, and nothing else is accepted. It is empty for the payments recorded before it existed, and the app asks for it on every new one. It has no effect on what a payment settles. | Not tied to a specific fine; see [how payments settle fines](#payments-settle-fines-oldest-first). |
 | `incomes` | Money into the box that is **not** a player's debt: prizes, donations. | `player_id` is optional and becomes null if that player is deleted. |
 | `expenses` | Money out of the box. | Free-text `description`. |
 
@@ -275,5 +276,6 @@ A fine is due on `due_day` of the month **after** its date. With the default of 
 | `20261118000000_late_fee_waivers.sql` | `late_fee_waivers`, the trigger that fills it, and `apply_late_fees` and `close_season` updated to respect it. A deleted late fee now stays deleted. |
 | `20261119000000_change_log.sql` | `change_log` with its triggers, `list_changes`, `restore_change`. The record starts from the moment this is run: earlier changes are not in it. |
 | `20261120000000_late_fee_switch.sql` | `settings.late_fee_enabled` and `apply_late_fees` updated to add nothing while it is off. Run it before using the switch; the app works without it (the late fee is simply always on). |
+| `20261121000000_payment_method.sql` | `payments.method` (`mbway` or `dinheiro`, empty for older payments) and `restore_change` updated so a payment put back from the history keeps it. |
 
 How to apply and verify them is in [operations](operations.md#database-migrations).

@@ -95,6 +95,7 @@ export function withQueuedPayments(rows: Payment[], entries: Entry[], playerId?:
       amount: num(row.amount),
       paid_on: str(row.paid_on),
       note: str(row.note) || null,
+      method: row.method === 'mbway' || row.method === 'dinheiro' ? row.method : null,
       sync: 'queued',
     }),
     (p) => !playerId || p.player_id === playerId,

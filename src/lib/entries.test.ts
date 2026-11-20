@@ -19,6 +19,13 @@ describe('describeEntry', () => {
     expect(plain(describeEntry({ ...base, op: 'insert', table: 'expenses', row: { id: 'x', description: 'Jantar', amount: 12 } } as Entry, player, type))).toBe('Jantar · 12,00 €')
   })
 
+  it('says how a payment waiting to be sent was made', () => {
+    const e = (method: string) => ({ ...base, op: 'insert', table: 'payments', row: { id: 'x', player_id: 'p1', amount: 5, method } }) as Entry
+    expect(plain(describeEntry(e('mbway'), player, type))).toBe('Pagamento MB WAY · Ana · 5,00 €')
+    expect(plain(describeEntry(e('dinheiro'), player, type))).toBe('Pagamento Dinheiro · Ana · 5,00 €')
+    expect(plain(describeEntry(e('cartao'), player, type))).toBe('Pagamento · Ana · 5,00 €') // never shows a value that is not one of the two
+  })
+
   it('describes deletes and cancels', () => {
     expect(describeEntry({ ...base, op: 'delete', table: 'payments', rowId: 'x' } as Entry, player, type)).toBe('Apagar pagamento')
     expect(describeEntry({ ...base, op: 'cancel', rowId: 'x', cancelled: true } as Entry, player, type)).toBe('Anular multa')

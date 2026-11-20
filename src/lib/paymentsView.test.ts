@@ -78,3 +78,16 @@ describe('matchesQuery', () => {
     expect(matchesQuery({ amount: 2.5, paid_on: '2026-10-01', note: null }, 'Ana', 'Outubro de 2026', '01/10/2026', '2,50')).toBe(true)
   })
 })
+
+describe('searching payments by how they were made', () => {
+  const pay = (method: string | null) => ({ amount: 5, paid_on: '2026-11-06', note: null, method })
+  it('finds MB WAY and cash payments by the words on screen, with or without the space', () => {
+    expect(matchesQuery(pay('mbway'), 'Ana', 'Novembro de 2026', '06/11/2026', 'mb way')).toBe(true)
+    expect(matchesQuery(pay('mbway'), 'Ana', 'Novembro de 2026', '06/11/2026', 'MB')).toBe(true)
+    expect(matchesQuery(pay('dinheiro'), 'Ana', 'Novembro de 2026', '06/11/2026', 'dinheiro')).toBe(true)
+    expect(matchesQuery(pay('dinheiro'), 'Ana', 'Novembro de 2026', '06/11/2026', 'mb way')).toBe(false)
+  })
+  it('does not match an older payment that has no method', () => {
+    expect(matchesQuery(pay(null), 'Ana', 'Novembro de 2026', '06/11/2026', 'dinheiro')).toBe(false)
+  })
+})

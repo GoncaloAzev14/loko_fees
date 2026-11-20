@@ -93,6 +93,7 @@ Open **SQL Editor → New query**, paste the **whole contents** of each file bel
 | 7 | `20261118000000_late_fee_waivers.sql` | a deleted late fee stays deleted (the automatic rule no longer adds it back) |
 | 8 | `20261119000000_change_log.sql` | a permanent record of who changed what, and putting back a deleted entry (Menu, Histórico) |
 | 9 | `20261120000000_late_fee_switch.sql` | a switch to turn the automatic late fee off and on (Regulamento page, as admin) |
+| 10 | `20261121000000_payment_method.sql` | how each payment was made, MB WAY or cash (Menu, Pagamentos) |
 
 (Prefer the command line? `npx supabase link --project-ref <ref>` then `npx supabase db push` applies the same files.)
 

@@ -52,7 +52,7 @@ beforeEach(() => {
   net.onLine = true
 })
 
-const payment = { player_id: 'p1', amount: 5, paid_on: '2026-11-10' }
+const payment = { player_id: 'p1', amount: 5, paid_on: '2026-11-10', method: 'dinheiro' as const }
 
 describe('with a connection and nothing waiting', () => {
   it('sends straight away, by id, ignoring a row that already exists', async () => {
