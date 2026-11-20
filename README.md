@@ -187,7 +187,7 @@ If you loaded the demo seed while testing, clear it before the club starts using
 truncate public.fines, public.payments, public.incomes, public.expenses, public.players, public.fine_types;
 ```
 
-This keeps your settings, admins and season. Then add the real fine types (the **Regulamento** tab, signed in as admin) and members (**Menu → Plantel**).
+This keeps your settings, admins and season. Then add the real fine types (the **Regulamento** tab, signed in as admin) and members (the **Plantel** tab, signed in as admin).
 
 At the end of each season use **Menu → Definições → Fechar época**: it archives a summary, clears fines and payments, and starts the next season while the cash in the box carries over.
 
@@ -219,7 +219,7 @@ At the end of each season use **Menu → Definições → Fechar época**: it ar
 ## What the app does
 
 - **Anyone, no login:** dashboard (box, total owed, overdue, credit); open a player in the **Plantel** tab to see their debt and credit; filter fines by date, player, reason and status; a **Regulamento** tab with every fine being enforced and what it costs. The box total is on the dashboard; the payments, income and expenses are listed for admins under Menu. Long lists are grouped by day or month in sections that start closed; tap a header to open it.
-- **Admins (login):** the same app plus register fines (one or many players at once), record payments, income and expenses, manage the fine types (on the **Regulamento** page, with a switch to turn each one off and a delete button), the roster, admins and the settings, close a season, browse the archive, and see **Histórico**: who changed or deleted what, with a button to put a deleted entry back. On phones the centre button of the tab bar logs in; once signed in it becomes a **Menu** whose options swing up as a stack.
+- **Admins (login):** the same app plus register fines (one or many players at once), record payments, income and expenses, manage the fine types (on the **Regulamento** page, with a switch to turn each one off and a delete button), the roster (on the **Plantel** page: add, edit, switch off or delete each member), admins and the settings, close a season, browse the archive, and see **Histórico**: who changed or deleted what, with a button to put a deleted entry back. On phones the centre button of the tab bar logs in; once signed in it becomes a **Menu** whose options swing up as a stack.
 
 Phones get a bottom tab bar, wide screens a sidebar: same code, same screens. The look is the black-and-orange "Locomotiva" direction (Sora font, self-hosted so it works offline). Installable as a PWA. It works offline: the last data seen stays readable, and an admin's fines, payments, income and expenses are saved on the phone and sent when the connection returns (see [docs/offline.md](docs/offline.md)).
 

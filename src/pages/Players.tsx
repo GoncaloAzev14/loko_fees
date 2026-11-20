@@ -1,13 +1,19 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { SearchIcon } from '../components/icons'
-import { Async, Avatar } from '../components/ui'
-import { money } from '../lib/format'
+import { AddPlayer, PlayerCard } from '../components/PlayerAdmin'
+import { Async } from '../components/ui'
+import { useAuth } from '../lib/auth'
 import { useBalances } from '../lib/hooks'
+import { plantelFor } from '../lib/roster'
 
 type Filter = 'all' | 'debt' | 'credit'
 
+/**
+ * The club's players and staff, open to everyone. Visitors only see the members who are active. Admins see all of
+ * them and, on this same page, can add a member and switch off, edit or delete each one.
+ */
 export default function Players() {
+  const { isAdmin } = useAuth()
   const q = useBalances()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
@@ -16,6 +22,7 @@ export default function Players() {
     <>
       <div className="sticky-box">
         <h1>Plantel</h1>
+        {isAdmin && <div className="stack-gap"><AddPlayer /></div>}
         <div className="srch">
           <SearchIcon className="ic sm" />
           <input type="search" placeholder="Procurar…" aria-label="Procurar jogador" value={search} onChange={(e) => setSearch(e.target.value)} style={{ border: 0, background: 'none', minHeight: 0, padding: 0, boxShadow: 'none' }} />
@@ -29,38 +36,13 @@ export default function Players() {
         </div>
       </div>
       <Async q={q}>
-        {(list) => {
+        {(all) => {
           const term = search.trim().toLowerCase()
-          const shown = list
+          const shown = plantelFor(all, isAdmin)
             .filter((b) => b.name.toLowerCase().includes(term))
             .filter((b) => (filter === 'debt' ? b.outstanding > 0 : filter === 'credit' ? b.credit > 0 : true))
           if (shown.length === 0) return <p className="muted pad">Nenhum jogador encontrado.</p>
-          return (
-            <ul className="list">
-              {shown.map((b) => (
-                <li key={b.player_id} className={`row clickable ${b.active ? '' : 'cancelled'}`}>
-                  <Avatar name={b.name} />
-                  <div className="row-main">
-                    <Link className="row-title" to={`/players/${b.player_id}`}>{b.name}</Link>
-                    <div className="row-sub">
-                      {b.role === 'staff' ? 'Equipa técnica' : 'Jogador'}
-                      {!b.active && ' · inativo'}
-                      {b.overdue > 0 && ` · ${money(b.overdue)} vencido`}
-                    </div>
-                  </div>
-                  <div className="row-side">
-                    {b.credit > 0 ? (
-                      <span className="amount good">Crédito {money(b.credit)}</span>
-                    ) : b.outstanding > 0 ? (
-                      <span className="amount bad">{money(b.outstanding)}</span>
-                    ) : (
-                      <span className="muted small">Sem dívidas</span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )
+          return <ul className="list">{shown.map((b) => <PlayerCard key={b.player_id} b={b} admin={isAdmin} />)}</ul>
         }}
       </Async>
     </>

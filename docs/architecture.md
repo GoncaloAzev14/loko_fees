@@ -83,7 +83,7 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 | Route | Screen | Who |
 | --- | --- | --- |
 | `/` | Dashboard: the box, how many players are in debt, overdue or up to date, and the biggest debt | everyone |
-| `/players`, `/players/:id` | **Plantel**: the roster with search and filters, and one player's debts, credit and history | everyone |
+| `/players`, `/players/:id` | **Plantel**: the roster with search and filters, and one player's debts, credit and history. Visitors only see the members who are **active**. **For admins the same page also manages the roster**: the form to add a player or staff member at the top, and on every card (inactive ones included, dimmed) an **Ativo** switch that saves at once, **Editar** (name and function) and **Apagar**. `/admin/players`, where this used to be, redirects here | everyone; the managing only for admins |
 | `/fines` | Fines filtered by date, player, type, status, grouped by day | everyone |
 | `/regulamento` | The rules of the fines: one card for every fine being enforced (the active fine types, then the automatic late fee), with its description on the left and its value on the right. The late fee card has a line under it saying that fines not paid by the due day are marked as vencidas and that this fine is then added. `/caixa`, the old address of the box page, redirects here. **For admins the same page also holds the fine types**: the form to add one at the top, and every type (including inactive ones, shown dimmed with *Desativada*, so they can be switched back on) is the same card as everyone's with the admin's tools under it: an **Ativa** switch that saves at once, **Editar** (turns the card into a small form with Guardar and Cancelar) and **Apagar**. `/admin/catalog`, where this used to be, redirects here | everyone; the editing only for admins |
 | `/login` | Admin sign-in | everyone |
@@ -92,7 +92,6 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 | `/admin/fines/new` | Register fines (one or many players) | admins |
 | `/admin/payments` | Record payments, and see and delete **every** payment: grouped by month in sections that open and close (closed at first), with a search box (player, note, amount, date or month) and a player filter. Searching or filtering opens the matching months | admins |
 | `/admin/money` | Income and expenses | admins |
-| `/admin/players` | Roster management | admins |
 | `/admin/admins` | Invite, resend, cancel, remove admins | admins |
 | `/admin/archive` | Archived seasons | admins |
 | `/admin/history` | Every change with who made it, and putting back what was deleted | admins |

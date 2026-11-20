@@ -620,3 +620,9 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
 .switch:disabled { opacity: 0.55; }
 .switch:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 8px; }
 @media (prefers-reduced-motion: reduce) { .switch .track, .switch .track::after { transition: none; } }
+
+/* on a card that opens a page when tapped, the admin's tools sit above the tap area */
+.row.clickable .row-actions, .row.clickable .switch { position: relative; z-index: 2; }
+.row.inactive .avatar { opacity: 0.55; }
+.stack-gap { margin: 0 0 10px; }
+.cf-row > .role-wide { flex: 0 0 156px; font-size: 0.86rem; padding-left: 12px; padding-right: 28px; }

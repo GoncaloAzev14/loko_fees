@@ -132,7 +132,7 @@ erDiagram
 
 | Table | Purpose | Notes |
 | --- | --- | --- |
-| `players` | The roster: players and technical staff (`role`). | `name` is unique. `active = false` hides someone without losing history. |
+| `players` | The roster: players and technical staff (`role`). | `name` is unique. `active = false` hides someone from the Plantel page for visitors (admins still see them, to switch them back on) without losing history. |
 | `fine_types` | The catalog of possible fines with a default amount. | The amount can be edited per fine when it is registered. |
 
 ### Configuration

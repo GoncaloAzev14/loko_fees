@@ -19,7 +19,6 @@ import Archive from './pages/admin/Archive'
 import History from './pages/admin/History'
 import Money from './pages/admin/Money'
 import Payments from './pages/admin/Payments'
-import Roster from './pages/admin/Roster'
 import Settings from './pages/admin/Settings'
 
 /**
@@ -68,7 +67,7 @@ export default function App() {
             <Route path="payments" element={<Payments />} />
             <Route path="money" element={<Money />} />
             <Route path="catalog" element={<Navigate to="/regulamento" replace />} />
-            <Route path="players" element={<Roster />} />
+            <Route path="players" element={<Navigate to="/players" replace />} />
             <Route path="admins" element={<Admins />} />
             <Route path="archive" element={<Archive />} />
           <Route path="history" element={<History />} />
