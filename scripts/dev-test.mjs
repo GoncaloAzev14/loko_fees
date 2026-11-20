@@ -8,8 +8,12 @@
 // Everything lives in memory: stop it and the data is gone; start it and it is fresh again.
 import { spawn } from 'node:child_process'
 
-const BACKEND = 'http://127.0.0.1:54321'
-const APP = 'http://localhost:5174'
+// The usual ports, unless another copy has to run beside this one (for example an automated check while
+// you keep working): APP_PORT=5184 BACKEND_PORT=54331 npm run dev:test
+const APP_PORT = process.env.APP_PORT ?? '5174'
+const BACKEND_PORT = process.env.BACKEND_PORT ?? '54321'
+const BACKEND = `http://127.0.0.1:${BACKEND_PORT}`
+const APP = `http://localhost:${APP_PORT}`
 const children = []
 let stopping = false
 
@@ -37,8 +41,8 @@ function stop(code = 0) {
 process.on('SIGINT', () => stop())
 process.on('SIGTERM', () => stop())
 
-start('backend', process.execPath, ['scripts/fake-supabase.mjs'])
-start('app', 'node_modules/.bin/vite', ['--mode', 'fake', '--port', '5174', '--strictPort'], {
+start('backend', process.execPath, ['scripts/fake-supabase.mjs'], { PORT: BACKEND_PORT })
+start('app', 'node_modules/.bin/vite', ['--mode', 'fake', '--port', APP_PORT, '--strictPort'], {
   VITE_SUPABASE_URL: BACKEND,
   VITE_SUPABASE_ANON_KEY: 'test-key',
 })

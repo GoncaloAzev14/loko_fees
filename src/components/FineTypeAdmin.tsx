@@ -2,9 +2,10 @@ import { useState, type FormEvent } from 'react'
 import { useConfirm } from './Confirm'
 import { PlusIcon } from './icons'
 import { ErrorNote } from './ui'
-import { deleteFineType, saveFineType } from '../lib/api'
+import { deleteFineType, saveFineType, setLateFeeEnabled } from '../lib/api'
 import { money, parseAmount } from '../lib/format'
 import { useAction } from '../lib/hooks'
+import type { RuleEntry } from '../lib/regulamento'
 import type { FineType } from '../lib/types'
 
 /** The form that adds a fine type. Only the Regulamento page shows it, and only to admins. */
@@ -105,6 +106,49 @@ export function FineTypeRow({ t }: { t: FineType }) {
           type="button" role="switch" aria-checked={t.active} className="switch" disabled={toggle.busy}
           onClick={() => toggle.run({ id: t.id, name: t.name, default_amount: t.default_amount, active: !t.active })}
         >
+          <span className="track" aria-hidden="true" />
+          Ativa
+        </button>
+      </div>
+    </li>
+  )
+}
+
+/**
+ * The automatic late fee for an admin: the same card everyone sees, with an Ativa switch. Switching it off only stops
+ * new late fees (the amount and the due day are kept, and the ones already charged stay); it is reversible at any time.
+ */
+export function LateFeeAdminCard({ r }: { r: RuleEntry }) {
+  const toggle = useAction(setLateFeeEnabled, (_res, on) => (on ? 'Multa de atraso ativada' : 'Multa de atraso desativada'))
+  const ask = useConfirm()
+  const active = r.active !== false
+
+  async function flip() {
+    if (active) {
+      const ok = await ask({
+        title: `Desativar «${r.description}»?`,
+        message: 'Deixa de ser acrescentada a quem não paga a tempo, e deixa de aparecer para os jogadores. As que já foram aplicadas ficam como estão. Pode voltar a ativá-la quando quiser.',
+        confirmLabel: 'Desativar',
+        tone: 'danger',
+      })
+      if (!ok) return
+    }
+    await toggle.run(!active)
+  }
+
+  return (
+    <li className={`row${active ? '' : ' inactive'}`}>
+      <div className="row-main">
+        <div className="row-title">
+          {r.description}
+          {!active && <span className="badge pending-off">Desativada</span>}
+        </div>
+        {r.note && <div className="row-sub">{r.note}</div>}
+        <ErrorNote error={toggle.error} />
+      </div>
+      <div className="row-side">
+        <div className="amount">{money(r.amount)}</div>
+        <button type="button" role="switch" aria-checked={active} className="switch" disabled={toggle.busy} onClick={flip}>
           <span className="track" aria-hidden="true" />
           Ativa
         </button>

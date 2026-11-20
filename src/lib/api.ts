@@ -28,16 +28,12 @@ export const getFineTypes = () =>
 export const DEFAULT_SEASON = '2026/27'
 
 export async function getSettings(): Promise<Settings> {
-  const { data, error } = await supabase.from('settings').select('late_fine_amount, due_day, season').single()
-  if (!error) return data as Settings
-  // 42703 = undefined column: the database has not had the season migration yet.
-  // Keep the app working (with the default season) instead of failing every page.
-  if (error.code === '42703') {
-    const old = await supabase.from('settings').select('late_fine_amount, due_day').single()
-    if (old.error) throw new Error(old.error.message)
-    return { ...(old.data as Omit<Settings, 'season'>), season: DEFAULT_SEASON }
-  }
-  throw new Error(error.message)
+  // every column, so that a database that has not had the latest migrations yet still works: what is missing gets
+  // the value it would have had (the default season, the late fee switched on)
+  const { data, error } = await supabase.from('settings').select('*').single()
+  if (error) throw new Error(error.message)
+  const row = data as Partial<Settings> & Pick<Settings, 'late_fine_amount' | 'due_day'>
+  return { ...row, season: row.season ?? DEFAULT_SEASON, late_fee_enabled: row.late_fee_enabled ?? true }
 }
 
 export function getLedger(f: LedgerFilter = {}) {
@@ -116,8 +112,12 @@ export const saveFineType = (t: Partial<FineType> & Pick<FineType, 'name' | 'def
 export const savePlayer = (p: { id?: string; name: string; role: Role; active: boolean }) =>
   run(supabase.from('players').upsert(p))
 
-export const saveSettings = (s: Settings) =>
+export const saveSettings = (s: Pick<Settings, 'late_fine_amount' | 'due_day' | 'season'>) =>
   run(supabase.from('settings').update(s).eq('singleton', true))
+
+/** Switches the automatic late fee on or off. Off only stops new ones; the ones already charged stay. */
+export const setLateFeeEnabled = (enabled: boolean) =>
+  run(supabase.from('settings').update({ late_fee_enabled: enabled }).eq('singleton', true))
 
 /** Adds the late fees that are due. Returns how many were created. */
 export const applyLateFees = () => run<number>(supabase.rpc('apply_late_fees_admin'))

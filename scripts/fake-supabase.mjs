@@ -41,6 +41,7 @@ await db.exec(sql('../supabase/migrations/20261116000000_admin_accept_invite.sql
 await db.exec(sql('../supabase/migrations/20261117000000_main_admin.sql'))
 await db.exec(sql('../supabase/migrations/20261118000000_late_fee_waivers.sql'))
 await db.exec(sql('../supabase/migrations/20261119000000_change_log.sql'))
+await db.exec(sql('../supabase/migrations/20261120000000_late_fee_switch.sql'))
 await db.exec(sql('../supabase/seed.sql'))
 await db.exec(`insert into auth.users values ('${ADMIN}', 'admin@loko.test', 'x'), ('${VIEWER}', 'viewer@loko.test', 'x'); insert into admins values ('${ADMIN}'); update admins set is_owner = true where user_id = '${ADMIN}';`)
 // Someone invited whose first link failed: an account without a password. Their emailed code is always 12345678 (the live project sends 8 digits).

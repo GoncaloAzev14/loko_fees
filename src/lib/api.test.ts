@@ -21,20 +21,19 @@ beforeEach(() => {
 })
 
 describe('getSettings', () => {
-  it('returns the settings including the season', async () => {
-    answers.queue.push({ data: { late_fine_amount: 5, due_day: 7, season: '2027/28' }, error: null })
-    expect(await getSettings()).toEqual({ late_fine_amount: 5, due_day: 7, season: '2027/28' })
+  it('returns the settings including the season and the late fee switch', async () => {
+    answers.queue.push({ data: { late_fine_amount: 5, due_day: 7, season: '2027/28', late_fee_enabled: false }, error: null })
+    expect(await getSettings()).toEqual({ late_fine_amount: 5, due_day: 7, season: '2027/28', late_fee_enabled: false })
+    expect(answers.selects).toEqual(['*'])
+  })
+
+  it('works on a database that has not had the latest migrations: default season, late fee switched on', async () => {
+    answers.queue.push({ data: { late_fine_amount: 6, due_day: 10 }, error: null })
+    expect(await getSettings()).toEqual({ late_fine_amount: 6, due_day: 10, season: '2026/27', late_fee_enabled: true })
     expect(answers.selects).toHaveLength(1)
   })
 
-  it('falls back to the default season when the database has no season column yet', async () => {
-    answers.queue.push({ data: null, error: { code: '42703', message: 'column settings.season does not exist' } })
-    answers.queue.push({ data: { late_fine_amount: 6, due_day: 10 }, error: null })
-    expect(await getSettings()).toEqual({ late_fine_amount: 6, due_day: 10, season: '2026/27' })
-    expect(answers.selects[1]).toBe('late_fine_amount, due_day')
-  })
-
-  it('still fails on any other error', async () => {
+  it('still fails on any error', async () => {
     answers.queue.push({ data: null, error: { code: '42501', message: 'permission denied' } })
     await expect(getSettings()).rejects.toThrow('permission denied')
     expect(answers.selects).toHaveLength(1)
