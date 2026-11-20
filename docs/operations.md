@@ -142,7 +142,7 @@ Treat anything read this way as private: it contains people's email addresses.
 
 Work through these, in this order:
 
-1. **Menu, Histórico.** If someone deleted it, it is there with who and when, and **Repor** puts it back exactly as it was. Switch to **Só apagados** to see only deletes.
+1. **Menu, Histórico, on the phone that entered it.** *Guardado no servidor* is the server's record: if someone deleted it, it is there with who and when, and **Repor** puts it back exactly as it was (**Só apagados** shows only deletes). *Neste telemóvel*, on top, is what that phone never managed to send: **Por enviar** is only on the phone, **Não aceite** was refused, with the reason.
 2. **The header chip.** On the phone of the person who entered it: if the small chip next to *Sair* says entries are waiting or were not accepted, they never reached the server. Tapping it shows each one, and the reason if the server refused it. Opening the app with a connection sends them.
 3. **Was it a late fee?** A late fee that was *deleted* used to come back the next time the app opened. That is fixed by migration `20261118000000_late_fee_waivers.sql`; until it has been run, use **Anular** instead of **Apagar** for late fees.
 4. **The edge logs** (see above) show whether the add request arrived and with what status.

@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
-import { money } from '../lib/format'
+import { describeEntry } from '../lib/entries'
 import { useLookups, useSyncSummary } from '../lib/hooks'
 import type { Entry } from '../lib/outbox'
 import { flush, outbox } from '../lib/sync'
-
-const TABLE_LABEL = { fines: 'multa', payments: 'pagamento', incomes: 'receita', expenses: 'despesa' } as const
 
 /**
  * A small chip in the header that appears only when there is something to say about the connection or
@@ -72,17 +70,7 @@ export default function SyncChip() {
 
 function EntryList({ entries, online }: { entries: Entry[]; online: boolean }) {
   const { players, types } = useLookups()
-  const describe = (e: Entry) => {
-    if (e.op === 'cancel') return e.cancelled ? 'Anular multa' : 'Repor multa'
-    if (e.op === 'delete') return `Apagar ${TABLE_LABEL[e.table]}`
-    const r = e.row
-    const who = typeof r.player_id === 'string' ? players.get(r.player_id)?.name : undefined
-    const what =
-      e.table === 'fines' ? types.get(String(r.fine_type_id))?.name
-      : e.table === 'payments' ? 'Pagamento'
-      : String(r.description ?? (e.table === 'incomes' ? 'Receita' : 'Despesa'))
-    return [what, who].filter(Boolean).join(' · ') + ` · ${money(Number(r.amount) || 0)}`
-  }
+  const describe = (e: Entry) => describeEntry(e, (id) => players.get(id)?.name, (id) => types.get(id)?.name)
   return (
     <ul className="sync-list">
       {entries.map((e) => (

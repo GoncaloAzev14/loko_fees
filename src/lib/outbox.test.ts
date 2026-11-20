@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createOutbox, OutboxError, type Entry, type Storage } from './outbox'
-import { ApiError, isRetryable } from './errors'
+import { ApiError, explainRefusal, isRetryable } from './errors'
 
 const memory = (): Storage & { data: Map<string, string>; failWrites: boolean } => {
   const data = new Map<string, string>()
@@ -93,6 +93,31 @@ describe('enqueue', () => {
   })
 })
 
+describe('what enqueue answers, and what is waiting', () => {
+  it('returns the ids of the entries it made', () => {
+    const ids = box.enqueue('ana', [fine('f1'), fine('f2')])
+    expect(ids).toEqual(box.forUser('ana').map((e) => e.id))
+  })
+
+  it('returns the id of the unsent entry a cancel was folded into', () => {
+    const [created] = box.enqueue('ana', [fine('f1')])
+    expect(box.enqueue('ana', [{ op: 'cancel', rowId: 'f1', cancelled: true }])).toEqual([created])
+  })
+
+  it('returns nothing when a delete cancels an entry that never left the phone', () => {
+    box.enqueue('ana', [fine('f1')])
+    expect(box.enqueue('ana', [{ op: 'delete', table: 'fines', rowId: 'f1' }])).toEqual([])
+  })
+
+  it('does not count a refused entry as waiting, but still keeps it', async () => {
+    box.enqueue('ana', [fine('f1')])
+    expect(box.hasWaiting('ana')).toBe(true)
+    await box.flush('ana', async () => { throw new Error('no') }, () => false)
+    expect(box.hasWaiting('ana')).toBe(false)
+    expect(box.hasEntries('ana')).toBe(true)
+  })
+})
+
 describe('flush', () => {
   const retryable = (e: unknown) => e instanceof TypeError
   const ids = (e: Entry[]) => e.map((x) => (x.op === 'insert' ? x.row.id : x.op === 'delete' ? x.rowId : x.rowId))
@@ -168,5 +193,20 @@ describe('isRetryable', () => {
     expect(isRetryable(new ApiError('permission denied', '42501', 403))).toBe(false)
     expect(isRetryable(new ApiError('new row violates check constraint', '23514', 400))).toBe(false)
     expect(isRetryable(new Error('something else'))).toBe(false)
+  })
+})
+
+describe('explainRefusal', () => {
+  it('puts the usual refusals in plain Portuguese and keeps the code', () => {
+    const e = explainRefusal(new ApiError('insert or update on table "payments" violates foreign key constraint "payments_player_id_fkey"', '23503', 409))
+    expect(e.message).toBe('O jogador ou o tipo de multa desta linha já não existe.')
+    expect(e.code).toBe('23503')
+    expect(explainRefusal(new ApiError('permission denied', '42501', 403)).message).toMatch(/Sem permissão/)
+    expect(explainRefusal(new ApiError('duplicate key', '23505', 409)).message).toMatch(/Já existe/)
+    expect(explainRefusal(new ApiError('check violation', '23514', 400)).message).toBe('Valor inválido.')
+  })
+
+  it('keeps the server\'s own words for anything it does not know', () => {
+    expect(explainRefusal(new ApiError('something odd', '99999', 400)).message).toBe('something odd')
   })
 })

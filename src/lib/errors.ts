@@ -34,3 +34,17 @@ export function isNetworkFailure(error: { code?: string; message?: string } | nu
   if (!error) return false
   return isRetryable(new ApiError(error.message ?? '', error.code ?? '', status ?? 0))
 }
+
+/**
+ * A refusal in words for the person. The server answers with database text ("violates foreign key
+ * constraint ..."); the usual ones become plain Portuguese, anything else keeps the server's own words.
+ */
+export function explainRefusal(error: ApiError): ApiError {
+  const text =
+    error.code === '23503' ? 'O jogador ou o tipo de multa desta linha já não existe.'
+    : error.code === '42501' ? 'Sem permissão: esta conta já não é de administrador?'
+    : error.code === '23505' ? 'Já existe uma linha igual.'
+    : error.code === '23514' || error.code === '22003' || error.code === '22P02' ? 'Valor inválido.'
+    : error.message
+  return new ApiError(text, error.code, error.status)
+}

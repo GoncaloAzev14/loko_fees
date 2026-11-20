@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import SaveStatus from '../../components/SaveStatus'
 import { Async, BalanceLine, ErrorNote, PlayerSelect, SyncBadge } from '../../components/ui'
 import { addPayment, deletePayment } from '../../lib/api'
 import { formatDate, money, parseAmount, todayISO } from '../../lib/format'
@@ -68,10 +69,12 @@ export default function Payments() {
         </Async>
         <ErrorNote error={save.error} />
         {done && <p className="good form-msg" role="status">{done}</p>}
+        <SaveStatus save={save.saved} />
       </div>
 
       <h2>Últimos pagamentos</h2>
       <ErrorNote error={del.error} />
+      <SaveStatus save={del.saved} />
       <Async q={payments}>
         {(rows) => (
           <ul className="list">

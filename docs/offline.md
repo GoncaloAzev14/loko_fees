@@ -55,7 +55,26 @@ Reading offline is handled separately. A service worker keeps the app itself and
 - **Lists** (the fines list, a player's page, Caixa, payments, income and expenses) show waiting entries straight away, marked **Por sincronizar**. A fine, payment, income or expense waiting to be deleted shows **A apagar…** and a waiting cancel shows **A anular…** or **A repor…**.
 - **Totals do not move yet.** The box, who owes what, and whether a fine is pending, overdue or paid are all worked out by the database. They change after the entries are sent, and the panel says so. This keeps the money rules in one place instead of copying them into the app.
 - **A small chip in the header**, next to *Sair*, appears only when there is something to say: *Offline*, how many entries wait (*Offline · 2*, *2 por enviar*), *A sincronizar*, or *Sem resposta* when the phone thinks it is online but the server cannot be reached. It sits in the header, not over the page, so it never covers a button. Tapping it opens a panel with the full message and the list of waiting entries, where each can be discarded; tapping outside closes it. On wide screens the chip is under the menu in the sidebar.
-- **Not accepted** entries stay in that list with the server's reason, and can be tried again or discarded.
+- **Not accepted** entries stay in that list with the server's reason, in plain Portuguese for the usual ones (for example "o jogador ou o tipo de multa já não existe"), and can be tried again or discarded. A refused entry never holds up what you save after it.
+
+### Did that really save?
+
+Right after every save (register a fine, a payment, income or an expense, and cancel or delete) the screen says which of three things happened, so nobody believes something is saved when it is not:
+
+| Message | What it means |
+| --- | --- |
+| **Guardado no servidor ✓** (green) | It reached the server. It is saved. |
+| **Guardado só no telemóvel: falta enviar** (amber) | It is only on this phone, waiting for a connection. It turns green by itself once it has been sent. |
+| **O servidor não aceitou: veja o Histórico** (red) | The server refused it. The reason is in Histórico. |
+
+Each message follows **its own** save, not the rest of the queue: an old refused entry elsewhere does not change what a new save says.
+
+### Histórico: what is on the server and what is only here
+
+**Menu, Histórico** has two parts. On top, **Neste telemóvel** lists this phone's entries that are waiting (**Por enviar**) or were refused (**Não aceite**, with the reason). Below, **Guardado no servidor** is the server's own record of every change, with who made it. The rule to remember:
+
+> A change in the server's list was saved. One marked **Por enviar** is only on this phone. One marked **Não aceite** was refused.
+
 
 ## Limits you should know about
 
@@ -81,6 +100,8 @@ If the server **cannot be reached** (no answer, a gateway error, an expired sess
 | `lib/sync.ts` | Send or save, the sending itself, the status the chip shows. |
 | `lib/errors.ts` | `ApiError`, and the single rule for "try later" versus "no". |
 | `lib/overlay.ts` | Puts waiting entries on top of lists, for display only. |
+| `lib/saveStatus.ts`, `components/SaveStatus.tsx` | The "did that really save?" message after a save, following that save's own entries. |
+| `lib/entries.ts` | Describes a waiting entry in words (used by the chip's panel and Histórico). |
 | `lib/offlineAuth.ts` | The stored sign-in and the remembered admin answer. |
 | `components/SyncManager.tsx` | Triggers the sending. Draws nothing. |
 | `components/SyncChip.tsx` | The header chip and its panel. |

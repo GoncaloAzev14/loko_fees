@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import * as api from './api'
 import { useAuth } from './auth'
+import type { Saved } from './saveStatus'
 import { getSyncStatus, outbox, subscribeSyncStatus } from './sync'
 import type { LedgerFilter } from './types'
 
@@ -52,20 +53,23 @@ export function useLookups() {
  */
 export function useAction<A extends unknown[]>(fn: (...args: A) => Promise<unknown>) {
   const qc = useQueryClient()
-  const [state, setState] = useState<{ busy: boolean; error: string | null }>({ busy: false, error: null })
+  const [state, setState] = useState<{ busy: boolean; error: string | null; saved: Saved | null }>({ busy: false, error: null, saved: null })
   const fnRef = useRef(fn)
   fnRef.current = fn
   const run = useCallback(
     async (...args: A) => {
-      setState({ busy: true, error: null })
+      setState({ busy: true, error: null, saved: null })
       try {
         const result = await fnRef.current(...args)
         // Saved on the phone to be sent later: nothing changed on the server, so there is nothing to read again.
-        if (!(result as { queued?: boolean } | undefined)?.queued) await qc.invalidateQueries()
-        setState({ busy: false, error: null })
+        const answer = result as { queued?: boolean; ids?: string[] } | undefined
+        const queued = Boolean(answer?.queued)
+        if (!queued) await qc.invalidateQueries()
+        // `saved` tells the screen whether it reached the server or is only waiting on this phone, and which entries to follow
+        setState({ busy: false, error: null, saved: { queued, ids: answer?.ids ?? [] } })
         return true
       } catch (e) {
-        setState({ busy: false, error: e instanceof Error ? e.message : 'Erro inesperado' })
+        setState({ busy: false, error: e instanceof Error ? e.message : 'Erro inesperado', saved: null })
         return false
       }
     },

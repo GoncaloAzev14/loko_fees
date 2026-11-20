@@ -40,6 +40,7 @@ h2 { font-size: 0.95rem; margin: 1.5rem 2px 0.7rem; font-weight: 600; }
 .muted { color: var(--muted); }
 .small { font-size: 0.82rem; }
 .good { color: var(--good); }
+.warn { color: #ffb454; font-weight: 600; }
 .bad { color: var(--brand); }
 .error { color: #ff8a5c; }
 .pad { padding: 1rem 0; }
@@ -220,6 +221,7 @@ a.row-title { color: var(--text); }
 .badge.owner { margin-left: 8px; background: var(--brand-soft); border: 1px solid var(--brand-line); color: var(--brand); }
 .badge.sync { background: transparent; border: 1px dashed var(--brand-line); color: var(--brand); }
 .row.waiting { opacity: 0.7; }
+.badge.failed { background: transparent; border: 1px solid #ff8a5c; color: #ff8a5c; }
 .badge.pending { margin-left: 8px; background: transparent; border: 1px solid var(--brand-line); color: var(--brand); }
 
 .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 4px; }

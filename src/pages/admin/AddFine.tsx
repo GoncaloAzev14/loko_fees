@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import SaveStatus from '../../components/SaveStatus'
 import SlideToConfirm from '../../components/SlideToConfirm'
 import { Async, ErrorNote } from '../../components/ui'
 import { addFines } from '../../lib/api'
@@ -100,6 +101,7 @@ export default function AddFine() {
 
                   <ErrorNote error={save.error} />
                   {done && <p className="good form-msg" role="status">{done}</p>}
+                  <SaveStatus save={save.saved} />
                   <SlideToConfirm
                     label="Deslize para registar"
                     busyLabel="A guardar…"

@@ -57,7 +57,7 @@ const payment = { player_id: 'p1', amount: 5, paid_on: '2026-11-10' }
 describe('with a connection and nothing waiting', () => {
   it('sends straight away, by id, ignoring a row that already exists', async () => {
     const r = await addPayment(payment)
-    expect(r).toEqual({ queued: false })
+    expect(r).toEqual({ queued: false, ids: [] })
     expect(supa.calls).toHaveLength(1)
     expect(supa.calls[0]).toMatchObject({ table: 'payments', op: 'upsert', opts: { onConflict: 'id', ignoreDuplicates: true } })
     expect((supa.calls[0].rows as { id: string }[])[0].id).toMatch(/^[0-9a-f-]{36}$/)
@@ -83,7 +83,7 @@ describe('without a connection', () => {
   it('saves on the phone, sends nothing, and says so', async () => {
     net.onLine = false
     const r = await addPayment(payment)
-    expect(r).toEqual({ queued: true })
+    expect(r).toMatchObject({ queued: true })
     expect(supa.calls).toHaveLength(0)
     expect(entries()).toHaveLength(1)
   })
@@ -137,7 +137,7 @@ describe('when the phone says online but the server cannot be reached', () => {
   it('saves instead of failing, then sends the same row id later without duplicating it', async () => {
     supa.next = () => NO_NETWORK
     const r = await addPayment(payment)
-    expect(r).toEqual({ queued: true })
+    expect(r).toMatchObject({ queued: true })
     const sentFirst = (supa.calls[0].rows as { id: string }[])[0].id
     expect(rowIds()).toEqual([sentFirst]) // the very same id is kept for the retry
 
@@ -156,7 +156,7 @@ describe('when the phone says online but the server cannot be reached', () => {
     await addPayment({ ...payment, amount: 1 }) // saved
     supa.next = null
     const r = await addPayment({ ...payment, amount: 2 }) // must not overtake the first
-    expect(r).toEqual({ queued: true })
+    expect(r).toMatchObject({ queued: true })
     supa.calls = []
     await flush()
     expect(supa.calls.map((c) => (c.rows as { amount: number }[])[0].amount)).toEqual([1, 2])
@@ -173,7 +173,7 @@ describe('when the server refuses an entry for good', () => {
     const result = await flush()
     expect(result).toEqual({ sent: 1, failed: 1, stopped: false })
     expect(entries()).toHaveLength(1)
-    expect(entries()[0].failed).toMatch(/foreign key/)
+    expect(entries()[0].failed).toMatch(/já não existe/)
     supa.calls = []
     await flush()
     expect(supa.calls).toHaveLength(0)
@@ -198,8 +198,42 @@ describe('without a usable session', () => {
     supa.session = null
     store.set('sb-x-auth-token', JSON.stringify({ user: { id: 'ana' } }))
     const r = await addPayment(payment)
-    expect(r).toEqual({ queued: true })
+    expect(r).toMatchObject({ queued: true })
     expect(supa.calls).toHaveLength(0)
+  })
+})
+
+describe('a refused entry in the queue', () => {
+  it('does not hold back later saves: they go straight to the server', async () => {
+    net.onLine = false
+    await addFines({ playerIds: ['gone'], fineTypeId: 't', amount: 2, finedOn: '2026-11-10' })
+    net.onLine = true
+    supa.next = () => REFUSED
+    await flush() // the server refuses it: it stays, marked
+    expect(entries()[0].failed).toBeTruthy()
+    supa.next = null
+    supa.calls = []
+    const r = await addPayment(payment)
+    expect(r).toEqual({ queued: false, ids: [] }) // sent at once, not queued behind the refused one
+    expect(supa.calls).toHaveLength(1)
+    expect(entries()).toHaveLength(1) // the refused one is still there, waiting for a decision
+  })
+})
+
+describe('what saving answers', () => {
+  it('names the entries kept on the phone, so the screen can follow them', async () => {
+    net.onLine = false
+    const r = await addFines({ playerIds: ['a', 'b'], fineTypeId: 't', amount: 2, finedOn: '2026-11-10' })
+    expect(r.queued).toBe(true)
+    expect(r.ids).toHaveLength(2)
+    expect(r.ids.sort()).toEqual(entries().map((e) => e.id).sort())
+  })
+
+  it('names nothing for a fine that was added and deleted before it left the phone', async () => {
+    net.onLine = false
+    await addFines({ playerIds: ['a'], fineTypeId: 't', amount: 2, finedOn: '2026-11-10' })
+    const r = await deleteFine(rowIds()[0])
+    expect(r).toEqual({ queued: true, ids: [] })
   })
 })
 

@@ -93,6 +93,8 @@ export function createOutbox(storage: Storage, key = OUTBOX_KEY, newId: () => st
     all: () => entries,
     forUser: (uid: string) => entries.filter((e) => e.uid === uid),
     hasEntries: (uid: string) => fresh().some((e) => e.uid === uid),
+    /** Entries still to be sent. One the server refused is not waiting: it never holds up what comes after it. */
+    hasWaiting: (uid: string) => fresh().some((e) => e.uid === uid && !e.failed),
     subscribe(listener: () => void) {
       listeners.add(listener)
       return () => void listeners.delete(listener)
@@ -108,27 +110,36 @@ export function createOutbox(storage: Storage, key = OUTBOX_KEY, newId: () => st
      * deleting something that was never sent just cancels it, cancelling something that was never sent
      * edits it, and a later cancel replaces an earlier one for the same fine.
      */
-    enqueue(uid: string, drafts: Draft[]) {
+    enqueue(uid: string, drafts: Draft[]): string[] {
       let next = [...fresh()]
+      const ids: string[] = [] // the entries that now stand for what was asked, so the caller can follow them
+      const add = (d: Draft) => {
+        const entry = { ...d, id: newId(), uid, at: Date.now() } as Entry
+        next.push(entry)
+        ids.push(entry.id)
+      }
       for (const d of drafts) {
         if (d.op === 'insert') {
-          next.push({ ...d, id: newId(), uid, at: Date.now() })
+          add(d)
         } else if (d.op === 'delete') {
           const unsent = next.find((e) => e.uid === uid && e.op === 'insert' && e.table === d.table && e.row.id === d.rowId)
           next = next.filter((e) => !(e.uid === uid && sameRow(e, null, d.rowId) && (e.op === 'cancel' || e === unsent)))
-          const alreadyDeleting = next.some((e) => e.uid === uid && e.op === 'delete' && e.table === d.table && e.rowId === d.rowId)
-          if (!unsent && !alreadyDeleting) next.push({ ...d, id: newId(), uid, at: Date.now() })
+          const already = next.find((e) => e.uid === uid && e.op === 'delete' && e.table === d.table && e.rowId === d.rowId)
+          if (already) ids.push(already.id)
+          else if (!unsent) add(d) // an unsent row that is deleted simply never existed: nothing to follow
         } else {
           const unsent = next.find((e) => e.uid === uid && e.op === 'insert' && e.table === 'fines' && e.row.id === d.rowId)
           if (unsent && unsent.op === 'insert') {
             next = next.map((e) => (e === unsent && e.op === 'insert' ? { ...e, row: { ...e.row, cancelled: d.cancelled } } : e))
+            ids.push(unsent.id)
           } else {
             next = next.filter((e) => !(e.uid === uid && e.op === 'cancel' && e.rowId === d.rowId))
-            next.push({ ...d, id: newId(), uid, at: Date.now() })
+            add(d)
           }
         }
       }
       write(next)
+      return ids
     },
 
     remove(id: string) {

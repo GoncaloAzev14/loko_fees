@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { ApiError, isRetryable } from './errors'
+import { ApiError, explainRefusal, isRetryable } from './errors'
 import { storedSession } from './offlineAuth'
 import { browserStorage, createOutbox, type Draft, type Entry, type FlushResult } from './outbox'
 
@@ -89,27 +89,32 @@ async function sendAll(drafts: Draft[], onSent: (n: number) => void) {
  * is an error the person sees. Offline, or if the server cannot be reached, or if older changes are
  * still waiting (so order is kept), they are saved on the phone to be sent later.
  */
-export async function submit(drafts: Draft[]): Promise<{ queued: boolean }> {
+/** What saving answered: straight to the server, or kept on the phone (and which entries stand for it). */
+export interface SubmitResult {
+  queued: boolean
+  ids: string[]
+}
+
+export async function submit(drafts: Draft[]): Promise<SubmitResult> {
   const uid = await currentUid()
   if (!uid) {
     await sendAll(drafts, () => {}) // not signed in: the server says no, in its own words
-    return { queued: false }
+    return { queued: false, ids: [] }
   }
-  if (isOffline() || outbox.hasEntries(uid) || !(await hasLiveSession())) {
-    outbox.enqueue(uid, drafts)
+  if (isOffline() || outbox.hasWaiting(uid) || !(await hasLiveSession())) {
+    const ids = outbox.enqueue(uid, drafts)
     void flush()
-    return { queued: true }
+    return { queued: true, ids }
   }
   let sent = 0
   try {
     await sendAll(drafts, (n) => (sent += n))
     setStatus({ unreachable: false })
-    return { queued: false }
+    return { queued: false, ids: [] }
   } catch (error) {
     if (!isRetryable(error)) throw error
     setStatus({ unreachable: true })
-    outbox.enqueue(uid, drafts.slice(sent))
-    return { queued: true }
+    return { queued: true, ids: outbox.enqueue(uid, drafts.slice(sent)) }
   }
 }
 
@@ -121,10 +126,12 @@ export function flush(): Promise<FlushResult> {
   running = (async (): Promise<FlushResult> => {
     const idle: FlushResult = { sent: 0, failed: 0, stopped: false }
     const uid = await currentUid()
-    if (!uid || isOffline() || !outbox.hasEntries(uid) || !(await hasLiveSession())) return idle
+    if (!uid || isOffline() || !outbox.hasWaiting(uid) || !(await hasLiveSession())) return idle
     setStatus({ syncing: true })
     try {
-      const result = await outbox.flush(uid, (e: Entry) => sendOne(e), isRetryable)
+      // a refusal is stored with words the person can read, not the database's
+      const send = (e: Entry) => sendOne(e).catch((error) => { throw error instanceof ApiError && !isRetryable(error) ? explainRefusal(error) : error })
+      const result = await outbox.flush(uid, send, isRetryable)
       setStatus({ unreachable: result.stopped })
       if (result.sent > 0 || result.failed > 0) flushedListeners.forEach((l) => l(result))
       return result

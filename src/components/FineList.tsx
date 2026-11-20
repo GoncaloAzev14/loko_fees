@@ -5,14 +5,16 @@ import { deleteFine, setFineCancelled } from '../lib/api'
 import { useAction, useLookups } from '../lib/hooks'
 import { fineName } from '../lib/labels'
 import type { LedgerRow } from '../lib/types'
+import SaveStatus from './SaveStatus'
 import { ErrorNote, StatusBadge, SyncBadge } from './ui'
 
 /** Fines with their status. Admins also get cancel / delete buttons. */
 export function FineList({ rows, showPlayer = true, groupByDate = false }: { rows: LedgerRow[]; showPlayer?: boolean; groupByDate?: boolean }) {
   const { players, types } = useLookups()
   const { isAdmin } = useAuth()
-  const cancel = useAction(setFineCancelled)
-  const del = useAction(deleteFine)
+  // one action for both buttons, so there is one status line: the latest thing that was done
+  const act = useAction((kind: 'cancel' | 'delete', id: string, cancelled?: boolean) =>
+    kind === 'cancel' ? setFineCancelled(id, Boolean(cancelled)) : deleteFine(id))
 
   if (rows.length === 0) return <p className="muted pad">Sem multas para mostrar.</p>
 
@@ -33,13 +35,13 @@ export function FineList({ rows, showPlayer = true, groupByDate = false }: { row
         </div>
         {isAdmin && (!r.sync || r.sync === 'queued') && (
           <div className="row-actions">
-            <button className="link" disabled={cancel.busy} onClick={() => cancel.run(r.id, !r.cancelled)}>
+            <button className="link" disabled={act.busy} onClick={() => act.run('cancel', r.id, !r.cancelled)}>
               {r.cancelled ? 'Repor' : 'Anular'}
             </button>
             <button
               className="link danger"
-              disabled={del.busy}
-              onClick={() => confirm(r.kind === 'late_fee' ? 'Apagar esta multa de atraso? Não volta a ser aplicada a este jogador neste mês.' : 'Apagar esta multa definitivamente?') && del.run(r.id)}
+              disabled={act.busy}
+              onClick={() => confirm(r.kind === 'late_fee' ? 'Apagar esta multa de atraso? Não volta a ser aplicada a este jogador neste mês.' : 'Apagar esta multa definitivamente?') && act.run('delete', r.id)}
             >
               Apagar
             </button>
@@ -53,7 +55,12 @@ export function FineList({ rows, showPlayer = true, groupByDate = false }: { row
     </li>
   )
 
-  const errors = <ErrorNote error={cancel.error ?? del.error} />
+  const errors = (
+    <>
+      <ErrorNote error={act.error} />
+      <SaveStatus save={act.saved} />
+    </>
+  )
   if (!groupByDate)
     return (
       <>

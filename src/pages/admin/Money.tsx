@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { PlusIcon } from '../../components/icons'
+import SaveStatus from '../../components/SaveStatus'
 import { Async, ErrorNote, SyncBadge } from '../../components/ui'
 import { addExpense, addIncome, deleteExpense, deleteIncome } from '../../lib/api'
 import { formatDate, money, parseAmount, todayISO } from '../../lib/format'
@@ -64,6 +65,7 @@ function IncomeForm() {
         <button className="cf-add" aria-label="Adicionar receita" disabled={save.busy}><PlusIcon /></button>
       </div>
       <ErrorNote error={save.error} />
+      <SaveStatus save={save.saved} />
     </form>
   )
 }
@@ -96,6 +98,7 @@ function ExpenseForm() {
         <button className="cf-add" aria-label="Adicionar despesa" disabled={save.busy}><PlusIcon /></button>
       </div>
       <ErrorNote error={save.error} />
+      <SaveStatus save={save.saved} />
     </form>
   )
 }
@@ -108,6 +111,7 @@ function IncomeList() {
   return (
     <>
       <ErrorNote error={del.error} />
+      <SaveStatus save={del.saved} />
       <Async q={q}>
         {(serverRows) => {
           const rows = withQueuedIncomes(serverRows, queued)
@@ -147,6 +151,7 @@ function ExpenseList() {
   return (
     <>
       <ErrorNote error={del.error} />
+      <SaveStatus save={del.saved} />
       <Async q={q}>
         {(serverRows) => {
           const rows = withQueuedExpenses(serverRows, queued)
