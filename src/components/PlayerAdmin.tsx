@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useConfirm } from './Confirm'
-import { PlusIcon } from './icons'
+import { CheckIcon, PencilIcon, PlusIcon, TrashIcon, XIcon } from './icons'
+import IconButton from './IconButton'
 import { Avatar, ErrorNote } from './ui'
 import { deletePlayer, savePlayer } from '../lib/api'
 import { money } from '../lib/format'
@@ -79,8 +80,8 @@ export function PlayerCard({ b, admin }: { b: Balance; admin: boolean }) {
             <RoleSelect className="role-wide" value={role} onChange={setRole} />
           </div>
           <div className="row-actions">
-            <button className="btn small" disabled={!name.trim() || !changed || save.busy}>Guardar</button>
-            <button type="button" className="link" onClick={() => setEditing(false)}>Cancelar</button>
+            <IconButton Icon={CheckIcon} label="Guardar" tone="solid" type="submit" disabled={!name.trim() || !changed || save.busy} />
+            <IconButton Icon={XIcon} label="Cancelar" onClick={() => setEditing(false)} />
           </div>
           <ErrorNote error={save.error} />
         </form>
@@ -99,14 +100,11 @@ export function PlayerCard({ b, admin }: { b: Balance; admin: boolean }) {
         </div>
         {admin && (
           <div className="row-actions">
-            <button className="link" onClick={startEditing}>Editar</button>
-            <button
-              className="link danger"
-              disabled={del.busy}
+            <IconButton Icon={PencilIcon} label={`Editar ${b.name}`} onClick={startEditing} />
+            <IconButton
+              Icon={TrashIcon} label={`Apagar ${b.name}`} tone="danger" disabled={del.busy}
               onClick={async () => (await ask({ title: `Apagar ${b.name}?`, message: 'Só é possível se não tiver multas nem pagamentos.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(b.player_id)}
-            >
-              Apagar
-            </button>
+            />
           </div>
         )}
         {admin && <ErrorNote error={toggle.error ?? del.error} />}

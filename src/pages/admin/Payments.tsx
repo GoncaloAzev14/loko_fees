@@ -6,7 +6,8 @@ import { Async, BalanceLine, ErrorNote, PlayerSelect, SyncBadge } from '../../co
 import { addPayment, deletePayment } from '../../lib/api'
 import { formatDate, money, parseAmount, todayISO } from '../../lib/format'
 import Folded from '../../components/Folded'
-import { SearchIcon } from '../../components/icons'
+import { SearchIcon, TrashIcon, XIcon } from '../../components/icons'
+import IconButton from '../../components/IconButton'
 import { groupByMonth, matchesQuery } from '../../lib/paymentsView'
 import { useAction, useBalances, useLookups, usePayments, useQueuedEntries } from '../../lib/hooks'
 import { withQueuedPayments } from '../../lib/overlay'
@@ -111,7 +112,7 @@ export default function Payments() {
                 <span>
                   {filtering ? `${shown.length} de ${everyone.length}` : shown.length} {shown.length === 1 ? 'pagamento' : 'pagamentos'} · {money(total)}
                 </span>
-                {filtering && <button className="link" onClick={clear}>Limpar</button>}
+                {filtering && <IconButton Icon={XIcon} label="Limpar pesquisa e filtro" onClick={clear} />}
               </p>
               {shown.length === 0 && <p className="muted pad">Nenhum pagamento encontrado.</p>}
               <Folded
@@ -126,7 +127,7 @@ export default function Payments() {
                       </div>
                       {p.sync !== 'deleting' && (
                         <div className="row-actions">
-                          <button className="link danger" disabled={del.busy} onClick={async () => (await ask({ title: 'Apagar este pagamento?', message: 'Deixa de contar para o jogador e para a caixa. Pode repô-lo no Histórico.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(p.id)}>Apagar</button>
+                          <IconButton Icon={TrashIcon} label="Apagar pagamento" tone="danger" disabled={del.busy} onClick={async () => (await ask({ title: 'Apagar este pagamento?', message: 'Deixa de contar para o jogador e para a caixa. Pode repô-lo no Histórico.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(p.id)} />
                         </div>
                       )}
                     </div>

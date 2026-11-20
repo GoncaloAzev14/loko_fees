@@ -626,3 +626,22 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
 .row.inactive .avatar { opacity: 0.55; }
 .stack-gap { margin: 0 0 10px; }
 .cf-row > .role-wide { flex: 0 0 156px; font-size: 0.86rem; padding-left: 12px; padding-right: 28px; }
+
+/* small actions shown as icons: exit, bin, pencil… (components/IconButton.tsx) */
+.ib {
+  display: inline-flex; align-items: center; justify-content: center; flex: none; width: 34px; height: 34px; padding: 0;
+  border: 1px solid var(--line); border-radius: 11px; background: transparent; color: var(--brand); cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: background 0.15s, border-color 0.15s;
+}
+.ib .ic { width: 18px; height: 18px; }
+.ib:hover { background: var(--brand-soft); border-color: var(--brand-line); }
+.ib:active { background: var(--brand-soft); }
+.ib.danger { color: #ff8a5c; }
+.ib.danger:hover, .ib.danger:active { background: rgba(255, 138, 92, 0.12); border-color: rgba(255, 138, 92, 0.4); }
+.ib.solid { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+.ib.solid:hover { background: var(--brand); filter: brightness(1.08); }
+.ib:disabled { opacity: 0.45; cursor: default; }
+.ib:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.row-actions .ib { width: 32px; height: 32px; }
+.row-actions { align-items: center; }
+.topbar-end .ib { border-color: transparent; }

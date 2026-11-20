@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useConfirm } from './Confirm'
-import { PlusIcon } from './icons'
+import { CheckIcon, PencilIcon, PlusIcon, TrashIcon, XIcon } from './icons'
+import IconButton from './IconButton'
 import { ErrorNote } from './ui'
 import { deleteFineType, saveFineType, setLateFeeEnabled } from '../lib/api'
 import { money, parseAmount } from '../lib/format'
@@ -73,8 +74,8 @@ export function FineTypeRow({ t }: { t: FineType }) {
             <input className="narrow" aria-label="Valor (€)" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </div>
           <div className="row-actions">
-            <button className="btn small" disabled={!valid || !changed || save.busy}>Guardar</button>
-            <button type="button" className="link" onClick={() => setEditing(false)}>Cancelar</button>
+            <IconButton Icon={CheckIcon} label="Guardar" tone="solid" type="submit" disabled={!valid || !changed || save.busy} />
+            <IconButton Icon={XIcon} label="Cancelar" onClick={() => setEditing(false)} />
           </div>
           <ErrorNote error={save.error} />
         </form>
@@ -89,14 +90,11 @@ export function FineTypeRow({ t }: { t: FineType }) {
           {!t.active && <span className="badge pending-off">Desativada</span>}
         </div>
         <div className="row-actions">
-          <button className="link" onClick={startEditing}>Editar</button>
-          <button
-            className="link danger"
-            disabled={del.busy}
+          <IconButton Icon={PencilIcon} label={`Editar ${t.name}`} onClick={startEditing} />
+          <IconButton
+            Icon={TrashIcon} label={`Apagar ${t.name}`} tone="danger" disabled={del.busy}
             onClick={async () => (await ask({ title: `Apagar «${t.name}»?`, message: 'Só é possível se nenhuma multa a usar.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(t.id)}
-          >
-            Apagar
-          </button>
+          />
         </div>
         <ErrorNote error={toggle.error ?? del.error} />
       </div>

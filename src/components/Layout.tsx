@@ -3,7 +3,8 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { useClubName } from '../lib/hooks'
 import { ADMIN_LINKS } from './adminLinks'
-import { HomeIcon, LoginIcon, ListIcon, ReceiptIcon, UsersIcon } from './icons'
+import { HomeIcon, ListIcon, LoginIcon, LogoutIcon, ReceiptIcon, UsersIcon } from './icons'
+import IconButton from './IconButton'
 import Logo from './Logo'
 import SyncChip from './SyncChip'
 import TabBar from './TabBar'
@@ -61,7 +62,7 @@ export default function Layout() {
           )}
         </nav>
         <SyncChip />
-        {session && <button className="link signout" onClick={signOut}>Terminar sessão</button>}
+        {session && <div className="signout"><IconButton Icon={LogoutIcon} label="Terminar sessão" onClick={signOut} /></div>}
       </aside>
 
       <header className="topbar">
@@ -69,7 +70,7 @@ export default function Layout() {
           <Brand />
           <div className="topbar-end">
             <SyncChip />
-            {session && <button className="link" onClick={signOut}>Sair</button>}
+            {session && <IconButton Icon={LogoutIcon} label="Sair" onClick={signOut} />}
           </div>
         </div>
       </header>

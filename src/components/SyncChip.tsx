@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { describeEntry } from '../lib/entries'
 import { useConfirm } from './Confirm'
+import { RefreshIcon, TrashIcon } from './icons'
+import IconButton from './IconButton'
 import { useToast } from './Toast'
 import { useLookups, useSyncSummary } from '../lib/hooks'
 import type { Entry } from '../lib/outbox'
@@ -83,9 +85,9 @@ function EntryList({ entries, online }: { entries: Entry[]; online: boolean }) {
           <div className="row-sub">{e.failed ? 'Não foi aceite' : online ? 'À espera de ser enviado' : 'A aguardar ligação'}</div>
           {e.failed && <p className="why small">{e.failed}</p>}
           <div className="row-actions">
-            {e.failed && <button className="link" onClick={() => { outbox.retry(e.id); void flush(); toast('A tentar enviar outra vez') }}>Tentar de novo</button>}
-            <button
-              className="link danger"
+            {e.failed && <IconButton Icon={RefreshIcon} label="Tentar de novo" onClick={() => { outbox.retry(e.id); void flush(); toast('A tentar enviar outra vez') }} />}
+            <IconButton
+              Icon={TrashIcon} label="Descartar" tone="danger"
               onClick={async () => {
                 const yes = await ask({ title: 'Descartar esta alteração?', message: 'Não será enviada ao servidor e perde-se.', confirmLabel: 'Descartar', cancelLabel: 'Manter', tone: 'danger' })
                 if (yes) {
@@ -93,9 +95,7 @@ function EntryList({ entries, online }: { entries: Entry[]; online: boolean }) {
                   toast('Alteração descartada')
                 }
               }}
-            >
-              Descartar
-            </button>
+            />
           </div>
         </li>
       ))}

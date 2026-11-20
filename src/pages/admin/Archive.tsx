@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useConfirm } from '../../components/Confirm'
+import { TrashIcon } from '../../components/icons'
+import IconButton from '../../components/IconButton'
 import { Async, ErrorNote } from '../../components/ui'
 import { deleteArchivedSeason } from '../../lib/api'
 import { formatDate, money } from '../../lib/format'
@@ -85,13 +87,10 @@ function Season({ s }: { s: ArchivedSeason }) {
             )}
           </Async>
           <ErrorNote error={del.error} />
-          <button
-            className="link danger"
-            disabled={del.busy}
+          <IconButton
+            Icon={TrashIcon} label="Apagar este arquivo" tone="danger" disabled={del.busy}
             onClick={async () => (await ask({ title: `Apagar o arquivo da época ${s.season}?`, message: 'O resumo desta época perde-se e não se pode repor.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(s.id)}
-          >
-            Apagar este arquivo
-          </button>
+          />
         </div>
       )}
     </section>

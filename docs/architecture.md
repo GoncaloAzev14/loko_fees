@@ -109,6 +109,10 @@ Searching or filtering opens the sections that match, so nothing is hidden behin
 
 It is one pair of pieces: `groupRows` in [`lib/groups.ts`](../src/lib/groups.ts) (pure: groups consecutive rows by day or month and adds up their amounts) and the `Folded` component ([`components/Folded.tsx`](../src/components/Folded.tsx)), which takes the rows, how to find a row's date, how to draw one row, whether the list is being filtered, and a `resetKey` that closes the sections again when the filters change. A new long list should use it rather than draw its own sections.
 
+## Small actions are icons
+
+The small actions on rows and in the header are icon buttons, not words: exit (Sair), pencil (Editar), bin (Apagar), a circle with a slash (Anular a fine) and an undo arrow (Repor), a check and a cross (save or leave an edit), refresh (try again), a paper plane (resend an invitation), and the double chevrons that open or close every group of a list. They are all drawn by `IconButton` ([`components/IconButton.tsx`](../src/components/IconButton.tsx)), which **requires a label**: it is the accessible name and the tooltip, so a screen reader and a long press still say what the button does. Words stay on the big buttons that do a main job (Entrar, Registar, Guardar in a full form, Fechar a época), in the confirmation dialogs, and in links inside a sentence. A new small action should use `IconButton` with an icon from `components/icons.tsx`.
+
 ## Layout and scrolling
 
 The page itself never scrolls: `body` is fixed and `#root` is the only scroller, with `overscroll-behavior: none`. This stops Safari dragging the whole page. Header, tab bar and menu are fixed. Pages pin their filters in a `.sticky-box`. Changing page scrolls `#root` back to the top.

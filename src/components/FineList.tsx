@@ -9,6 +9,8 @@ import { useConfirm } from './Confirm'
 import SaveStatus from './SaveStatus'
 import type { GroupBy } from '../lib/groups'
 import Folded from './Folded'
+import { BanIcon, TrashIcon, UndoIcon } from './icons'
+import IconButton from './IconButton'
 import { ErrorNote, StatusBadge, SyncBadge } from './ui'
 
 /**
@@ -48,11 +50,12 @@ export function FineList({
         </div>
         {isAdmin && (!r.sync || r.sync === 'queued') && (
           <div className="row-actions">
-            <button className="link" disabled={act.busy} onClick={() => act.run('cancel', r.id, !r.cancelled)}>
-              {r.cancelled ? 'Repor' : 'Anular'}
-            </button>
-            <button
-              className="link danger"
+            <IconButton
+              Icon={r.cancelled ? UndoIcon : BanIcon} label={r.cancelled ? 'Repor multa' : 'Anular multa'}
+              disabled={act.busy} onClick={() => act.run('cancel', r.id, !r.cancelled)}
+            />
+            <IconButton
+              Icon={TrashIcon} label="Apagar multa" tone="danger"
               disabled={act.busy}
               onClick={async () => {
                 const late = r.kind === 'late_fee'
@@ -63,9 +66,7 @@ export function FineList({
                 )
                 if (yes) act.run('delete', r.id, undefined, late)
               }}
-            >
-              Apagar
-            </button>
+            />
           </div>
         )}
       </div>

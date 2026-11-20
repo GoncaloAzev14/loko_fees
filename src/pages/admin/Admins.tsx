@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useConfirm } from '../../components/Confirm'
+import { SendIcon, UserMinusIcon, XIcon } from '../../components/icons'
+import IconButton from '../../components/IconButton'
 import { Async, ErrorNote } from '../../components/ui'
 import { inviteAdmin, removeAdmin } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
@@ -64,13 +66,10 @@ export default function Admins() {
                     {!me && !a.is_owner && (
                       <div className="row-actions">
                         {a.pending && (
-                          <button className="link" disabled={invite.busy} onClick={() => { setDone(null); invite.run(a.email) }}>
-                            Reenviar convite
-                          </button>
+                          <IconButton Icon={SendIcon} label="Reenviar convite" disabled={invite.busy} onClick={() => { setDone(null); invite.run(a.email) }} />
                         )}
-                        <button
-                          className="link danger"
-                          disabled={remove.busy}
+                        <IconButton
+                          Icon={a.pending ? XIcon : UserMinusIcon} label={a.pending ? 'Cancelar convite' : 'Retirar acesso'} tone="danger" disabled={remove.busy}
                           onClick={async () => {
                             const yes = await ask(
                               a.pending
@@ -79,9 +78,7 @@ export default function Admins() {
                             )
                             if (yes) remove.run(a.user_id, a.pending === true)
                           }}
-                        >
-                          {a.pending ? 'Cancelar convite' : 'Retirar acesso'}
-                        </button>
+                        />
                       </div>
                     )}
                   </div>

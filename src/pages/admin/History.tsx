@@ -5,6 +5,8 @@ import { Async, ErrorNote } from '../../components/ui'
 import { restoreChange } from '../../lib/api'
 import { describeChange, whoLabel } from '../../lib/changes'
 import Folded from '../../components/Folded'
+import { RefreshIcon, TrashIcon, UndoIcon } from '../../components/icons'
+import IconButton from '../../components/IconButton'
 import { toISO } from '../../lib/format'
 import { describeEntry } from '../../lib/entries'
 import { useAction, useChanges, useLookups, useQueuedEntries } from '../../lib/hooks'
@@ -55,9 +57,9 @@ export default function History() {
                     {e.failed && <span> {e.failed}</span>}
                   </div>
                   <div className="row-actions">
-                    {e.failed && <button className="link" onClick={() => { outbox.retry(e.id); void flush(); toast('A tentar enviar outra vez') }}>Tentar de novo</button>}
-                    <button
-                      className="link danger"
+                    {e.failed && <IconButton Icon={RefreshIcon} label="Tentar de novo" onClick={() => { outbox.retry(e.id); void flush(); toast('A tentar enviar outra vez') }} />}
+                    <IconButton
+                      Icon={TrashIcon} label="Descartar" tone="danger"
                       onClick={async () => {
                         const yes = await ask({ title: 'Descartar esta alteração?', message: 'Não será enviada ao servidor e perde-se.', confirmLabel: 'Descartar', cancelLabel: 'Manter', tone: 'danger' })
                         if (yes) {
@@ -65,9 +67,7 @@ export default function History() {
                           toast('Alteração descartada')
                         }
                       }}
-                    >
-                      Descartar
-                    </button>
+                    />
                   </div>
                 </div>
               </li>
@@ -97,13 +97,10 @@ export default function History() {
                       <div className="row-sub">{when.format(new Date(c.at))} · {whoLabel(c.who_email)}</div>
                       {c.restorable && (
                         <div className="row-actions">
-                          <button
-                            className="link"
-                            disabled={restore.busy}
+                          <IconButton
+                            Icon={UndoIcon} label="Repor" disabled={restore.busy}
                             onClick={async () => (await ask({ title: 'Repor esta entrada?', message: 'Volta a ficar exatamente como estava.', confirmLabel: 'Repor' })) && restore.run(c.id)}
-                          >
-                            Repor
-                          </button>
+                          />
                         </div>
                       )}
                     </div>

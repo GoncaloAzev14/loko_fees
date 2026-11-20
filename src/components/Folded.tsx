@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { groupRows, type GroupBy } from '../lib/groups'
 import { money } from '../lib/format'
-import { ChevronRightIcon } from './icons'
+import { ChevronRightIcon, ChevronsDownIcon, ChevronsUpIcon } from './icons'
+import IconButton from './IconButton'
 
 interface Props<T> {
   /** Newest first. */
@@ -42,9 +43,10 @@ export default function Folded<T>({ rows, dateOf, by, amountOf, formatTotal = mo
     <>
       {groups.length > 1 && (
         <p className="fold-tools">
-          <button className="link" onClick={() => setToggled(Object.fromEntries(groups.map((g) => [g.key, !allOpen])))}>
-            {allOpen ? 'Recolher tudo' : 'Abrir tudo'}
-          </button>
+          <IconButton
+            Icon={allOpen ? ChevronsUpIcon : ChevronsDownIcon} label={allOpen ? 'Recolher tudo' : 'Abrir tudo'}
+            onClick={() => setToggled(Object.fromEntries(groups.map((g) => [g.key, !allOpen])))}
+          />
         </p>
       )}
       {groups.map((g) => {

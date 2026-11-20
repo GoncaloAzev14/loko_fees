@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { PlusIcon } from '../../components/icons'
+import { PlusIcon, TrashIcon } from '../../components/icons'
+import IconButton from '../../components/IconButton'
 import { useConfirm } from '../../components/Confirm'
 import SaveStatus from '../../components/SaveStatus'
 import Folded from '../../components/Folded'
@@ -130,7 +131,7 @@ function IncomeList() {
                     <div className="row-sub">{formatDate(i.received_on)}{i.player_id && ` · ${players.get(i.player_id)?.name ?? ''}`}</div>
                     {i.sync !== 'deleting' && (
                       <div className="row-actions">
-                        <button className="link danger" onClick={async () => (await ask({ title: 'Apagar esta receita?', message: 'Deixa de contar para a caixa. Pode repô-la no Histórico.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(i.id)}>Apagar</button>
+                        <IconButton Icon={TrashIcon} label="Apagar receita" tone="danger" onClick={async () => (await ask({ title: 'Apagar esta receita?', message: 'Deixa de contar para a caixa. Pode repô-la no Histórico.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(i.id)} />
                       </div>
                 )}
               </div>
@@ -172,7 +173,7 @@ function ExpenseList() {
                     <div className="row-sub">{formatDate(x.spent_on)}</div>
                     {x.sync !== 'deleting' && (
                       <div className="row-actions">
-                        <button className="link danger" onClick={async () => (await ask({ title: 'Apagar esta despesa?', message: 'Volta a contar para a caixa. Pode repô-la no Histórico.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(x.id)}>Apagar</button>
+                        <IconButton Icon={TrashIcon} label="Apagar despesa" tone="danger" onClick={async () => (await ask({ title: 'Apagar esta despesa?', message: 'Volta a contar para a caixa. Pode repô-la no Histórico.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(x.id)} />
                       </div>
                 )}
               </div>

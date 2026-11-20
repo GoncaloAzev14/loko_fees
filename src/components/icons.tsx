@@ -63,3 +63,16 @@ export const TouchIcon = (p: IconProps) => (
     <path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-6-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
   </Svg>
 )
+
+// icons for the small actions on rows and in the header (see IconButton)
+export const LogoutIcon = (p: IconProps) => <Svg {...p}><path d="M10 4H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M15 8l4 4-4 4M19 12H9" /></Svg>
+export const TrashIcon = (p: IconProps) => <Svg {...p}><path d="M4 7h16M9 7V4.5h6V7M6.5 7l.8 12a1 1 0 0 0 1 .9h7.4a1 1 0 0 0 1-.9l.8-12M10 11v5.5M14 11v5.5" /></Svg>
+export const PencilIcon = (p: IconProps) => <Svg {...p}><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17zM14 7l3 3" /></Svg>
+export const BanIcon = (p: IconProps) => <Svg {...p}><circle cx="12" cy="12" r="8" /><path d="M6.3 6.3l11.4 11.4" /></Svg>
+export const UndoIcon = (p: IconProps) => <Svg {...p}><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3" /></Svg>
+export const RefreshIcon = (p: IconProps) => <Svg {...p}><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4.5v4.5H8" /></Svg>
+export const XIcon = (p: IconProps) => <Svg {...p}><path d="M6 6l12 12M18 6L6 18" /></Svg>
+export const SendIcon = (p: IconProps) => <Svg {...p}><path d="M21 3L10 14M21 3l-6.5 18-4-7.5L3 9.5z" /></Svg>
+export const UserMinusIcon = (p: IconProps) => <Svg {...p}><path d="M15 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM17 8h5" /></Svg>
+export const ChevronsDownIcon = (p: IconProps) => <Svg {...p}><path d="M7 7.5l5 5 5-5M7 13l5 5 5-5" /></Svg>
+export const ChevronsUpIcon = (p: IconProps) => <Svg {...p}><path d="M7 11l5-5 5 5M7 16.5l5-5 5 5" /></Svg>
