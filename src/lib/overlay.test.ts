@@ -75,6 +75,12 @@ describe('payments, income and expenses', () => {
     expect(withQueuedPayments(rows, entries).map((p) => p.id)).toContain('other')
   })
 
+  it('never cuts a long list short: every payment comes back, old ones included', () => {
+    const many = Array.from({ length: 300 }, (_, i) => pay({ id: `p${i}`, paid_on: `2026-${String(1 + (i % 12)).padStart(2, '0')}-10` }))
+    expect(withQueuedPayments(many, [])).toHaveLength(300)
+    expect(withQueuedPayments(many, [insert('payments', { id: 'q', player_id: 'p1', amount: 1, paid_on: '2026-11-02' })])).toHaveLength(301)
+  })
+
   it('shows waiting income and expenses, and marks waiting deletes', () => {
     const incomes = withQueuedIncomes(
       [{ id: 'i1', player_id: null, amount: 40, received_on: '2026-10-03', description: 'Prémio' }],

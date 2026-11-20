@@ -70,7 +70,7 @@ docs/                        this documentation
 
 ## One layer for the backend
 
-Screens never call Supabase directly. They use hooks in `lib/hooks.ts`, which call functions in `lib/api.ts`. That file is the whole contract with the backend, so a change to a table or function usually touches `api.ts`, `types.ts` and one page. The everyday money writes in it go through `lib/sync.ts`, which sends them straight away or, offline, saves them for later.
+Screens never call Supabase directly. They use hooks in `lib/hooks.ts`, which call functions in `lib/api.ts`. That file is the whole contract with the backend, so a change to a table or function usually touches `api.ts`, `types.ts` and one page. Lists show every row: nothing is cut to "the latest" in the app. (Supabase itself returns at most 1000 rows per request. That is far above a season's payments or fines, but a list that ever reached it would be cut silently.) The everyday money writes in it go through `lib/sync.ts`, which sends them straight away or, offline, saves them for later.
 
 Reads go to the three views (`fine_ledger`, `player_balance`, `club_summary`) and plain tables. Anything involving a rule (settling payments, late fees, closing a season, admin changes) is done **in the database**, never recomputed in the browser.
 
@@ -88,7 +88,7 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 | `/recover` | First access / forgotten password with an emailed code | everyone |
 | `/set-password` | Where the invitation link lands | whoever the link signed in |
 | `/admin/fines/new` | Register fines (one or many players) | admins |
-| `/admin/payments` | Record payments | admins |
+| `/admin/payments` | Record payments, and see and delete **every** payment (newest first, grouped by month, filter by player) | admins |
 | `/admin/money` | Income and expenses | admins |
 | `/admin/catalog` | Fine types | admins |
 | `/admin/players` | Roster management | admins |

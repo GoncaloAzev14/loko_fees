@@ -4,6 +4,7 @@ import SaveStatus from '../../components/SaveStatus'
 import { Async, BalanceLine, ErrorNote, PlayerSelect, SyncBadge } from '../../components/ui'
 import { addPayment, deletePayment } from '../../lib/api'
 import { formatDate, money, parseAmount, todayISO } from '../../lib/format'
+import { groupByMonth } from '../../lib/paymentsView'
 import { useAction, useBalances, useLookups, usePayments, useQueuedEntries } from '../../lib/hooks'
 import { withQueuedPayments } from '../../lib/overlay'
 
@@ -18,6 +19,7 @@ export default function Payments() {
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(todayISO())
   const [note, setNote] = useState('')
+  const [filterPlayer, setFilterPlayer] = useState('') // which player's payments to list; empty = everyone
   const [done, setDone] = useState<string | null>(null)
   const save = useAction(addPayment)
   const del = useAction(deletePayment)
@@ -72,33 +74,61 @@ export default function Payments() {
         <SaveStatus save={save.saved} />
       </div>
 
-      <h2>Últimos pagamentos</h2>
+      <h2>Todos os pagamentos</h2>
+      <Async q={balances}>
+        {(list) => (
+          <select aria-label="Filtrar por jogador" value={filterPlayer} onChange={(e) => setFilterPlayer(e.target.value)} style={{ marginBottom: 8 }}>
+            <option value="">Todos os jogadores</option>
+            {list.map((b) => <option key={b.player_id} value={b.player_id}>{b.name}</option>)}
+          </select>
+        )}
+      </Async>
       <ErrorNote error={del.error} />
       <SaveStatus save={del.saved} />
       <Async q={payments}>
-        {(rows) => (
-          <ul className="list">
-            {withQueuedPayments(rows, queued).slice(0, 30).map((p) => (
-              <li key={p.id} className={`row${p.sync ? ' waiting' : ''}`}>
-                <div className="row-main">
-                  <div className="row-title">{players.get(p.player_id)?.name ?? '…'}</div>
-                  <div className="row-sub">
-                    {formatDate(p.paid_on)}{p.note && ` · ${p.note}`}
-                  </div>
-                  {p.sync !== 'deleting' && (
-                    <div className="row-actions">
-                      <button className="link danger" disabled={del.busy} onClick={() => confirm('Apagar este pagamento?') && del.run(p.id)}>Apagar</button>
-                    </div>
-                  )}
-                </div>
-                <div className="row-side">
-                  <div className="amount good">{money(p.amount)}</div>
-                  {p.sync && <SyncBadge sync={p.sync} />}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        {(rows) => {
+          // every payment, newest first, grouped by month: none is left out, so any of them can be found and deleted
+          // the helper only filters what is waiting on the phone, so narrow the server's rows to the player first
+          const ofPlayer = filterPlayer ? rows.filter((p) => p.player_id === filterPlayer) : rows
+          const shown = withQueuedPayments(ofPlayer, queued, filterPlayer || null)
+          if (shown.length === 0) return <p className="muted pad">Sem pagamentos{filterPlayer ? ' para este jogador' : ''}.</p>
+          const total = shown.reduce((sum, p) => sum + p.amount, 0)
+          return (
+            <>
+              <p className="muted small" style={{ margin: '0 2px 8px' }}>
+                {shown.length} {shown.length === 1 ? 'pagamento' : 'pagamentos'} · {money(total)}
+              </p>
+              {groupByMonth(shown, (p) => p.paid_on).map((g) => (
+                <section key={g.key}>
+                  <h3 className="group-title">
+                    {g.label} <span className="muted">· {g.rows.length} · {money(g.total)}</span>
+                  </h3>
+                  <ul className="list">
+                    {g.rows.map((p) => (
+                      <li key={p.id} className={`row${p.sync ? ' waiting' : ''}`}>
+                        <div className="row-main">
+                          <div className="row-title">{players.get(p.player_id)?.name ?? '…'}</div>
+                          <div className="row-sub">
+                            {formatDate(p.paid_on)}{p.note && ` · ${p.note}`}
+                          </div>
+                          {p.sync !== 'deleting' && (
+                            <div className="row-actions">
+                              <button className="link danger" disabled={del.busy} onClick={() => confirm('Apagar este pagamento?') && del.run(p.id)}>Apagar</button>
+                            </div>
+                          )}
+                        </div>
+                        <div className="row-side">
+                          <div className="amount good">{money(p.amount)}</div>
+                          {p.sync && <SyncBadge sync={p.sync} />}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </>
+          )
+        }}
       </Async>
     </>
   )
