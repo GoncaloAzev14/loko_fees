@@ -414,7 +414,8 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
   font-size: 15px;
   flex: 1; min-width: 0; width: auto; height: 40px; min-height: 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; outline: 0; color: var(--text);
 }
-.sel-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+.sel-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+.sel-row.one { grid-template-columns: minmax(0, 1fr); }
 .sel-row select { min-height: 44px; padding: 0 28px 0 12px; border-radius: 14px; text-overflow: ellipsis; background-position: calc(100% - 15px) 19px, calc(100% - 10px) 19px; }
 .sticky-box .chips { scrollbar-width: none; }
 .sticky-box .chips::-webkit-scrollbar { display: none; }

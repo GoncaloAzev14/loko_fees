@@ -29,8 +29,10 @@ export default function Fines() {
   )
   const ledger = useLedger(filter)
   const queued = useQueuedEntries()
-  const extra = [playerId, fineTypeId, status].filter(Boolean).length
   const period = (r: { from: string; to: string }) => range.from === r.from && range.to === r.to
+  // the filters button holds the dates and the reason; it counts the ones that are set (a custom date range, a reason)
+  const customDates = !period(monthRange(0)) && !period(monthRange(-1)) && !period({ from: '', to: '' })
+  const extra = (customDates ? 1 : 0) + (fineTypeId ? 1 : 0)
 
   return (
     <>
@@ -53,32 +55,36 @@ export default function Fines() {
           </button>
         </div>
 
-        <div className="dates">
-          <label className="field-inline">
-            <span>De</span>
-            <input type="date" aria-label="Data inicial" value={range.from} max={range.to || undefined} onChange={(e) => setRange({ ...range, from: e.target.value })} />
-          </label>
-          <ArrowRightIcon className="ic sm dates-arrow" />
-          <label className="field-inline">
-            <span>Até</span>
-            <input type="date" aria-label="Data final" value={range.to} min={range.from || undefined} onChange={(e) => setRange({ ...range, to: e.target.value })} />
-          </label>
+        <div className="sel-row">
+          <Async q={balances}>
+            {(list) => <PlayerSelect ariaLabel="Jogador" balances={list} value={playerId} onChange={setPlayerId} placeholder="Jogador" />}
+          </Async>
+          <select aria-label="Estado" value={status} onChange={(e) => setStatus(e.target.value as FineStatus | '')}>
+            <option value="">Estado</option>
+            {(Object.keys(STATUS_LABEL) as FineStatus[]).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+          </select>
         </div>
 
         {more && (
-          <div className="sel-row">
-            <Async q={balances}>
-              {(list) => <PlayerSelect ariaLabel="Jogador" balances={list} value={playerId} onChange={setPlayerId} placeholder="Jogador" />}
-            </Async>
-            <select aria-label="Motivo" value={fineTypeId} onChange={(e) => setFineTypeId(e.target.value)}>
-              <option value="">Motivo</option>
-              {types.data?.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
-            <select aria-label="Estado" value={status} onChange={(e) => setStatus(e.target.value as FineStatus | '')}>
-              <option value="">Estado</option>
-              {(Object.keys(STATUS_LABEL) as FineStatus[]).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-            </select>
-          </div>
+          <>
+            <div className="dates">
+              <label className="field-inline">
+                <span>De</span>
+                <input type="date" aria-label="Data inicial" value={range.from} max={range.to || undefined} onChange={(e) => setRange({ ...range, from: e.target.value })} />
+              </label>
+              <ArrowRightIcon className="ic sm dates-arrow" />
+              <label className="field-inline">
+                <span>Até</span>
+                <input type="date" aria-label="Data final" value={range.to} min={range.from || undefined} onChange={(e) => setRange({ ...range, to: e.target.value })} />
+              </label>
+            </div>
+            <div className="sel-row one">
+              <select aria-label="Motivo" value={fineTypeId} onChange={(e) => setFineTypeId(e.target.value)}>
+                <option value="">Motivo</option>
+                {types.data?.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </div>
+          </>
         )}
 
         <Async q={ledger}>
