@@ -14,7 +14,7 @@ export const useToast = () => useContext(Ctx)
 
 const MARK: Record<ToastTone, string> = { good: '✓', warn: '!', bad: '✕' }
 
-/** Holds the toasts on screen: a small stack under the header that clears itself, and a tap closes one. */
+/** Holds the toasts on screen: a small stack above the tab bar that clears itself, and a tap closes one. */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([])
   const next = useRef(1)
