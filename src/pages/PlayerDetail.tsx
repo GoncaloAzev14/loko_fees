@@ -7,8 +7,8 @@ import { ChevronLeftIcon, PlusIcon } from '../components/icons'
 import { Async, Avatar, SyncBadge } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { formatDate, money } from '../lib/format'
-import { useBalances, useLedger, usePayments, useQueuedEntries } from '../lib/hooks'
-import { withQueuedFines, withQueuedPayments } from '../lib/overlay'
+import { useBalances, useIncomes, useLedger, usePayments, useQueuedEntries } from '../lib/hooks'
+import { withQueuedFines, withQueuedIncomes, withQueuedPayments } from '../lib/overlay'
 import type { Balance, FineStatus, LedgerRow } from '../lib/types'
 
 function headline(b: Balance) {
@@ -23,8 +23,9 @@ export default function PlayerDetail() {
   const balances = useBalances()
   const ledger = useLedger({ playerId: id })
   const payments = usePayments(id)
+  const incomes = useIncomes()
   const queued = useQueuedEntries()
-  const [tab, setTab] = useState<'fines' | 'payments'>('fines')
+  const [chosen, setTab] = useState<'fines' | 'payments' | 'donations'>('fines')
   const [open, setOpen] = useState(true) // hide settled fines
 
   return (
@@ -34,6 +35,9 @@ export default function PlayerDetail() {
         if (!b) return <p className="muted pad">Jogador não encontrado. <Link to="/players">Voltar</Link></p>
         const hidden: FineStatus[] = ['paid', 'cancelled']
         const fineCount = ledger.data?.filter((r) => r.status !== 'cancelled').length
+        // money this member gave the club (prizes, donations, gifts), recorded by an admin under Receitas
+        const donations = withQueuedIncomes(incomes.data ?? [], queued).filter((i) => i.player_id === id)
+        const tab = chosen === 'donations' && donations.length === 0 ? 'fines' : chosen // the tab goes away if the last one is deleted
         const shownFines = (rows: LedgerRow[]) => withQueuedFines(rows, queued, { playerId: id }) // plus what is waiting to be sent
         return (
           <>
@@ -68,6 +72,9 @@ export default function PlayerDetail() {
             <div className="chips" role="tablist" style={{ marginTop: 10 }}>
               <button role="tab" aria-selected={tab === 'fines'} className={`chip ${tab === 'fines' ? 'on' : ''}`} onClick={() => setTab('fines')}>Multas</button>
               <button role="tab" aria-selected={tab === 'payments'} className={`chip ${tab === 'payments' ? 'on' : ''}`} onClick={() => setTab('payments')}>Pagamentos</button>
+              {donations.length > 0 && (
+                <button role="tab" aria-selected={tab === 'donations'} className={`chip ${tab === 'donations' ? 'on' : ''}`} onClick={() => setTab('donations')}>Donativos</button>
+              )}
             </div>
 
             {tab === 'fines' ? (
@@ -81,6 +88,23 @@ export default function PlayerDetail() {
                   </>
                 )}
               </Async>
+            ) : tab === 'donations' ? (
+              <Folded
+                rows={donations} by="month" dateOf={(i) => i.received_on} amountOf={(i) => i.amount} idPrefix="player-donations"
+                noun={['donativo', 'donativos']}
+                render={(i) => (
+                  <li key={i.id} className={`row${i.sync ? ' waiting' : ''}`}>
+                    <div className="row-main">
+                      <div className="row-title">{i.description}</div>
+                      <div className="row-sub">{formatDate(i.received_on)}</div>
+                    </div>
+                    <div className="row-side">
+                      <div className="amount good">+{money(i.amount)}</div>
+                      {i.sync && <SyncBadge sync={i.sync} />}
+                    </div>
+                  </li>
+                )}
+              />
             ) : (
               <Async q={payments}>
                 {(serverRows) => {
