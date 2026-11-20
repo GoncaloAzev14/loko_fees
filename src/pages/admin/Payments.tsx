@@ -4,7 +4,8 @@ import SaveStatus from '../../components/SaveStatus'
 import { Async, BalanceLine, ErrorNote, PlayerSelect, SyncBadge } from '../../components/ui'
 import { addPayment, deletePayment } from '../../lib/api'
 import { formatDate, money, parseAmount, todayISO } from '../../lib/format'
-import { ChevronRightIcon, SearchIcon } from '../../components/icons'
+import Folded from '../../components/Folded'
+import { SearchIcon } from '../../components/icons'
 import { groupByMonth, matchesQuery } from '../../lib/paymentsView'
 import { useAction, useBalances, useLookups, usePayments, useQueuedEntries } from '../../lib/hooks'
 import { withQueuedPayments } from '../../lib/overlay'
@@ -22,12 +23,6 @@ export default function Payments() {
   const [note, setNote] = useState('')
   const [filterPlayer, setFilterPlayer] = useState('') // which player's payments to list; empty = everyone
   const [query, setQuery] = useState('')
-  // months the person opened or closed by hand; without an entry a month is closed, unless a search or filter is active
-  const [toggled, setToggled] = useState<Record<string, boolean>>({})
-  const narrow = (apply: () => void) => {
-    apply()
-    setToggled({}) // a new search starts from its own defaults
-  }
   const [done, setDone] = useState<string | null>(null)
   const save = useAction(addPayment)
   const del = useAction(deletePayment)
@@ -87,13 +82,13 @@ export default function Payments() {
         <SearchIcon className="ic sm" />
         <input
           type="search" aria-label="Procurar pagamento (por jogador, nota, valor, data ou mês)" placeholder="Procurar…"
-          value={query} onChange={(e) => narrow(() => setQuery(e.target.value))}
+          value={query} onChange={(e) => setQuery(e.target.value)}
           style={{ border: 0, background: 'none', minHeight: 0, padding: 0, boxShadow: 'none' }}
         />
       </div>
       <Async q={balances}>
         {(list) => (
-          <select aria-label="Filtrar por jogador" value={filterPlayer} onChange={(e) => narrow(() => setFilterPlayer(e.target.value))} style={{ marginBottom: 8 }}>
+          <select aria-label="Filtrar por jogador" value={filterPlayer} onChange={(e) => setFilterPlayer(e.target.value)} style={{ marginBottom: 8 }}>
             <option value="">Todos os jogadores</option>
             {list.map((b) => <option key={b.player_id} value={b.player_id}>{b.name}</option>)}
           </select>
@@ -109,12 +104,9 @@ export default function Payments() {
           const label = (iso: string) => groupByMonth([{ amount: 0, paid_on: iso }], (r) => r.paid_on)[0].label
           const shown = everyone.filter((p) => matchesQuery(p, players.get(p.player_id)?.name ?? '', label(p.paid_on), formatDate(p.paid_on), query))
           const filtering = Boolean(query.trim() || filterPlayer)
-          const clear = () => narrow(() => { setQuery(''); setFilterPlayer('') })
+          const clear = () => { setQuery(''); setFilterPlayer('') }
           if (everyone.length === 0 && !filtering) return <p className="muted pad">Ainda não há pagamentos.</p>
           const total = shown.reduce((sum, p) => sum + p.amount, 0)
-          const groups = groupByMonth(shown, (p) => p.paid_on)
-          const isOpen = (key: string) => toggled[key] ?? filtering // searching or filtering shows the results at once
-          const allOpen = groups.length > 0 && groups.every((g) => isOpen(g.key))
           return (
             <>
               <p className="muted small" style={{ margin: '0 2px 8px', display: 'flex', gap: 12, alignItems: 'baseline', flexWrap: 'wrap' }}>
@@ -122,48 +114,31 @@ export default function Payments() {
                   {filtering ? `${shown.length} de ${everyone.length}` : shown.length} {shown.length === 1 ? 'pagamento' : 'pagamentos'} · {money(total)}
                 </span>
                 {filtering && <button className="link" onClick={clear}>Limpar</button>}
-                {groups.length > 1 && (
-                  <button className="link" onClick={() => setToggled(Object.fromEntries(groups.map((g) => [g.key, !allOpen])))}>
-                    {allOpen ? 'Recolher tudo' : 'Abrir tudo'}
-                  </button>
-                )}
               </p>
               {shown.length === 0 && <p className="muted pad">Nenhum pagamento encontrado.</p>}
-              {groups.map((g) => {
-                const open = isOpen(g.key)
-                return (
-                  <section key={g.key} className="month">
-                    <button className="month-head" aria-expanded={open} aria-controls={`m-${g.key}`} onClick={() => setToggled({ ...toggled, [g.key]: !open })}>
-                      <ChevronRightIcon className={`ic sm chev${open ? ' open' : ''}`} />
-                      <span className="mh-name">{g.label}</span>
-                      <span className="mh-meta">{g.rows.length} · {money(g.total)}</span>
-                    </button>
-                    {open && (
-                      <ul className="list" id={`m-${g.key}`}>
-                        {g.rows.map((p) => (
-                          <li key={p.id} className={`row${p.sync ? ' waiting' : ''}`}>
-                            <div className="row-main">
-                              <div className="row-title">{players.get(p.player_id)?.name ?? '…'}</div>
-                              <div className="row-sub">
-                                {formatDate(p.paid_on)}{p.note && ` · ${p.note}`}
-                              </div>
-                              {p.sync !== 'deleting' && (
-                                <div className="row-actions">
-                                  <button className="link danger" disabled={del.busy} onClick={() => confirm('Apagar este pagamento?') && del.run(p.id)}>Apagar</button>
-                                </div>
-                              )}
-                            </div>
-                            <div className="row-side">
-                              <div className="amount good">{money(p.amount)}</div>
-                              {p.sync && <SyncBadge sync={p.sync} />}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </section>
-                )
-              })}
+              <Folded
+                rows={shown} by="month" dateOf={(p) => p.paid_on} amountOf={(p) => p.amount} idPrefix="payments"
+                filtering={filtering} resetKey={`${query}|${filterPlayer}`}
+                render={(p) => (
+                  <li key={p.id} className={`row${p.sync ? ' waiting' : ''}`}>
+                    <div className="row-main">
+                      <div className="row-title">{players.get(p.player_id)?.name ?? '…'}</div>
+                      <div className="row-sub">
+                        {formatDate(p.paid_on)}{p.note && ` · ${p.note}`}
+                      </div>
+                      {p.sync !== 'deleting' && (
+                        <div className="row-actions">
+                          <button className="link danger" disabled={del.busy} onClick={() => confirm('Apagar este pagamento?') && del.run(p.id)}>Apagar</button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="row-side">
+                      <div className="amount good">{money(p.amount)}</div>
+                      {p.sync && <SyncBadge sync={p.sync} />}
+                    </div>
+                  </li>
+                )}
+              />
             </>
           )
         }}

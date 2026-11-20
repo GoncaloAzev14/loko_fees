@@ -544,16 +544,17 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
   .sync-panel { top: 24px; left: 270px; right: auto; width: 400px; margin: 0; max-height: calc(100dvh - 48px); }
 }
 
-/* a month of payments: a header that opens and closes its list */
-.month { margin-top: 8px; }
-.month-head {
+/* a group of rows (a day, a month): a header that opens and closes its list */
+.fold { margin-top: 8px; }
+.fold-tools { margin: 4px 2px 0; font-size: 0.82rem; }
+.fold-head {
   display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; text-align: left; cursor: pointer;
   background: var(--surface); border: 1px solid var(--line); border-radius: 16px; color: inherit; font: inherit;
 }
-.month-head[aria-expanded='true'] { border-color: var(--brand-line); background: var(--brand-soft); }
-.month-head .chev { flex: none; color: var(--muted); transition: transform 0.2s ease; }
-.month-head .chev.open { transform: rotate(90deg); color: var(--brand); }
-.mh-name { flex: 1; font-weight: 700; }
-.mh-meta { color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
-.month .list { margin-top: 8px; margin-bottom: 4px; }
-@media (prefers-reduced-motion: reduce) { .month-head .chev { transition: none; } }
+.fold-head[aria-expanded='true'] { border-color: var(--brand-line); background: var(--brand-soft); }
+.fold-head .chev { flex: none; color: var(--muted); transition: transform 0.2s ease; }
+.fold-head .chev.open { transform: rotate(90deg); color: var(--brand); }
+.fold-name { flex: 1; min-width: 0; font-weight: 700; }
+.fold-meta { color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fold .list { margin-top: 8px; margin-bottom: 4px; }
+@media (prefers-reduced-motion: reduce) { .fold-head .chev { transition: none; } }

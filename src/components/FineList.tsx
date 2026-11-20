@@ -1,15 +1,22 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
-import { formatDate, formatDateLong, money } from '../lib/format'
+import { formatDate, money } from '../lib/format'
 import { deleteFine, setFineCancelled } from '../lib/api'
 import { useAction, useLookups } from '../lib/hooks'
 import { fineName } from '../lib/labels'
 import type { LedgerRow } from '../lib/types'
 import SaveStatus from './SaveStatus'
+import type { GroupBy } from '../lib/groups'
+import Folded from './Folded'
 import { ErrorNote, StatusBadge, SyncBadge } from './ui'
 
-/** Fines with their status. Admins also get cancel / delete buttons. */
-export function FineList({ rows, showPlayer = true, groupByDate = false }: { rows: LedgerRow[]; showPlayer?: boolean; groupByDate?: boolean }) {
+/**
+ * Fines with their status. Admins also get cancel / delete buttons. With `groupBy` the fines are folded into
+ * days or months that open and close (see Folded); without it they are one flat list.
+ */
+export function FineList({
+  rows, showPlayer = true, groupBy, filtering = false, resetKey,
+}: { rows: LedgerRow[]; showPlayer?: boolean; groupBy?: GroupBy; filtering?: boolean; resetKey?: string }) {
   const { players, types } = useLookups()
   const { isAdmin } = useAuth()
   // one action for both buttons, so there is one status line: the latest thing that was done
@@ -29,7 +36,7 @@ export function FineList({ rows, showPlayer = true, groupByDate = false }: { row
           {fineName(r, types)}
         </div>
         <div className="row-sub">
-          {!groupByDate && <>{formatDate(r.fined_on)} · </>}
+          {groupBy !== 'day' && <>{formatDate(r.fined_on)} · </>}
           {r.description && <>{r.description} · </>}
           {r.due_on ? <>vence {formatDate(r.due_on)}</> : 'guardada no telemóvel'}
         </div>
@@ -61,7 +68,7 @@ export function FineList({ rows, showPlayer = true, groupByDate = false }: { row
       <SaveStatus save={act.saved} />
     </>
   )
-  if (!groupByDate)
+  if (!groupBy)
     return (
       <>
         {errors}
@@ -69,19 +76,13 @@ export function FineList({ rows, showPlayer = true, groupByDate = false }: { row
       </>
     )
 
-  const groups = new Map<string, LedgerRow[]>()
-  for (const r of rows) groups.set(r.fined_on, [...(groups.get(r.fined_on) ?? []), r])
   return (
     <>
       {errors}
-      {[...groups].map(([date, list]) => (
-        <section key={date}>
-          <h3 className="group-title">
-            {formatDateLong(date)} <span className="muted">· {list.length} {list.length === 1 ? 'multa' : 'multas'}</span>
-          </h3>
-          <ul className="list">{list.map(item)}</ul>
-        </section>
-      ))}
+      <Folded
+        rows={rows} by={groupBy} dateOf={(r) => r.fined_on} amountOf={(r) => (r.cancelled ? 0 : r.amount)}
+        render={item} filtering={filtering} resetKey={resetKey} idPrefix="fines" noun={['multa', 'multas']}
+      />
     </>
   )
 }

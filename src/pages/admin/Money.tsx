@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { PlusIcon } from '../../components/icons'
 import SaveStatus from '../../components/SaveStatus'
+import Folded from '../../components/Folded'
 import { Async, ErrorNote, SyncBadge } from '../../components/ui'
 import { addExpense, addIncome, deleteExpense, deleteIncome } from '../../lib/api'
 import { formatDate, money, parseAmount, todayISO } from '../../lib/format'
@@ -118,8 +119,9 @@ function IncomeList() {
           return rows.length === 0 ? (
             <p className="empty">Ainda não há receitas.</p>
           ) : (
-            <ul className="list">
-              {rows.map((i) => (
+            <Folded
+              rows={rows} by="month" dateOf={(i) => i.received_on} amountOf={(i) => i.amount} idPrefix="income" noun={['receita', 'receitas']}
+              render={(i) => (
                 <li key={i.id} className={`row${i.sync ? ' waiting' : ''}`}>
                   <div className="row-main">
                     <div className="row-title">{i.description}</div>
@@ -128,15 +130,15 @@ function IncomeList() {
                       <div className="row-actions">
                         <button className="link danger" onClick={() => confirm('Apagar esta receita?') && del.run(i.id)}>Apagar</button>
                       </div>
-                    )}
-                  </div>
-                  <div className="row-side">
-                    <div className="amount good">+{money(i.amount)}</div>
-                    {i.sync && <SyncBadge sync={i.sync} />}
-                  </div>
-                </li>
-              ))}
-            </ul>
+                )}
+              </div>
+              <div className="row-side">
+                <div className="amount good">+{money(i.amount)}</div>
+                {i.sync && <SyncBadge sync={i.sync} />}
+              </div>
+            </li>
+              )}
+            />
           )
         }}
       </Async>
@@ -158,8 +160,9 @@ function ExpenseList() {
           return rows.length === 0 ? (
             <p className="empty">Ainda não há despesas.</p>
           ) : (
-            <ul className="list">
-              {rows.map((x) => (
+            <Folded
+              rows={rows} by="month" dateOf={(x) => x.spent_on} amountOf={(x) => x.amount} idPrefix="expenses" noun={['despesa', 'despesas']}
+              render={(x) => (
                 <li key={x.id} className={`row${x.sync ? ' waiting' : ''}`}>
                   <div className="row-main">
                     <div className="row-title">{x.description}</div>
@@ -168,15 +171,15 @@ function ExpenseList() {
                       <div className="row-actions">
                         <button className="link danger" onClick={() => confirm('Apagar esta despesa?') && del.run(x.id)}>Apagar</button>
                       </div>
-                    )}
-                  </div>
-                  <div className="row-side">
-                    <div className="amount bad">−{money(x.amount)}</div>
-                    {x.sync && <SyncBadge sync={x.sync} />}
-                  </div>
-                </li>
-              ))}
-            </ul>
+                )}
+              </div>
+              <div className="row-side">
+                <div className="amount bad">−{money(x.amount)}</div>
+                {x.sync && <SyncBadge sync={x.sync} />}
+              </div>
+            </li>
+              )}
+            />
           )
         }}
       </Async>

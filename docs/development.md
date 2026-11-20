@@ -165,6 +165,7 @@ The workflow runs the tests on every push to `main` and only publishes if they p
 | What a screen shows | The page in `src/pages/`, and the hook or `lib/api.ts` function it uses |
 | A table or a view's columns | The migration, `src/lib/types.ts`, `lib/api.ts`, then the pages |
 | Colours, spacing, layout | `src/styles.css`, which is the whole theme (tokens at the top) |
+| A long list (grouped, collapsible) | Use `Folded` (`src/components/Folded.tsx`) with `groupRows` from `lib/groups.ts`; see [architecture](architecture.md#long-lists-are-folded) |
 | Admin menu entries | `src/components/adminLinks.tsx`, which feeds both the sidebar and the phone menu |
 | Who can do what | Row level security and functions in a migration. The route guard in the app is only a convenience. |
 

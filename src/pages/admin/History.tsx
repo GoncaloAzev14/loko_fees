@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { Async, ErrorNote } from '../../components/ui'
 import { restoreChange } from '../../lib/api'
 import { describeChange, whoLabel } from '../../lib/changes'
+import Folded from '../../components/Folded'
+import { toISO } from '../../lib/format'
 import { describeEntry } from '../../lib/entries'
 import { useAction, useChanges, useLookups, useQueuedEntries } from '../../lib/hooks'
 import { flush, outbox } from '../../lib/sync'
@@ -66,8 +68,10 @@ export default function History() {
           if (shown.length === 0)
             return <p className="muted pad">{onlyDeleted ? 'Nada foi apagado desde que o histórico começou.' : 'O histórico começa a partir da primeira alteração.'}</p>
           return (
-            <ul className="list">
-              {shown.map((c) => {
+            <Folded
+              rows={shown} by="day" dateOf={(c) => toISO(new Date(c.at))} idPrefix="history" noun={['alteração', 'alterações']}
+              filtering={onlyDeleted} resetKey={String(onlyDeleted)}
+              render={(c) => {
                 const { title, detail } = describeChange(c, names, typeNames)
                 return (
                   <li key={c.id} className="row">
@@ -90,8 +94,8 @@ export default function History() {
                     </div>
                   </li>
                 )
-              })}
-            </ul>
+              }}
+            />
           )
         }}
       </Async>

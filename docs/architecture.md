@@ -55,6 +55,7 @@ src/
     types.ts                 shapes of the data
     outbox.ts, sync.ts       offline: the queue of saved entries and sending them (see offline.md)
     overlay.ts, errors.ts    waiting entries shown in lists; "try later" versus "no"
+    groups.ts                grouping rows by day or month for the folded lists (with tests)
     format.ts, season.ts, ... small pure helpers (with tests)
   styles.css                 the whole theme
 supabase/
@@ -82,8 +83,8 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 | --- | --- | --- |
 | `/` | Dashboard: the box, how many players are in debt, overdue or up to date, and the biggest debt | everyone |
 | `/players`, `/players/:id` | Roster with search and filters, and one player's debts, credit and history | everyone |
-| `/fines` | Fines filtered by date, player, type, status | everyone |
-| `/caixa` | Every payment, income and expense | everyone |
+| `/fines` | Fines filtered by date, player, type, status, grouped by day | everyone |
+| `/caixa` | Every payment, income and expense, grouped by month | everyone |
 | `/login` | Admin sign-in | everyone |
 | `/recover` | First access / forgotten password with an emailed code | everyone |
 | `/set-password` | Where the invitation link lands | whoever the link signed in |
@@ -100,6 +101,14 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 `/admin/*` is wrapped by `RequireAdmin`, which sends everyone else to `/login`. That is a convenience: the real protection is row level security, which would refuse the writes anyway.
 
 On phones there is a bottom tab bar (Início, Jogadores, a centre button, Multas, Caixa). The centre button is **Entrar** when nobody is signed in and **Menu** for admins, opening the admin options. On wide screens the same links appear in a sidebar. It is the same code, switched in CSS.
+
+## Long lists are folded
+
+Every long list is split into sections that open and close, and **all start closed**: fines by day (Multas, Histórico), and payments, income, expenses, Caixa and a player's fines and payments by month. Each header shows the day or month, how many entries it holds and, where money is involved, the total. If there is more than one section, an **Abrir tudo / Recolher tudo** link opens or closes them all.
+
+Searching or filtering opens the sections that match, so nothing is hidden behind a closed header. Clearing the search closes them again. Nothing is cut: a closed section still holds every entry, and every list, total and action works as before.
+
+It is one pair of pieces: `groupRows` in [`lib/groups.ts`](../src/lib/groups.ts) (pure: groups consecutive rows by day or month and adds up their amounts) and the `Folded` component ([`components/Folded.tsx`](../src/components/Folded.tsx)), which takes the rows, how to find a row's date, how to draw one row, whether the list is being filtered, and a `resetKey` that closes the sections again when the filters change. A new long list should use it rather than draw its own sections.
 
 ## Layout and scrolling
 

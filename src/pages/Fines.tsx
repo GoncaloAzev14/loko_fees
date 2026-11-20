@@ -91,7 +91,11 @@ export default function Fines() {
         </Async>
       </div>
 
-      <Async q={ledger}>{(rows) => <FineList rows={withQueuedFines(rows, queued, filter)} groupByDate />}</Async>
+      <Async q={ledger}>{(rows) => <FineList
+          rows={withQueuedFines(rows, queued, filter)} groupBy="day"
+          filtering={Boolean(playerId || fineTypeId || status)}
+          resetKey={`${range.from}|${range.to}|${playerId}|${fineTypeId}|${status}`}
+        />}</Async>
     </>
   )
 }

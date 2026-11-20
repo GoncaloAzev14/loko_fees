@@ -218,7 +218,7 @@ At the end of each season use **Menu → Definições → Fechar época**: it ar
 
 ## What the app does
 
-- **Anyone, no login:** dashboard (box, total owed, overdue, credit); open a player in the **Jogadores** tab to see their debt and credit; filter fines by date, player, reason and status; a **Caixa** tab listing every payment, income and expense.
+- **Anyone, no login:** dashboard (box, total owed, overdue, credit); open a player in the **Jogadores** tab to see their debt and credit; filter fines by date, player, reason and status; a **Caixa** tab listing every payment, income and expense. Long lists are grouped by day or month in sections that start closed; tap a header to open it.
 - **Admins (login):** the same app plus register fines (one or many players at once), record payments, income and expenses, manage the fine catalog, the roster, admins and the settings, close a season, browse the archive, and see **Histórico**: who changed or deleted what, with a button to put a deleted entry back. On phones the centre button of the tab bar logs in; once signed in it becomes a **Menu** whose options swing up as a stack.
 
 Phones get a bottom tab bar, wide screens a sidebar: same code, same screens. The look is the black-and-orange "Locomotiva" direction (Sora font, self-hosted so it works offline). Installable as a PWA. It works offline: the last data seen stays readable, and an admin's fines, payments, income and expenses are saved on the phone and sent when the connection returns (see [docs/offline.md](docs/offline.md)).

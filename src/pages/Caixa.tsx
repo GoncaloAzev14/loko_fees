@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ArrowDownIcon, ArrowUpIcon, CoinIcon, PlusIcon, TouchIcon } from '../components/icons'
+import Folded from '../components/Folded'
 import { Async, BigMoney, SyncBadge } from '../components/ui'
 import { formatDate, money } from '../lib/format'
 import { useExpenses, useIncomes, useLookups, usePayments, useQueuedEntries, useSummary } from '../lib/hooks'
@@ -82,8 +83,11 @@ export default function Caixa() {
       ) : shown.length === 0 ? (
         <p className="muted pad">Sem movimentos.</p>
       ) : (
-        <ul className="list">
-          {shown.map((m) => (
+        <Folded
+          rows={shown} by="month" dateOf={(m) => m.date} amountOf={(m) => m.amount} idPrefix="caixa" noun={['movimento', 'movimentos']}
+          formatTotal={(n) => `${n >= 0 ? '+' : '−'}${money(Math.abs(n))}`}
+          filtering={filter !== 'all'} resetKey={filter}
+          render={(m) => (
             <li key={m.key} className={`row${m.sync ? ' waiting' : ''}`}>
               <span className="row-lead">
                 {m.kind === 'payment' ? <CoinIcon className="ic sm" /> : m.kind === 'income' ? <PlusIcon className="ic sm" /> : <ArrowUpIcon className="ic sm" />}
@@ -97,8 +101,8 @@ export default function Caixa() {
                 {m.sync && <SyncBadge sync={m.sync} />}
               </div>
             </li>
-          ))}
-        </ul>
+          )}
+        />
       )}
     </>
   )

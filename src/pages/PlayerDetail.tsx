@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import DebtChart from '../components/DebtChart'
+import Folded from '../components/Folded'
 import { FineList } from '../components/FineList'
 import { ChevronLeftIcon, PlusIcon } from '../components/icons'
 import { Async, Avatar, SyncBadge } from '../components/ui'
@@ -76,7 +77,7 @@ export default function PlayerDetail() {
                     <label className="check">
                       <input type="checkbox" checked={open} onChange={(e) => setOpen(e.target.checked)} /> Só por pagar
                     </label>
-                    <FineList showPlayer={false} rows={open ? shownFines(rows).filter((r) => !hidden.includes(r.status)) : shownFines(rows)} />
+                    <FineList showPlayer={false} groupBy="month" resetKey={String(open)} rows={open ? shownFines(rows).filter((r) => !hidden.includes(r.status)) : shownFines(rows)} />
                   </>
                 )}
               </Async>
@@ -87,8 +88,10 @@ export default function PlayerDetail() {
                   return rows.length === 0 ? (
                     <p className="muted pad">Sem pagamentos registados.</p>
                   ) : (
-                    <ul className="list">
-                      {rows.map((p) => (
+                    <Folded
+                      rows={rows} by="month" dateOf={(p) => p.paid_on} amountOf={(p) => p.amount} idPrefix="player-payments"
+                      noun={['pagamento', 'pagamentos']}
+                      render={(p) => (
                         <li key={p.id} className={`row${p.sync ? ' waiting' : ''}`}>
                           <div className="row-main">
                             <div className="row-title">{formatDate(p.paid_on)}</div>
@@ -99,8 +102,8 @@ export default function PlayerDetail() {
                             {p.sync && <SyncBadge sync={p.sync} />}
                           </div>
                         </li>
-                      ))}
-                    </ul>
+                      )}
+                    />
                   )
                 }}
               </Async>
