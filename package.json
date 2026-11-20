@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:test": "node scripts/dev-test.mjs",
+    "backup": "node scripts/backup.mjs",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",

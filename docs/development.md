@@ -144,7 +144,7 @@ npm run typecheck        # types only
 
 | Where | What | How |
 | --- | --- | --- |
-| `supabase/tests/` | The database: ledger, late fees, access rules, seasons, admins and invitations, the demo seed | An in-memory Postgres (PGlite) loads every migration, with a stand-in for Supabase's `auth` schema and roles (`db.ts`). Tests act as `anon` or as a given user. |
+| `supabase/tests/` | The database: ledger, late fees (and a deleted one staying deleted), access rules, seasons, admins and invitations, the change record and restoring from it, the demo seed | An in-memory Postgres (PGlite) loads every migration, with a stand-in for Supabase's `auth` schema and roles (`db.ts`). Tests act as `anon` or as a given user. |
 | `src/**/*.test.ts` | Pure helpers and the API layer (formatting, seasons, the access-code calls with a mocked client), and the offline queue: its folding rules, saving and sending in order, retries and refusals, what lists show | Plain Vitest, with a stand-in for the Supabase client. |
 
 Nothing tests the screens themselves or the Edge Function against real Supabase. The function has been checked with scripted stand-ins for the Supabase client, but that script is not part of the repository, and the real email behaviour has only been confirmed by using it.
@@ -183,6 +183,7 @@ Notes on the front end:
 
 | Command | Does |
 | --- | --- |
+| `npm run backup` | Saves a read-only copy of the live data into `backups/` (git-ignored, private). See [operations](operations.md#backups). |
 | `npm run logo` | Rebuilds the logo, app icons and favicon from `branding/original.png` (the club crest). Writes into `public/` and `branding/`. |
 | `python3 scripts/build_seed.py` | Regenerates `supabase/seed.sql`, the invented demo data. No dependencies. |
 

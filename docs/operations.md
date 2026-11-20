@@ -8,7 +8,9 @@ How the live system is changed and kept healthy. The first-time setup is a step-
 - [The Edge Function](#the-edge-function)
 - [Supabase dashboard settings](#supabase-dashboard-settings)
 - [Daily late fees](#daily-late-fees)
+- [Backups](#backups)
 - [Looking at production](#looking-at-production)
+- [When an entry seems to have vanished](#when-an-entry-seems-to-have-vanished)
 
 ## What lives where
 
@@ -93,6 +95,20 @@ Limits to remember: a given address can be sent a new code only about once a min
 
 Late fees are added whenever an admin opens the app, so the system works without any job. To also add them every day without anyone opening it, enable the `pg_cron` extension (Database, Extensions) and run [`supabase/cron.sql`](../supabase/cron.sql) once in the SQL Editor.
 
+## Backups
+
+```bash
+npm run backup
+```
+
+Saves a copy of the club's data from the live project onto your computer: one JSON file per table in `backups/<date and time>/`. It only reads (the CLI is told `--read-only`), and git ignores the folder, because the files hold real names, fines and payments. Keep them private.
+
+Run it **before anything risky**: deleting data, closing a season, running a migration. It needs `npx supabase login` and a linked project, as for deploying. Tables that do not exist yet are skipped, so it works before and after each migration.
+
+Supabase's free plan may not keep backups for you (check your plan), so this is the copy you can rely on. To use one, the files are plain data: ask for help restoring from them, and do not edit the live database by hand from them without a plan.
+
+The in-app **Histórico** (Menu, Histórico) is the finer tool for the day-to-day: it lists every change with who made it, and puts back a deleted entry in one tap. A backup is for the worse day.
+
 ## Looking at production
 
 The Supabase CLI can read production without changing it. Use these for diagnosis; they need `supabase login` and a linked project.
@@ -117,8 +133,19 @@ What to look for:
 | Did the invite function run, and what did it answer? | `function-edge` (request and status) and `functions` (start and errors) |
 | Was a link used up before the person clicked? | `auth` logs: repeated `/verify` calls, the later ones failing with "One-time token not found" |
 | Is someone an admin, pending, or the main admin? | `select u.email, a.accepted_at, a.is_owner from admins a join auth.users u on u.id = a.user_id` |
+| Who changed or deleted something, and when? | The app: **Menu, Histórico**. Or `select * from list_changes()` as an admin. The record starts when the change-history migration was run. |
+| Did an add request reach the server at all? | `edge` logs: `POST` to `/rest/v1/fines` (or `payments`) with status `201`. The logs only keep about a day: ask for them soon after something goes wrong. |
 
 Treat anything read this way as private: it contains people's email addresses.
+
+## When an entry seems to have vanished
+
+Work through these, in this order:
+
+1. **Menu, Histórico.** If someone deleted it, it is there with who and when, and **Repor** puts it back exactly as it was. Switch to **Só apagados** to see only deletes.
+2. **The header chip.** On the phone of the person who entered it: if the small chip next to *Sair* says entries are waiting or were not accepted, they never reached the server. Tapping it shows each one, and the reason if the server refused it. Opening the app with a connection sends them.
+3. **Was it a late fee?** A late fee that was *deleted* used to come back the next time the app opened. That is fixed by migration `20261118000000_late_fee_waivers.sql`; until it has been run, use **Anular** instead of **Apagar** for late fees.
+4. **The edge logs** (see above) show whether the add request arrived and with what status.
 
 ## When something breaks
 

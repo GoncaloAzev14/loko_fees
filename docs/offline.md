@@ -43,7 +43,7 @@ The pieces, in the order that matters:
 
 1. **The outbox.** A list kept in the phone's storage, one entry per change: a new row, a delete, or a cancel. It survives closing the app. ([`lib/outbox.ts`](../src/lib/outbox.ts))
 2. **Send or save.** Every everyday write goes through one function. With a connection and an empty outbox it sends straight away and a refusal is shown as before. Otherwise it saves. Changes are never sent out of order: while anything is waiting, new changes queue behind it. ([`lib/sync.ts`](../src/lib/sync.ts))
-3. **Sending twice must not double the money.** Every new row gets its own id on the phone, and is sent as "insert, and do nothing if that id exists". If an answer is lost on the way and the entry is sent again, it is still one row. Deletes and cancels are harmless to repeat. This is tested against the database.
+3. **Sending twice must not double the money.** Every new row gets its own id on the phone (the browser's own generator, with a fallback for iPhones before iOS 15.4, which lack it), and is sent as "insert, and do nothing if that id exists". If an answer is lost on the way and the entry is sent again, it is still one row. Deletes and cancels are harmless to repeat. This is tested against the database.
 4. **Tidying the queue.** Deleting something that was never sent just removes it from the outbox; cancelling it edits it; a later cancel replaces an earlier one. Nothing pointless is sent.
 5. **When it sends.** When the phone says it is back online, when the app comes to the front, every 30 seconds while something waits, at start-up, and on the **Sincronizar agora** button. ([`components/SyncManager.tsx`](../src/components/SyncManager.tsx))
 6. **After sending**, every list and total is read again from the server.

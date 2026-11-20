@@ -43,6 +43,8 @@ Open **SQL Editor → New query**, paste the **whole contents** of each file bel
 | 4 | `20261115000000_admin_pending.sql` | the helpers behind the pending-invitation list and resending a code |
 | 5 | `20261116000000_admin_accept_invite.sql` | an invited person is only an admin after their first sign-in or after choosing a password; until then the invitation is pending |
 | 6 | `20261117000000_main_admin.sql` | the first admin is marked as the main admin and cannot be removed from the app |
+| 7 | `20261118000000_late_fee_waivers.sql` | a deleted late fee stays deleted (the automatic rule no longer adds it back) |
+| 8 | `20261119000000_change_log.sql` | a permanent record of who changed what, and putting back a deleted entry (Menu, Histórico) |
 
 (Prefer the command line? `npx supabase link --project-ref <ref>` then `npx supabase db push` applies the same files.)
 
@@ -198,6 +200,8 @@ At the end of each season use **Menu → Definições → Fechar época**: it ar
 | Console shows `400` on `settings?select=…season…` or `404` on `season_archive` | Migration 3 has not been run yet (step 2). The app keeps working meanwhile, but the season name, **Fechar época** and the archive stay inactive. |
 | *Não foi possível carregar os dados* everywhere after a quiet period | Free Supabase projects pause after about a week without activity. Open the Supabase dashboard and click **Restore project**. |
 | The invitation email never arrives | Check the SMTP settings (step 4), look in spam, and remember the limit of 30 emails per hour. Without custom SMTP only members of your Supabase organization receive mail. |
+| A late fee I deleted came back the next time the app opened | The automatic rule re-added it. Run migration 7 (`20261118000000_late_fee_waivers.sql`); after that a deleted late fee stays deleted. Until then use **Anular** instead of **Apagar**. |
+| An entry seems to have vanished | **Menu, Histórico** shows every change with who made it, and **Repor** puts a deleted entry back. Also check the header chip on the phone that entered it: entries saved offline that were not sent yet are listed there. See [operations](docs/operations.md#when-an-entry-seems-to-have-vanished). |
 | The invitation link says expired or opens the wrong page | Links are single-use and can be used up by email scanners. The person opens the app, chooses **Entrar → Primeiro acesso**, asks for a code and sets the password there. Or an admin presses **Reenviar convite** on **Administradores**. Also check **Site URL** and **Redirect URLs** (step 3.4). |
 | An invited person shows as *Convite pendente* and cannot see admin screens | By design: an invitation only becomes admin access when the person signs in with their password or chooses one on **Primeiro acesso**. Use **Reenviar convite** to send a new code, or **Cancelar convite** to withdraw it. |
 | The email has a link but no code | The email templates were not updated: step 4b. |
@@ -215,7 +219,7 @@ At the end of each season use **Menu → Definições → Fechar época**: it ar
 ## What the app does
 
 - **Anyone, no login:** dashboard (box, total owed, overdue, credit); open a player in the **Jogadores** tab to see their debt and credit; filter fines by date, player, reason and status; a **Caixa** tab listing every payment, income and expense.
-- **Admins (login):** the same app plus register fines (one or many players at once), record payments, income and expenses, manage the fine catalog, the roster, admins and the settings, close a season and browse the archive. On phones the centre button of the tab bar logs in; once signed in it becomes a **Menu** whose options swing up as a stack.
+- **Admins (login):** the same app plus register fines (one or many players at once), record payments, income and expenses, manage the fine catalog, the roster, admins and the settings, close a season, browse the archive, and see **Histórico**: who changed or deleted what, with a button to put a deleted entry back. On phones the centre button of the tab bar logs in; once signed in it becomes a **Menu** whose options swing up as a stack.
 
 Phones get a bottom tab bar, wide screens a sidebar: same code, same screens. The look is the black-and-orange "Locomotiva" direction (Sora font, self-hosted so it works offline). Installable as a PWA. It works offline: the last data seen stays readable, and an admin's fines, payments, income and expenses are saved on the phone and sent when the connection returns (see [docs/offline.md](docs/offline.md)).
 
@@ -236,7 +240,7 @@ Phones get a bottom tab bar, wide screens a sidebar: same code, same screens. Th
 | Season | The app is called "FC Lokomotiv <season>" (e.g. 2026/27). Definições → Época only edits that name. |
 | Closing a season | Definições → *Fechar época* (typed confirmation) archives a summary, then clears fines, payments, income and expenses and starts the next season. The cash in the box carries over; unpaid fines and player credit do **not** (they are in the archive). Players and fine types stay. |
 | Archive | *Arquivo de épocas* (admins only) keeps, per closed season, the totals, one line per player and one per fine type. Not every individual fine. |
-| Deleting | Admins can delete players and fine types, but only while nothing uses them (a player with fines or payments, or a fine type used by a fine, is refused). Otherwise mark them inactive, or close the season and then delete. Single fines and payments can always be deleted. |
+| Deleting | Admins can delete players and fine types, but only while nothing uses them (a player with fines or payments, or a fine type used by a fine, is refused). Otherwise mark them inactive, or close the season and then delete. Single fines and payments can always be deleted. A deleted **late fee** stays deleted: the automatic rule remembers it was waived for that player and month. Every change is recorded (**Menu, Histórico**), and a deleted entry can be put back. |
 
 The ledger logic lives in SQL views (`supabase/migrations`), so the app has a single source of truth and no duplicated calculations. The SQL is tested in-process with PGlite (`npm test`).
 
@@ -279,6 +283,6 @@ The last line of the seed applies the late fees with the real rule, so the demo 
 
 ## Scripts
 
-`npm run dev` · `npm run build` · `npm test` · `npm run typecheck` · `npm run dev:fake` · `npm run dev:fake:web` · `npm run logo`
+`npm run dev` · `npm run build` · `npm test` · `npm run typecheck` · `npm run backup` · `npm run dev:fake` · `npm run dev:fake:web` · `npm run logo`
 
 `npm run logo` rebuilds the logo and app icons from `branding/original.png` (the club crest): it cuts the crest out of its black background, upscales it, and writes `branding/logo-source.png`, `public/logo.png` and the PWA/favicon icons in `public/`.

@@ -8,3 +8,5 @@ dev-dist
 *.tsbuildinfo
 # the club's real spreadsheet: personal data, keep it out of the repository
 *.xlsx
+# copies of the live club data (npm run backup): private
+backups/

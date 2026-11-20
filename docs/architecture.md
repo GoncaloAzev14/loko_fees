@@ -94,6 +94,7 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 | `/admin/players` | Roster management | admins |
 | `/admin/admins` | Invite, resend, cancel, remove admins | admins |
 | `/admin/archive` | Archived seasons | admins |
+| `/admin/history` | Every change with who made it, and putting back what was deleted | admins |
 | `/admin/settings` | Season, due day, late fee, close season | admins |
 
 `/admin/*` is wrapped by `RequireAdmin`, which sends everyone else to `/login`. That is a convenience: the real protection is row level security, which would refuse the writes anyway.

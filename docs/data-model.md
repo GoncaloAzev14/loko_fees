@@ -19,6 +19,7 @@ erDiagram
     PLAYERS ||--o{ PAYMENTS : "makes"
     PLAYERS |o--o{ INCOMES : "optionally gives"
     FINE_TYPES ||--o{ FINES : "classifies"
+    PLAYERS ||--o{ LATE_FEE_WAIVERS : "may be waived"
     SEASON_ARCHIVE ||--o{ SEASON_ARCHIVE_PLAYERS : "summarises"
     SEASON_ARCHIVE ||--o{ SEASON_ARCHIVE_TYPES : "summarises"
 
@@ -81,6 +82,20 @@ erDiagram
         date spent_on
         text description
     }
+    LATE_FEE_WAIVERS {
+        uuid player_id PK "FK players"
+        date month PK "first day of the month"
+        timestamptz waived_at
+    }
+    CHANGE_LOG {
+        bigint id PK
+        timestamptz at
+        uuid who "null = the system"
+        text action "insert, update or delete"
+        text table_name
+        jsonb old_row
+        jsonb new_row
+    }
     SEASON_ARCHIVE {
         uuid id PK
         text season
@@ -100,7 +115,7 @@ erDiagram
     }
 ```
 
-`settings` has no relationships: it is a single row of club-wide configuration.
+`settings` has no relationships: it is a single row of club-wide configuration. `change_log` is not linked to the others on purpose: it must survive them being deleted.
 
 ## Tables
 
@@ -131,6 +146,15 @@ erDiagram
 | Table | Purpose | Notes |
 | --- | --- | --- |
 | `admins` | Who may write. A row is an invitation or an admin. | `accepted_at` null means the invitation is **pending** and gives no rights. `is_owner` marks the main admin. Details in [auth and admins](auth-and-admins.md). |
+
+### Safety records
+
+Two tables the app never writes to directly: the database fills them in.
+
+| Table | Purpose | Notes |
+| --- | --- | --- |
+| `late_fee_waivers` | Remembers a late fee that an admin **deleted**, per player and month, so the automatic rule does not add it again. | Written by a trigger on `fines`. Cleared when a season is closed. Admins can read it. |
+| `change_log` | A permanent record of every insert, update and delete on fines, payments, income, expenses, players, fine types and the settings: who, when, and the row before and after. | Written by triggers. **Closed to the app**: nobody, admins included, can read it except through `list_changes()` or change it at all. `who` is null when the system did it (the daily job, the dashboard, a script). |
 
 ### Season archive
 
@@ -168,9 +192,11 @@ All are in `public`. "Caller" is who may execute them.
 | Function | Caller | Does |
 | --- | --- | --- |
 | `is_admin()` | everyone (used by every write rule) | True when the signed-in user has an **accepted** admin row. |
-| `apply_late_fees(date)` | database only (cron) | Adds one late fee per player per month for fines still unpaid after the due date. Idempotent. |
+| `apply_late_fees(date)` | database only (cron) | Adds one late fee per player per month for fines still unpaid after the due date, **except** where one was deleted on purpose (see `late_fee_waivers`). Idempotent. |
 | `apply_late_fees_admin()` | admins | Same, on demand. The app calls it whenever an admin opens it. |
 | `close_season(text)` | admins | Archives the season and starts the next one. See [season close](#closing-a-season). |
+| `list_changes(int)` | admins | The latest changes from `change_log`, newest first, with the person's email, and whether a delete can still be put back. |
+| `restore_change(bigint)` | admins | Puts back a row that was deleted, exactly as it was, from its `change_log` line. Refuses anything that was not a delete, and a row that already exists. |
 | `list_admins()` | admins | Admin rows with email, `pending` and `is_owner`. |
 | `remove_admin(uuid)` | admins | Removes or cancels an admin. Refuses yourself and the main admin. |
 | `accept_admin_invite()` | signed-in users | Accepts your own pending invitation. No effect for anyone not invited. |
@@ -178,7 +204,7 @@ All are in `public`. "Caller" is who may execute them.
 | `add_admin_by_email(text)` | invite function only | Records a pending invitation for an existing account. |
 | `invite_state(text)` | invite function only | `none`, `pending` or `admin` for an email. |
 
-The two "invite function only" helpers are granted to the `service_role` and revoked from everyone else.
+The functions `remember_deleted_late_fee()` and `log_change()` are triggers and cannot be called by anyone. The two "invite function only" helpers are granted to the `service_role` and revoked from everyone else.
 
 ## Who can read and write what
 
@@ -190,6 +216,8 @@ Row level security is on for every table. The rule is deliberately simple:
 | `settings` | read | read | update only |
 | `admins` | nothing | own row only | own row only (use `list_admins()` for the list) |
 | Season archive tables | nothing | nothing | read and delete |
+| `late_fee_waivers` | nothing | nothing | read |
+| `change_log` | nothing | nothing | nothing directly: read through `list_changes()` only |
 | Everything else (invitations, season close) | nothing | only through the functions above | through functions |
 
 Consequence: the publishable key shipped in the website is safe, but **anyone with the link can read every member's fines and debts**.
@@ -217,6 +245,8 @@ A fine is due on `due_day` of the month **after** its date. With the default of 
 
 `apply_late_fees` runs daily at 06:00 UTC if `pg_cron` is set up (see [`supabase/cron.sql`](../supabase/cron.sql)), and whenever an admin opens the app. For each player with an unpaid regular fine past its due date it adds **one** flat late fee (`late_fine_amount`), dated the day after the due date. The unique index on `(player_id, late_for_month)` guarantees one per player per month, even if an admin cancels it. A late fee never triggers another late fee.
 
+**Deleting a late fee is different from cancelling it.** A cancelled late fee stays in the table, so the unique index counts it and the rule leaves it alone. A *deleted* one used to vanish without trace, and the rule, which runs every time an admin opens the app, saw an unpaid month with no late fee and added it again. Now deleting a late fee records it in `late_fee_waivers`, and the rule skips that player and month for good (until the season is closed). Restoring the deleted late fee from the history removes that note.
+
 ### The box
 
 `box = payments + incomes - expenses`. Fines do not count until paid.
@@ -226,7 +256,7 @@ A fine is due on `due_day` of the month **after** its date. With the default of 
 `close_season(next)` runs as one transaction:
 
 1. Writes the summary to `season_archive`, `season_archive_players` and `season_archive_types`.
-2. Deletes all fines, payments, incomes and expenses.
+2. Deletes all fines, payments, incomes and expenses, and forgets the waived late fees. (The deleted rows stay in `change_log`.)
 3. Carries the cash over: if the box was positive it creates an income "Saldo transitado da época …"; if negative, an expense. So the box is identical before and after.
 4. Sets the new season name.
 
@@ -242,5 +272,7 @@ A fine is due on `due_day` of the month **after** its date. With the default of 
 | `20261115000000_admin_pending.sql` | `invite_state`; first version of the pending flag on `list_admins`. |
 | `20261116000000_admin_accept_invite.sql` | `admins.accepted_at`, invitations that stay pending, `accept_admin_invite`, `my_invite_pending`; `is_admin()` now requires acceptance. |
 | `20261117000000_main_admin.sql` | `admins.is_owner`, protection in `remove_admin`, owner first in `list_admins`. |
+| `20261118000000_late_fee_waivers.sql` | `late_fee_waivers`, the trigger that fills it, and `apply_late_fees` and `close_season` updated to respect it. A deleted late fee now stays deleted. |
+| `20261119000000_change_log.sql` | `change_log` with its triggers, `list_changes`, `restore_change`. The record starts from the moment this is run: earlier changes are not in it. |
 
 How to apply and verify them is in [operations](operations.md#database-migrations).

@@ -28,6 +28,8 @@ What protects the app, what was checked and how, and what is knowingly left open
 | **Sessions** | Kept in the browser's local storage (the Supabase default). The access token lasts an hour and refresh tokens rotate. | below |
 | **Script injection** | The app renders no raw HTML, uses no `eval`, loads no outside scripts, and ships a strict content-security policy. | [policy](#the-content-security-policy) |
 | **Finding out who is an admin** | Asking for a code gives the same answer for an address that was not invited, so the list cannot be probed. | [auth and admins](auth-and-admins.md#the-persons-first-access) |
+| **Knowing what happened** | The database records every change to the club's data (who, when, before and after) in a record nobody can edit through the app, and a deleted entry can be put back. | [data model](data-model.md#safety-records), Menu, Histórico |
+| **Losing data** | `npm run backup` saves a private copy on your computer. A deleted late fee stays deleted; a deleted entry can be restored. | [operations](operations.md#backups) |
 | **Money entered offline** | Kept on the phone with no secrets in it, sent by id so a repeat creates nothing twice, and checked by the server entry by entry. | [offline](offline.md) |
 
 **On the session in local storage.** It is true that a script running on the page could read it, which is why the points above matter: there is no way found for such a script to get in, and the policy would stop it from sending anything out. The usual alternative, cookies the page cannot read, needs a server of our own. This is a static site on GitHub Pages, so it has none. The risk is accepted.
@@ -74,6 +76,7 @@ Limits: a meta tag cannot set `frame-ancestors`, so it does not stop the site be
 
 | Gap | Risk | What it would take |
 | --- | --- | --- |
+| **The change record starts when its migration is run.** Anything changed before then is not in it. It also has no automatic expiry, so it grows slowly. | Older changes cannot be traced. | Nothing for the past. A clean-up job only if the table ever gets large. |
 | **No two-factor login.** The authenticator-app option is switched on in Supabase but the app has no screens to enrol or use it, and nothing requires it. | A stolen or guessed admin password is enough. Moderate for a club box with few admins. | An enrolment screen (QR code), a code step at sign-in, a decision on whether admin writes should require it, and a recovery plan if an admin loses their phone. A feature of its own. |
 | **No per-account lockout and no CAPTCHA.** Limits are per IP address. | An attacker with many addresses can keep guessing a password slowly. | A free CAPTCHA (Cloudflare Turnstile or hCaptcha) on sign-in and first access. |
 | **Everyone can read all the data**, including who owes what. | By design, but a link leaked is a list of debts. | Would need a login for visitors, which is a different app. |
