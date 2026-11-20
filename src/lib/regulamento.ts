@@ -13,7 +13,7 @@ export const LATE_FEE_NAME = 'Multa de falta de pagamento'
 
 /** Says when the late fee is added, in the words the app uses for an unpaid fine ("vencida"). */
 export function lateFeeNote(dueDay: number) {
-  return `Quando as multas do mês não estão pagas até ao dia ${dueDay} do mês seguinte, ficam marcadas como vencidas e esta multa é acrescentada (uma vez por mês).`
+  return `Quando as multas do mês não estão pagas até ao dia ${dueDay} do mês seguinte, ficam marcadas como vencidas e esta multa é acrescentada.`
 }
 
 /**
