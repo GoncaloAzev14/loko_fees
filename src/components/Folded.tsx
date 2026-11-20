@@ -42,12 +42,13 @@ export default function Folded<T>({ rows, dateOf, by, amountOf, formatTotal = mo
   return (
     <>
       {groups.length > 1 && (
-        <p className="fold-tools">
+        <div className="fold-tools">
+          <span>{groups.length} {by === 'day' ? 'dias' : 'meses'}</span>
           <IconButton
             Icon={allOpen ? ChevronsUpIcon : ChevronsDownIcon} label={allOpen ? 'Recolher tudo' : 'Abrir tudo'}
             onClick={() => setToggled(Object.fromEntries(groups.map((g) => [g.key, !allOpen])))}
           />
-        </p>
+        </div>
       )}
       {groups.map((g) => {
         const open = isOpen(g.key)

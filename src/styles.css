@@ -401,7 +401,7 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
 .login-back { margin: 1.5rem 0 0; text-align: center; font-size: 0.9rem; color: var(--muted); }
 
 /* ---------- compact filters (Multas, Caixa) ---------- */
-.dates { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.dates { display: flex; align-items: center; gap: 2px; margin-bottom: 8px; padding: 0 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
 .field-inline {
   display: flex; align-items: center; gap: 8px; min-width: 0; height: 44px; padding: 0 12px;
   background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
@@ -537,7 +537,7 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
 
 /* a group of rows (a day, a month): a header that opens and closes its list */
 .fold { margin-top: 8px; }
-.fold-tools { margin: 4px 2px 0; font-size: 0.82rem; }
+.fold-tools { display: flex; justify-content: space-between; align-items: center; margin: 2px 4px 0 6px; color: var(--muted); font-size: 0.78rem; font-weight: 600; }
 .fold-head {
   display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; text-align: left; cursor: pointer;
   background: var(--surface); border: 1px solid var(--line); border-radius: 16px; color: inherit; font: inherit;
@@ -645,3 +645,36 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
 .row-actions .ib { width: 32px; height: 32px; }
 .row-actions { align-items: center; }
 .topbar-end .ib { border-color: transparent; }
+
+/* Multas header: a segmented period control, one date range, and three figures instead of a sentence */
+.filter-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.seg { display: grid; grid-template-columns: repeat(3, auto); flex: 1; min-width: 0; gap: 2px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+.seg button {
+  min-height: 36px; padding: 0 6px; border: 0; border-radius: 12px; background: transparent; color: #d6d6db; cursor: pointer;
+  font: inherit; font-size: 0.8rem; font-weight: 600; white-space: nowrap; -webkit-tap-highlight-color: transparent; transition: background 0.15s, color 0.15s;
+}
+.seg button.on { background: var(--brand); color: var(--on-brand); box-shadow: 0 4px 12px -6px rgba(242, 92, 31, 0.8); }
+.seg button:focus-visible, .filters-toggle:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.filters-toggle {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; flex: none; width: 46px; height: 46px; padding: 0 !important; margin: 0 !important;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; color: #d6d6db; cursor: pointer;
+}
+.filters-toggle.on { border-color: var(--brand-line); background: var(--brand-soft); color: var(--brand); }
+.filters-toggle .count {
+  position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; display: flex; align-items: center; justify-content: center;
+  border-radius: 99px; background: var(--brand); color: var(--on-brand); font-size: 0.7rem; font-weight: 800; font-style: normal; border: 2px solid var(--bg);
+}
+.dates:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(242, 92, 31, 0.18); }
+.dates .field-inline { flex: 1; min-width: 0; background: none; border: 0; box-shadow: none; border-radius: 12px; padding: 0 8px; }
+.dates .field-inline:focus-within { border: 0; box-shadow: none; }
+.dates-arrow { flex: none; color: var(--muted); opacity: 0.8; }
+.stats3 { display: grid; grid-template-columns: 0.8fr 1.1fr 1.1fr; gap: 8px; }
+.stat { display: flex; flex-direction: column; gap: 1px; min-width: 0; padding: 7px 12px 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.stat b { font-size: 0.98rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stat small { font-size: 0.66rem; font-weight: 600; letter-spacing: 0.02em; color: var(--muted); }
+.stat.due { background: var(--brand-soft); border-color: var(--brand-line); }
+.stat.due b { color: var(--brand); }
+/* two dates side by side only fit on a narrow screen without the little calendar icon (touch screens already hide it) */
+@media (max-width: 520px) {
+  .dates .field-inline input[type='date']::-webkit-calendar-picker-indicator { display: none; }
+}

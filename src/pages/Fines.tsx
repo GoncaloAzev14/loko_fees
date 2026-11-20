@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { FineList } from '../components/FineList'
-import { SlidersIcon } from '../components/icons'
+import { ArrowRightIcon, SlidersIcon } from '../components/icons'
 import { Async, PlayerSelect } from '../components/ui'
 import { money, monthRange } from '../lib/format'
 import { STATUS_LABEL } from '../lib/labels'
@@ -35,17 +35,20 @@ export default function Fines() {
   return (
     <>
       <div className="sticky-box">
-        <div className="chips" role="group" aria-label="Período">
-          <button className={`chip ${period(monthRange(0)) ? 'on' : ''}`} onClick={() => setRange(monthRange(0))}>Este mês</button>
-          <button className={`chip ${period(monthRange(-1)) ? 'on' : ''}`} onClick={() => setRange(monthRange(-1))}>Mês passado</button>
-          <button className={`chip ${period({ from: '', to: '' }) ? 'on' : ''}`} onClick={() => setRange({ from: '', to: '' })}>Tudo</button>
+        <div className="filter-top">
+          <div className="seg" role="group" aria-label="Período">
+            <button className={period(monthRange(0)) ? 'on' : ''} aria-pressed={period(monthRange(0))} onClick={() => setRange(monthRange(0))}>Este mês</button>
+            <button className={period(monthRange(-1)) ? 'on' : ''} aria-pressed={period(monthRange(-1))} onClick={() => setRange(monthRange(-1))}>Mês passado</button>
+            <button className={period({ from: '', to: '' }) ? 'on' : ''} aria-pressed={period({ from: '', to: '' })} onClick={() => setRange({ from: '', to: '' })}>Tudo</button>
+          </div>
           <button
-            className={`chip filters-toggle ${extra > 0 || more ? 'on' : ''}`}
+            className={`filters-toggle${extra > 0 || more ? ' on' : ''}`}
             aria-expanded={more}
             aria-label={extra > 0 ? `Filtros (${extra} ativos)` : 'Filtros'}
+            title="Filtros"
             onClick={() => setMore((m) => !m)}
           >
-            <SlidersIcon className="ic sm" />
+            <SlidersIcon />
             {extra > 0 && <i className="count">{extra}</i>}
           </button>
         </div>
@@ -55,6 +58,7 @@ export default function Fines() {
             <span>De</span>
             <input type="date" aria-label="Data inicial" value={range.from} max={range.to || undefined} onChange={(e) => setRange({ ...range, from: e.target.value })} />
           </label>
+          <ArrowRightIcon className="ic sm dates-arrow" />
           <label className="field-inline">
             <span>Até</span>
             <input type="date" aria-label="Data final" value={range.to} min={range.from || undefined} onChange={(e) => setRange({ ...range, to: e.target.value })} />
@@ -83,9 +87,11 @@ export default function Fines() {
             const total = active.reduce((s, r) => s + r.amount, 0)
             const open = active.reduce((s, r) => s + r.remaining, 0)
             return (
-              <p className="summary">
-                {active.length} {active.length === 1 ? 'multa' : 'multas'} · {money(total)} · por pagar <strong className={open > 0 ? 'bad' : undefined}>{money(open)}</strong>
-              </p>
+              <div className="stats3">
+                <div className="stat"><b>{active.length}</b><small>{active.length === 1 ? 'multa' : 'multas'}</small></div>
+                <div className="stat"><b>{money(total)}</b><small>total</small></div>
+                <div className={`stat${open > 0 ? ' due' : ''}`}><b>{money(open)}</b><small>por pagar</small></div>
+              </div>
             )
           }}
         </Async>
