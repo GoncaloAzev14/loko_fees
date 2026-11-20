@@ -88,7 +88,7 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 | `/recover` | First access / forgotten password with an emailed code | everyone |
 | `/set-password` | Where the invitation link lands | whoever the link signed in |
 | `/admin/fines/new` | Register fines (one or many players) | admins |
-| `/admin/payments` | Record payments, and see and delete **every** payment (newest first, grouped by month, filter by player) | admins |
+| `/admin/payments` | Record payments, and see and delete **every** payment: grouped by month in sections that open and close (closed at first), with a search box (player, note, amount, date or month) and a player filter. Searching or filtering opens the matching months | admins |
 | `/admin/money` | Income and expenses | admins |
 | `/admin/catalog` | Fine types | admins |
 | `/admin/players` | Roster management | admins |

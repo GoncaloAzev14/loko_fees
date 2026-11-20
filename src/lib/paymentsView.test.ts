@@ -33,3 +33,48 @@ describe('groupByMonth', () => {
     expect(groupByMonth(rows, by).flatMap((g) => g.rows)).toHaveLength(400)
   })
 })
+
+import { matchesQuery, normalize } from './paymentsView'
+
+describe('normalize', () => {
+  it('drops accents and case', () => {
+    expect(normalize('Aurélio  Março')).toBe('aurelio  marco')
+  })
+})
+
+describe('matchesQuery', () => {
+  const pay = { amount: 5, paid_on: '2026-11-06', note: 'Dinheiro na mão' }
+  const hit = (q: string) => matchesQuery(pay, 'Aurélio Campos', 'Novembro de 2026', '06/11/2026', q)
+
+  it('matches everything when nothing is typed', () => {
+    expect(hit('')).toBe(true)
+    expect(hit('   ')).toBe(true)
+  })
+
+  it('finds a payment by the player, ignoring accents and case', () => {
+    expect(hit('aurelio')).toBe(true)
+    expect(hit('CAMPOS')).toBe(true)
+    expect(hit('bruno')).toBe(false)
+  })
+
+  it('finds it by the note, the amount in any of its forms, the date and the month', () => {
+    expect(hit('dinheiro')).toBe(true)
+    expect(hit('5,00')).toBe(true)
+    expect(hit('5.00')).toBe(true)
+    expect(hit('06/11')).toBe(true)
+    expect(hit('2026-11')).toBe(true)
+    expect(hit('novembro')).toBe(true)
+    expect(hit('outubro')).toBe(false)
+    expect(hit('7,00')).toBe(false)
+  })
+
+  it('needs every word typed, in any order', () => {
+    expect(hit('campos 5,00')).toBe(true)
+    expect(hit('5,00 aurelio')).toBe(true)
+    expect(hit('campos bruno')).toBe(false)
+  })
+
+  it('copes with a payment that has no note', () => {
+    expect(matchesQuery({ amount: 2.5, paid_on: '2026-10-01', note: null }, 'Ana', 'Outubro de 2026', '01/10/2026', '2,50')).toBe(true)
+  })
+})
