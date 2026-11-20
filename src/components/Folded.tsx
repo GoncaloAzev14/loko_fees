@@ -52,7 +52,7 @@ export default function Folded<T>({ rows, dateOf, by, amountOf, formatTotal = mo
         const id = `${idPrefix}-${g.key}`
         return (
           <section key={g.key} className="fold">
-            <button className="fold-head" aria-expanded={open} aria-controls={id} onClick={() => setToggled({ ...toggled, [g.key]: !open })}>
+            <button className="fold-head" aria-expanded={open} aria-controls={id} onClick={() => setToggled((t) => ({ ...t, [g.key]: !open }))}>
               <ChevronRightIcon className={`ic sm chev${open ? ' open' : ''}`} />
               <span className="fold-name">{g.label}</span>
               <span className="fold-meta">{count(g.rows.length)}{amountOf ? ` · ${formatTotal(g.total)}` : ''}</span>
