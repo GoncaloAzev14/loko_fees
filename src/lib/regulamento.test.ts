@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { finesInForce, LATE_FEE_NAME } from './regulamento'
+import { finesInForce, LATE_FEE_NAME, sortedTypes } from './regulamento'
 import type { FineType } from './types'
 
 const type = (id: string, name: string, default_amount: number, active = true): FineType => ({ id, name, default_amount, active })
@@ -28,5 +28,18 @@ describe('finesInForce', () => {
   it('has no late fee card while the settings are not loaded', () => {
     expect(finesInForce([type('1', 'Atraso', 1)])).toHaveLength(1)
     expect(finesInForce([type('1', 'Atraso', 1)], null)).toHaveLength(1)
+  })
+})
+
+describe('sortedTypes', () => {
+  it('keeps the inactive types, which an admin needs to switch them back on, in alphabetical order', () => {
+    const rows = sortedTypes([type('1', 'Treino', 3), type('2', 'Antiga', 9, false), type('3', 'Atraso', 1)])
+    expect(rows.map((t) => t.name)).toEqual(['Antiga', 'Atraso', 'Treino'])
+  })
+
+  it('does not reorder the list it was given', () => {
+    const given = [type('1', 'B', 1), type('2', 'A', 1)]
+    sortedTypes(given)
+    expect(given.map((t) => t.name)).toEqual(['B', 'A'])
   })
 })

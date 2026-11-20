@@ -1,15 +1,14 @@
 import { useState, type FormEvent } from 'react'
-import { useConfirm } from '../../components/Confirm'
-import { PlusIcon } from '../../components/icons'
-import { Async, ErrorNote } from '../../components/ui'
-import { deleteFineType, saveFineType } from '../../lib/api'
-import { parseAmount } from '../../lib/format'
-import { useAction, useFineTypes } from '../../lib/hooks'
-import type { FineType } from '../../lib/types'
+import { useConfirm } from './Confirm'
+import { PlusIcon } from './icons'
+import { ErrorNote } from './ui'
+import { deleteFineType, saveFineType } from '../lib/api'
+import { parseAmount } from '../lib/format'
+import { useAction } from '../lib/hooks'
+import type { FineType } from '../lib/types'
 
-/** The list of possible fines and the amount each costs by default. The add form stays pinned. */
-export default function Catalog() {
-  const q = useFineTypes()
+/** The form that adds a fine type. Only the Regulamento page shows it, and only to admins. */
+export function AddFineType() {
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
   const add = useAction(saveFineType, 'Tipo de multa adicionado')
@@ -26,21 +25,18 @@ export default function Catalog() {
 
   return (
     <>
-      <div className="sticky-box form">
-        <h1>Tipos de multa</h1>
-        <form className="cf-row" onSubmit={submit}>
-          <input aria-label="Nome" placeholder="Nome" required value={name} onChange={(e) => setName(e.target.value)} />
-          <input className="narrow" aria-label="Valor (€)" placeholder="€" inputMode="decimal" required value={amount} onChange={(e) => setAmount(e.target.value)} />
-          <button className="cf-add" aria-label="Adicionar" disabled={add.busy}><PlusIcon /></button>
-        </form>
-        <ErrorNote error={add.error} />
-      </div>
-      <Async q={q}>{(rows) => <ul className="list">{rows.map((t) => <TypeRow key={t.id} t={t} />)}</ul>}</Async>
+      <form className="cf-row" onSubmit={submit}>
+        <input aria-label="Nome" placeholder="Nome" required value={name} onChange={(e) => setName(e.target.value)} />
+        <input className="narrow" aria-label="Valor (€)" placeholder="€" inputMode="decimal" required value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <button className="cf-add" aria-label="Adicionar" disabled={add.busy}><PlusIcon /></button>
+      </form>
+      <ErrorNote error={add.error} />
     </>
   )
 }
 
-function TypeRow({ t }: { t: FineType }) {
+/** One fine type for an admin: change its name or value, switch it on or off (Ativo), or delete it. */
+export function FineTypeRow({ t }: { t: FineType }) {
   const [name, setName] = useState(t.name)
   const [amount, setAmount] = useState(String(t.default_amount).replace('.', ','))
   const [active, setActive] = useState(t.active)

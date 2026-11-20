@@ -46,7 +46,7 @@ export default function Layout() {
         <Brand />
         <nav aria-label="Principal">
           <NavLink to="/" end className={nav}><HomeIcon />Início</NavLink>
-          <NavLink to="/players" className={nav}><UsersIcon />Jogadores</NavLink>
+          <NavLink to="/players" className={nav}><UsersIcon />Plantel</NavLink>
           <NavLink to="/fines" className={nav}><ReceiptIcon />Multas</NavLink>
           <NavLink to="/regulamento" className={nav}><ListIcon />Regulamento</NavLink>
           {isAdmin ? (

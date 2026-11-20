@@ -59,7 +59,7 @@ export default function TabBar() {
 
       <nav className="dock" aria-label="Principal">
         <NavLink to="/" end className={tab}><HomeIcon />Início</NavLink>
-        <NavLink to="/players" className={tab}><UsersIcon />Jogadores</NavLink>
+        <NavLink to="/players" className={tab}><UsersIcon />Plantel</NavLink>
         <div className="mid">
           {isAdmin ? (
             <button

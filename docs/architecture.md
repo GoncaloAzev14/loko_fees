@@ -83,16 +83,15 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 | Route | Screen | Who |
 | --- | --- | --- |
 | `/` | Dashboard: the box, how many players are in debt, overdue or up to date, and the biggest debt | everyone |
-| `/players`, `/players/:id` | Roster with search and filters, and one player's debts, credit and history | everyone |
+| `/players`, `/players/:id` | **Plantel**: the roster with search and filters, and one player's debts, credit and history | everyone |
 | `/fines` | Fines filtered by date, player, type, status, grouped by day | everyone |
-| `/regulamento` | The rules of the fines: one card for every fine being enforced (the active fine types, then the automatic late fee), with its description on the left and its value on the right. The late fee card has a line under it saying that fines not paid by the due day are marked as vencidas and that this fine is then added. `/caixa`, the old address of the box page, redirects here | everyone |
+| `/regulamento` | The rules of the fines: one card for every fine being enforced (the active fine types, then the automatic late fee), with its description on the left and its value on the right. The late fee card has a line under it saying that fines not paid by the due day are marked as vencidas and that this fine is then added. `/caixa`, the old address of the box page, redirects here. **For admins the same page also holds the fine types**: the form to add one at the top, and on every type (including inactive ones, so they can be switched back on) its name and value, the **Ativo** box, Guardar and Apagar. `/admin/catalog`, where this used to be, redirects here | everyone; the editing only for admins |
 | `/login` | Admin sign-in | everyone |
 | `/recover` | First access / forgotten password with an emailed code | everyone |
 | `/set-password` | Where the invitation link lands | whoever the link signed in |
 | `/admin/fines/new` | Register fines (one or many players) | admins |
 | `/admin/payments` | Record payments, and see and delete **every** payment: grouped by month in sections that open and close (closed at first), with a search box (player, note, amount, date or month) and a player filter. Searching or filtering opens the matching months | admins |
 | `/admin/money` | Income and expenses | admins |
-| `/admin/catalog` | Fine types | admins |
 | `/admin/players` | Roster management | admins |
 | `/admin/admins` | Invite, resend, cancel, remove admins | admins |
 | `/admin/archive` | Archived seasons | admins |
@@ -101,7 +100,7 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 
 `/admin/*` is wrapped by `RequireAdmin`, which sends everyone else to `/login`. That is a convenience: the real protection is row level security, which would refuse the writes anyway.
 
-On phones there is a bottom tab bar (Início, Jogadores, a centre button, Multas, Regulamento). The centre button is **Entrar** when nobody is signed in and **Menu** for admins, opening the admin options. On wide screens the same links appear in a sidebar. It is the same code, switched in CSS.
+On phones there is a bottom tab bar (Início, Plantel, a centre button, Multas, Regulamento). The centre button is **Entrar** when nobody is signed in and **Menu** for admins, opening the admin options. On wide screens the same links appear in a sidebar. It is the same code, switched in CSS.
 
 ## Long lists are folded
 

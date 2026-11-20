@@ -15,7 +15,7 @@ export default function Players() {
   return (
     <>
       <div className="sticky-box">
-        <h1>Jogadores</h1>
+        <h1>Plantel</h1>
         <div className="srch">
           <SearchIcon className="ic sm" />
           <input type="search" placeholder="Procurar…" aria-label="Procurar jogador" value={search} onChange={(e) => setSearch(e.target.value)} style={{ border: 0, background: 'none', minHeight: 0, padding: 0, boxShadow: 'none' }} />

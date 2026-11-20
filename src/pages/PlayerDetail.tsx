@@ -37,7 +37,7 @@ export default function PlayerDetail() {
         const shownFines = (rows: LedgerRow[]) => withQueuedFines(rows, queued, { playerId: id }) // plus what is waiting to be sent
         return (
           <>
-            <p><Link to="/players" className="actions"><ChevronLeftIcon className="ic sm" />Jogadores</Link></p>
+            <p><Link to="/players" className="actions"><ChevronLeftIcon className="ic sm" />Plantel</Link></p>
             <p className="tag">Estado da conta</p>
             <h1>{headline(b)}</h1>
             {b.overdue > 0 && <p className="muted small" style={{ marginTop: -8 }}>{money(b.overdue)} fora do prazo</p>}
