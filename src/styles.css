@@ -421,15 +421,6 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
 .filters-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 4px; margin-left: auto; padding: 0 12px !important; }
 .filters-toggle .count { font-style: normal; font-size: 0.7rem; font-weight: 800; }
 .summary { margin: 2px 2px 0; font-size: 0.8rem; color: var(--muted); }
-.statbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.statbtn {
-  display: flex; align-items: center; gap: 10px; min-width: 0; padding: 8px 12px; text-align: left; cursor: pointer;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; color: inherit; font: inherit;
-}
-.statbtn[aria-pressed='true'] { border-color: var(--brand); background: var(--brand-soft); }
-.statbtn .ring { width: 28px; height: 28px; margin: 0; flex: none; }
-.statbtn small { display: block; font-size: 0.66rem; font-weight: 500; color: var(--muted); }
-.statbtn b { font-size: 0.95rem; font-variant-numeric: tabular-nums; }
 /* on touch screens the whole date field opens the picker, so the little calendar icon only costs room */
 @media (hover: none) {
   .field-inline input[type='date']::-webkit-calendar-picker-indicator { display: none; }
@@ -468,7 +459,6 @@ code { background: var(--surface); padding: 1px 5px; border-radius: 6px; border:
 .chips.tight { gap: 6px; padding-bottom: 4px; }
 .chips.tight .chip { min-height: 34px; padding: 0 12px; font-size: 0.78rem; }
 .form-msg { margin: 6px 2px 0; font-size: 0.82rem; }
-.statbtn .touch { margin-left: auto; color: var(--muted); opacity: 0.7; width: 16px; height: 16px; }
 .empty { margin: 1.2rem 2px; padding: 1.1rem; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); }
 
 /* Registar multa: the page is exactly one screen on phones. The player chips scale with the screen height,

@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { useClubName } from '../lib/hooks'
 import { ADMIN_LINKS } from './adminLinks'
-import { HomeIcon, LoginIcon, ReceiptIcon, UsersIcon, WalletIcon } from './icons'
+import { HomeIcon, LoginIcon, ListIcon, ReceiptIcon, UsersIcon } from './icons'
 import Logo from './Logo'
 import SyncChip from './SyncChip'
 import TabBar from './TabBar'
@@ -48,7 +48,7 @@ export default function Layout() {
           <NavLink to="/" end className={nav}><HomeIcon />Início</NavLink>
           <NavLink to="/players" className={nav}><UsersIcon />Jogadores</NavLink>
           <NavLink to="/fines" className={nav}><ReceiptIcon />Multas</NavLink>
-          <NavLink to="/caixa" className={nav}><WalletIcon />Caixa</NavLink>
+          <NavLink to="/tabela" className={nav}><ListIcon />Tabela</NavLink>
           {isAdmin ? (
             <>
               <div className="nav-heading">Administração</div>

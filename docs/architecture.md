@@ -85,7 +85,7 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 | `/` | Dashboard: the box, how many players are in debt, overdue or up to date, and the biggest debt | everyone |
 | `/players`, `/players/:id` | Roster with search and filters, and one player's debts, credit and history | everyone |
 | `/fines` | Fines filtered by date, player, type, status, grouped by day | everyone |
-| `/caixa` | Every payment, income and expense, grouped by month | everyone |
+| `/tabela` | The table of fines: one card for every fine being enforced (the active fine types, then the automatic late fee), with its description on the left and its value on the right. `/caixa`, the old address of the box page, redirects here | everyone |
 | `/login` | Admin sign-in | everyone |
 | `/recover` | First access / forgotten password with an emailed code | everyone |
 | `/set-password` | Where the invitation link lands | whoever the link signed in |
@@ -101,11 +101,11 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 
 `/admin/*` is wrapped by `RequireAdmin`, which sends everyone else to `/login`. That is a convenience: the real protection is row level security, which would refuse the writes anyway.
 
-On phones there is a bottom tab bar (Início, Jogadores, a centre button, Multas, Caixa). The centre button is **Entrar** when nobody is signed in and **Menu** for admins, opening the admin options. On wide screens the same links appear in a sidebar. It is the same code, switched in CSS.
+On phones there is a bottom tab bar (Início, Jogadores, a centre button, Multas, Tabela). The centre button is **Entrar** when nobody is signed in and **Menu** for admins, opening the admin options. On wide screens the same links appear in a sidebar. It is the same code, switched in CSS.
 
 ## Long lists are folded
 
-Every long list is split into sections that open and close, and **all start closed**: fines by day (Multas, Histórico), and payments, income, expenses, Caixa and a player's fines and payments by month. Each header shows the day or month, how many entries it holds and, where money is involved, the total. If there is more than one section, an **Abrir tudo / Recolher tudo** link opens or closes them all.
+Every long list is split into sections that open and close, and **all start closed**: fines by day (Multas, Histórico), and payments, income, expenses and a player's fines and payments by month. Each header shows the day or month, how many entries it holds and, where money is involved, the total. If there is more than one section, an **Abrir tudo / Recolher tudo** link opens or closes them all.
 
 Searching or filtering opens the sections that match, so nothing is hidden behind a closed header. Clearing the search closes them again. Nothing is cut: a closed section still holds every entry, and every list, total and action works as before.
 

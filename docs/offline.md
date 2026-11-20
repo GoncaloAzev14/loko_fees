@@ -52,7 +52,7 @@ Reading offline is handled separately. A service worker keeps the app itself and
 
 ## What the screen shows
 
-- **Lists** (the fines list, a player's page, Caixa, payments, income and expenses) show waiting entries straight away, marked **Por sincronizar**. A fine, payment, income or expense waiting to be deleted shows **A apagar…** and a waiting cancel shows **A anular…** or **A repor…**.
+- **Lists** (the fines list, a player's page, payments, income and expenses) show waiting entries straight away, marked **Por sincronizar**. A fine, payment, income or expense waiting to be deleted shows **A apagar…** and a waiting cancel shows **A anular…** or **A repor…**.
 - **Totals do not move yet.** The box, who owes what, and whether a fine is pending, overdue or paid are all worked out by the database. They change after the entries are sent, and the panel says so. This keeps the money rules in one place instead of copying them into the app.
 - **A small chip in the header**, next to *Sair*, appears only when there is something to say: *Offline*, how many entries wait (*Offline · 2*, *2 por enviar*), *A sincronizar*, or *Sem resposta* when the phone thinks it is online but the server cannot be reached. It sits in the header, not over the page, so it never covers a button. Tapping it opens a panel with the full message and the list of waiting entries, where each can be discarded; tapping outside closes it. On wide screens the chip is under the menu in the sidebar.
 - **Not accepted** entries stay in that list with the server's reason, in plain Portuguese for the usual ones (for example "o jogador ou o tipo de multa já não existe"), and can be tried again or discarded. A refused entry never holds up what you save after it.

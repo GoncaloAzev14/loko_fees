@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { ADMIN_LINKS } from './adminLinks'
-import { HomeIcon, LoginIcon, PlusIcon, ReceiptIcon, UsersIcon, WalletIcon } from './icons'
+import { HomeIcon, LoginIcon, PlusIcon, ListIcon, ReceiptIcon, UsersIcon } from './icons'
 
 const tab = ({ isActive }: { isActive: boolean }) => (isActive ? 'dk on' : 'dk')
 
@@ -78,7 +78,7 @@ export default function TabBar() {
           {isAdmin ? 'Menu' : 'Entrar'}
         </div>
         <NavLink to="/fines" className={tab}><ReceiptIcon />Multas</NavLink>
-        <NavLink to="/caixa" className={tab}><WalletIcon />Caixa</NavLink>
+        <NavLink to="/tabela" className={tab}><ListIcon />Tabela</NavLink>
       </nav>
     </>
   )
