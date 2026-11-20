@@ -48,7 +48,7 @@ export default function Layout() {
           <NavLink to="/" end className={nav}><HomeIcon />Início</NavLink>
           <NavLink to="/players" className={nav}><UsersIcon />Jogadores</NavLink>
           <NavLink to="/fines" className={nav}><ReceiptIcon />Multas</NavLink>
-          <NavLink to="/tabela" className={nav}><ListIcon />Tabela</NavLink>
+          <NavLink to="/regulamento" className={nav}><ListIcon />Regulamento</NavLink>
           {isAdmin ? (
             <>
               <div className="nav-heading">Administração</div>

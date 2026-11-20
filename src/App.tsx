@@ -6,7 +6,7 @@ import { useAuth } from './lib/auth'
 import Layout from './components/Layout'
 import RequireAdmin from './components/RequireAdmin'
 import Access from './pages/Access'
-import FineTable from './pages/FineTable'
+import Regulamento from './pages/Regulamento'
 import Dashboard from './pages/Dashboard'
 import Fines from './pages/Fines'
 import Login from './pages/Login'
@@ -60,8 +60,8 @@ export default function App() {
           <Route path="players" element={<Players />} />
           <Route path="players/:id" element={<PlayerDetail />} />
           <Route path="fines" element={<Fines />} />
-          <Route path="tabela" element={<FineTable />} />
-          <Route path="caixa" element={<Navigate to="/tabela" replace />} />
+          <Route path="regulamento" element={<Regulamento />} />
+          <Route path="caixa" element={<Navigate to="/regulamento" replace />} />
           <Route path="set-password" element={<SetPassword />} />
           <Route path="admin" element={<RequireAdmin />}>
             <Route index element={<Navigate to="/" replace />} />

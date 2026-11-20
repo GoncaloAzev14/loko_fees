@@ -105,7 +105,8 @@ main {
 .dk, .mid {
   position: relative;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-  font-size: 0.68rem; font-weight: 600; color: var(--muted); min-width: 0;
+  /* shrinks a little on narrow phones so the longest label (Regulamento) stays inside its slot */
+  font-size: clamp(0.5rem, 2.35vw, 0.68rem); font-weight: 600; color: var(--muted); min-width: 0;
 }
 .dk.on { color: var(--brand); }
 .mid { color: var(--text); font-weight: 700; }

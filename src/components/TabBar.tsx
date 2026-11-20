@@ -78,7 +78,7 @@ export default function TabBar() {
           {isAdmin ? 'Menu' : 'Entrar'}
         </div>
         <NavLink to="/fines" className={tab}><ReceiptIcon />Multas</NavLink>
-        <NavLink to="/tabela" className={tab}><ListIcon />Tabela</NavLink>
+        <NavLink to="/regulamento" className={tab}><ListIcon />Regulamento</NavLink>
       </nav>
     </>
   )

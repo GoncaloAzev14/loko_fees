@@ -85,7 +85,7 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 | `/` | Dashboard: the box, how many players are in debt, overdue or up to date, and the biggest debt | everyone |
 | `/players`, `/players/:id` | Roster with search and filters, and one player's debts, credit and history | everyone |
 | `/fines` | Fines filtered by date, player, type, status, grouped by day | everyone |
-| `/tabela` | The table of fines: one card for every fine being enforced (the active fine types, then the automatic late fee), with its description on the left and its value on the right. `/caixa`, the old address of the box page, redirects here | everyone |
+| `/regulamento` | The rules of the fines: one card for every fine being enforced (the active fine types, then the automatic late fee), with its description on the left and its value on the right. The late fee card has a line under it saying that fines not paid by the due day are marked as vencidas and that this fine is then added. `/caixa`, the old address of the box page, redirects here | everyone |
 | `/login` | Admin sign-in | everyone |
 | `/recover` | First access / forgotten password with an emailed code | everyone |
 | `/set-password` | Where the invitation link lands | whoever the link signed in |
@@ -101,7 +101,7 @@ The base path is `/` locally and `/<repo>/` on GitHub Pages.
 
 `/admin/*` is wrapped by `RequireAdmin`, which sends everyone else to `/login`. That is a convenience: the real protection is row level security, which would refuse the writes anyway.
 
-On phones there is a bottom tab bar (Início, Jogadores, a centre button, Multas, Tabela). The centre button is **Entrar** when nobody is signed in and **Menu** for admins, opening the admin options. On wide screens the same links appear in a sidebar. It is the same code, switched in CSS.
+On phones there is a bottom tab bar (Início, Jogadores, a centre button, Multas, Regulamento). The centre button is **Entrar** when nobody is signed in and **Menu** for admins, opening the admin options. On wide screens the same links appear in a sidebar. It is the same code, switched in CSS.
 
 ## Long lists are folded
 
