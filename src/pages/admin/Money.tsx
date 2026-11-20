@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { PlusIcon } from '../../components/icons'
+import { useConfirm } from '../../components/Confirm'
 import SaveStatus from '../../components/SaveStatus'
 import Folded from '../../components/Folded'
 import { Async, ErrorNote, SyncBadge } from '../../components/ui'
@@ -36,7 +37,7 @@ function IncomeForm() {
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(todayISO())
   const [playerId, setPlayerId] = useState('')
-  const save = useAction(addIncome)
+  const save = useAction(addIncome, 'Receita registada')
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -75,7 +76,7 @@ function ExpenseForm() {
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(todayISO())
-  const save = useAction(addExpense)
+  const save = useAction(addExpense, 'Despesa registada')
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -108,7 +109,8 @@ function IncomeList() {
   const q = useIncomes()
   const queued = useQueuedEntries()
   const { players } = useLookups()
-  const del = useAction(deleteIncome)
+  const del = useAction(deleteIncome, 'Receita apagada')
+  const ask = useConfirm()
   return (
     <>
       <ErrorNote error={del.error} />
@@ -128,7 +130,7 @@ function IncomeList() {
                     <div className="row-sub">{formatDate(i.received_on)}{i.player_id && ` · ${players.get(i.player_id)?.name ?? ''}`}</div>
                     {i.sync !== 'deleting' && (
                       <div className="row-actions">
-                        <button className="link danger" onClick={() => confirm('Apagar esta receita?') && del.run(i.id)}>Apagar</button>
+                        <button className="link danger" onClick={async () => (await ask({ title: 'Apagar esta receita?', message: 'Deixa de contar para a caixa. Pode repô-la no Histórico.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(i.id)}>Apagar</button>
                       </div>
                 )}
               </div>
@@ -149,7 +151,8 @@ function IncomeList() {
 function ExpenseList() {
   const q = useExpenses()
   const queued = useQueuedEntries()
-  const del = useAction(deleteExpense)
+  const del = useAction(deleteExpense, 'Despesa apagada')
+  const ask = useConfirm()
   return (
     <>
       <ErrorNote error={del.error} />
@@ -169,7 +172,7 @@ function ExpenseList() {
                     <div className="row-sub">{formatDate(x.spent_on)}</div>
                     {x.sync !== 'deleting' && (
                       <div className="row-actions">
-                        <button className="link danger" onClick={() => confirm('Apagar esta despesa?') && del.run(x.id)}>Apagar</button>
+                        <button className="link danger" onClick={async () => (await ask({ title: 'Apagar esta despesa?', message: 'Volta a contar para a caixa. Pode repô-la no Histórico.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(x.id)}>Apagar</button>
                       </div>
                 )}
               </div>

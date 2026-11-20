@@ -23,11 +23,16 @@ function SettingsForm({ s }: { s: S }) {
   const [season, setSeason] = useState(s.season)
   useEffect(() => setSeason(s.season), [s.season]) // follows a season closed from the card below
   const [result, setResult] = useState<string | null>(null)
-  const save = useAction(saveSettings)
-  const apply = useAction(async () => {
-    const n = await applyLateFees()
-    setResult(n === 0 ? 'Nenhuma multa de atraso por aplicar.' : `${n} ${n === 1 ? 'multa de atraso aplicada' : 'multas de atraso aplicadas'}.`)
-  })
+  const save = useAction(saveSettings, 'Definições guardadas')
+  const lateText = (n: number) => (n === 0 ? 'Nenhuma multa de atraso por aplicar' : `${n} ${n === 1 ? 'multa de atraso aplicada' : 'multas de atraso aplicadas'}`)
+  const apply = useAction(
+    async () => {
+      const n = await applyLateFees()
+      setResult(`${lateText(n)}.`)
+      return n
+    },
+    (n) => lateText(Number(n)),
+  )
 
   const amount = parseAmount(late)
   const dueDay = Number(day)
@@ -73,12 +78,15 @@ function CloseSeason({ current }: { current: string }) {
   const [typed, setTyped] = useState('')
   const [done, setDone] = useState<string | null>(null)
   useEffect(() => setNext(nextSeason(current)), [current])
-  const close = useAction(async () => {
-    await closeSeason(next.trim())
-    setDone(`Época ${current} arquivada. Começou a época ${next.trim()}.`)
-    setOpen(false)
-    setTyped('')
-  })
+  const close = useAction(
+    async () => {
+      await closeSeason(next.trim())
+      setDone(`Época ${current} arquivada. Começou a época ${next.trim()}.`)
+      setOpen(false)
+      setTyped('')
+    },
+    () => `Época ${current} fechada`,
+  )
 
   const ready = isSeason(next) && next.trim() !== current && typed.trim() === current
 

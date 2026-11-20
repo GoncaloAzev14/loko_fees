@@ -67,6 +67,8 @@ Right after every save (register a fine, a payment, income or an expense, and ca
 | **Guardado só no telemóvel: falta enviar** (amber) | It is only on this phone, waiting for a connection. It turns green by itself once it has been sent. |
 | **O servidor não aceitou: veja o Histórico** (red) | The server refused it. The reason is in Histórico. |
 
+A small **toast** just above the tab bar says the same at the moment of saving (for example *Pagamento de 5,00 € registado*, with *Guardado no servidor ✓* or, in amber, *Só no telemóvel: falta enviar* underneath) and fades after a few seconds. The line under the form stays, so the answer is still there if the toast was missed.
+
 Each message follows **its own** save, not the rest of the queue: an old refused entry elsewhere does not change what a new save says.
 
 ### Histórico: what is on the server and what is only here

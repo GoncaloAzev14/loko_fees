@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useConfirm } from '../../components/Confirm'
 import { PlusIcon } from '../../components/icons'
 import { Async, ErrorNote } from '../../components/ui'
 import { deletePlayer, savePlayer } from '../../lib/api'
@@ -10,7 +11,7 @@ export default function Roster() {
   const q = useBalances()
   const [name, setName] = useState('')
   const [role, setRole] = useState<Role>('player')
-  const add = useAction(savePlayer)
+  const add = useAction(savePlayer, 'Jogador adicionado')
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -41,8 +42,9 @@ function PlayerRow({ b }: { b: Balance }) {
   const [name, setName] = useState(b.name)
   const [role, setRole] = useState<Role>(b.role)
   const [active, setActive] = useState(b.active)
-  const save = useAction(savePlayer)
-  const del = useAction(deletePlayer)
+  const save = useAction(savePlayer, 'Jogador guardado')
+  const del = useAction(deletePlayer, 'Jogador apagado')
+  const ask = useConfirm()
   const dirty = name.trim() !== b.name || role !== b.role || active !== b.active
   return (
     <li className="row edit">
@@ -58,7 +60,7 @@ function PlayerRow({ b }: { b: Balance }) {
       <button
         className="link danger"
         disabled={del.busy}
-        onClick={() => confirm(`Apagar ${b.name} definitivamente? Só é possível se não tiver multas nem pagamentos.`) && del.run(b.player_id)}
+        onClick={async () => (await ask({ title: `Apagar ${b.name}?`, message: 'Só é possível se não tiver multas nem pagamentos.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(b.player_id)}
       >
         Apagar
       </button>

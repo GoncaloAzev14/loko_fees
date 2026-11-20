@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useConfirm } from '../../components/Confirm'
 import { Async, ErrorNote } from '../../components/ui'
 import { inviteAdmin, removeAdmin } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
@@ -10,15 +11,23 @@ export default function Admins() {
   const q = useAdmins()
   const [email, setEmail] = useState('')
   const [done, setDone] = useState<string | null>(null)
-  const invite = useAction(async (to: string) => {
-    const status = await inviteAdmin(to)
-    setDone(
-      status === 'invited' ? `Convite enviado para ${to}.`
-      : status === 'resent' ? `Enviámos um novo código a ${to}.`
-      : `${to} já é administrador.`,
-    )
-  })
-  const remove = useAction(removeAdmin)
+  const inviteText = (status: string, to: string) =>
+    status === 'invited' ? `Convite enviado para ${to}`
+    : status === 'resent' ? `Enviámos um novo código a ${to}`
+    : `${to} já é administrador`
+  const invite = useAction(
+    async (to: string) => {
+      const status = await inviteAdmin(to)
+      setDone(`${inviteText(status, to)}.`)
+      return status
+    },
+    (status, to) => inviteText(String(status), to),
+  )
+  const remove = useAction(
+    (userId: string, pending: boolean) => removeAdmin(userId).then(() => pending),
+    (_r, _id, pending) => (pending ? 'Convite cancelado' : 'Acesso retirado'),
+  )
+  const ask = useConfirm()
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -62,9 +71,14 @@ export default function Admins() {
                         <button
                           className="link danger"
                           disabled={remove.busy}
-                          onClick={() =>
-                            confirm(a.pending ? `Cancelar o convite a ${a.email}?` : `Retirar o acesso de administrador a ${a.email}?`) && remove.run(a.user_id)
-                          }
+                          onClick={async () => {
+                            const yes = await ask(
+                              a.pending
+                                ? { title: 'Cancelar este convite?', message: `${a.email} deixa de poder usar o convite.`, confirmLabel: 'Cancelar convite', cancelLabel: 'Manter', tone: 'danger' }
+                                : { title: 'Retirar o acesso?', message: `${a.email} deixa de ser administrador. Pode convidar de novo mais tarde.`, confirmLabel: 'Retirar acesso', tone: 'danger' },
+                            )
+                            if (yes) remove.run(a.user_id, a.pending === true)
+                          }}
                         >
                           {a.pending ? 'Cancelar convite' : 'Retirar acesso'}
                         </button>

@@ -3,6 +3,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
+import { ConfirmProvider } from './components/Confirm'
+import { ToastProvider } from './components/Toast'
 import { AuthProvider } from './lib/auth'
 import { isConfigured } from './lib/supabase'
 import '@fontsource-variable/sora'
@@ -29,7 +31,11 @@ createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <BrowserRouter basename={import.meta.env.BASE_URL}>
-            <App />
+            <ToastProvider>
+              <ConfirmProvider>
+                <App />
+              </ConfirmProvider>
+            </ToastProvider>
           </BrowserRouter>
         </AuthProvider>
       </QueryClientProvider>

@@ -162,6 +162,7 @@ The workflow runs the tests on every push to `main` and only publishes if they p
 | To change | Touch |
 | --- | --- |
 | A rule about money, dates, late fees, seasons | A **new migration** (never edit an old one), and tests in `supabase/tests/` |
+| A new action that changes something | Wrap it in `useAction(fn, 'Message')`: on success it confirms itself with a toast (a function `(result, ...args) => text` builds the message from the result). Anything destructive asks first with `const ask = useConfirm()` and `await ask({ title, message, confirmLabel, tone: 'danger' })`. **Never `window.confirm`**: the app has its own dialog, and a test run can tell by counting native popups (there should be none). |
 | What a screen shows | The page in `src/pages/`, and the hook or `lib/api.ts` function it uses |
 | A table or a view's columns | The migration, `src/lib/types.ts`, `lib/api.ts`, then the pages |
 | Colours, spacing, layout | `src/styles.css`, which is the whole theme (tokens at the top) |

@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import { useConfirm } from '../../components/Confirm'
+import { useToast } from '../../components/Toast'
 import { Async, ErrorNote } from '../../components/ui'
 import { restoreChange } from '../../lib/api'
 import { describeChange, whoLabel } from '../../lib/changes'
@@ -21,7 +23,9 @@ export default function History() {
   const q = useChanges()
   const { players, types } = useLookups()
   const [onlyDeleted, setOnlyDeleted] = useState(false)
-  const restore = useAction(restoreChange)
+  const restore = useAction(restoreChange, 'Entrada reposta')
+  const ask = useConfirm()
+  const toast = useToast()
   const mine = useQueuedEntries()
   const names = useMemo(() => new Map([...players].map(([id, p]) => [id, p.name])), [players])
   const typeNames = useMemo(() => new Map([...types].map(([id, t]) => [id, t.name])), [types])
@@ -51,8 +55,19 @@ export default function History() {
                     {e.failed && <span> {e.failed}</span>}
                   </div>
                   <div className="row-actions">
-                    {e.failed && <button className="link" onClick={() => { outbox.retry(e.id); void flush() }}>Tentar de novo</button>}
-                    <button className="link danger" onClick={() => confirm('Descartar esta alteração? Não será enviada.') && outbox.discard(e.id)}>Descartar</button>
+                    {e.failed && <button className="link" onClick={() => { outbox.retry(e.id); void flush(); toast('A tentar enviar outra vez') }}>Tentar de novo</button>}
+                    <button
+                      className="link danger"
+                      onClick={async () => {
+                        const yes = await ask({ title: 'Descartar esta alteração?', message: 'Não será enviada ao servidor e perde-se.', confirmLabel: 'Descartar', cancelLabel: 'Manter', tone: 'danger' })
+                        if (yes) {
+                          outbox.discard(e.id)
+                          toast('Alteração descartada')
+                        }
+                      }}
+                    >
+                      Descartar
+                    </button>
                   </div>
                 </div>
               </li>
@@ -85,7 +100,7 @@ export default function History() {
                           <button
                             className="link"
                             disabled={restore.busy}
-                            onClick={() => confirm('Repor esta linha tal como estava?') && restore.run(c.id)}
+                            onClick={async () => (await ask({ title: 'Repor esta entrada?', message: 'Volta a ficar exatamente como estava.', confirmLabel: 'Repor' })) && restore.run(c.id)}
                           >
                             Repor
                           </button>

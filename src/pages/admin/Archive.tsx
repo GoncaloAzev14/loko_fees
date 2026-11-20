@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useConfirm } from '../../components/Confirm'
 import { Async, ErrorNote } from '../../components/ui'
 import { deleteArchivedSeason } from '../../lib/api'
 import { formatDate, money } from '../../lib/format'
@@ -30,7 +31,8 @@ function Season({ s }: { s: ArchivedSeason }) {
   const [open, setOpen] = useState(false)
   const multas = (n: number) => `${n} ${n === 1 ? 'multa' : 'multas'}`
   const detail = useArchivedDetail(s.id, open)
-  const del = useAction(deleteArchivedSeason)
+  const del = useAction(deleteArchivedSeason, 'Arquivo apagado')
+  const ask = useConfirm()
   return (
     <section className="card">
       <button className="card-head" style={{ width: '100%', background: 'none', border: 0, color: 'inherit', font: 'inherit', cursor: 'pointer', textAlign: 'left', padding: 0 }} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
@@ -86,7 +88,7 @@ function Season({ s }: { s: ArchivedSeason }) {
           <button
             className="link danger"
             disabled={del.busy}
-            onClick={() => confirm(`Apagar o arquivo da época ${s.season}? Não se pode desfazer.`) && del.run(s.id)}
+            onClick={async () => (await ask({ title: `Apagar o arquivo da época ${s.season}?`, message: 'O resumo desta época perde-se e não se pode repor.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(s.id)}
           >
             Apagar este arquivo
           </button>

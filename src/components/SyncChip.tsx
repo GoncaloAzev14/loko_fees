@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { describeEntry } from '../lib/entries'
+import { useConfirm } from './Confirm'
+import { useToast } from './Toast'
 import { useLookups, useSyncSummary } from '../lib/hooks'
 import type { Entry } from '../lib/outbox'
 import { flush, outbox } from '../lib/sync'
@@ -70,6 +72,8 @@ export default function SyncChip() {
 
 function EntryList({ entries, online }: { entries: Entry[]; online: boolean }) {
   const { players, types } = useLookups()
+  const ask = useConfirm()
+  const toast = useToast()
   const describe = (e: Entry) => describeEntry(e, (id) => players.get(id)?.name, (id) => types.get(id)?.name)
   return (
     <ul className="sync-list">
@@ -79,8 +83,19 @@ function EntryList({ entries, online }: { entries: Entry[]; online: boolean }) {
           <div className="row-sub">{e.failed ? 'Não foi aceite' : online ? 'À espera de ser enviado' : 'A aguardar ligação'}</div>
           {e.failed && <p className="why small">{e.failed}</p>}
           <div className="row-actions">
-            {e.failed && <button className="link" onClick={() => { outbox.retry(e.id); void flush() }}>Tentar de novo</button>}
-            <button className="link danger" onClick={() => confirm('Descartar esta alteração? Não será enviada.') && outbox.discard(e.id)}>Descartar</button>
+            {e.failed && <button className="link" onClick={() => { outbox.retry(e.id); void flush(); toast('A tentar enviar outra vez') }}>Tentar de novo</button>}
+            <button
+              className="link danger"
+              onClick={async () => {
+                const yes = await ask({ title: 'Descartar esta alteração?', message: 'Não será enviada ao servidor e perde-se.', confirmLabel: 'Descartar', cancelLabel: 'Manter', tone: 'danger' })
+                if (yes) {
+                  outbox.discard(e.id)
+                  toast('Alteração descartada')
+                }
+              }}
+            >
+              Descartar
+            </button>
           </div>
         </li>
       ))}
