@@ -1,4 +1,4 @@
-import { AddFineType, FineTypeRow } from '../components/FineTypeAdmin'
+import { AddFineType, FineTypeRow, LateFeeAdminCard } from '../components/FineTypeAdmin'
 import { Async } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { money } from '../lib/format'
@@ -25,7 +25,7 @@ export default function Regulamento() {
   const { isAdmin } = useAuth()
   const types = useFineTypes()
   const settings = useSettings() // only adds the late-fee card; if it cannot be read the list is still shown
-  const lateFee = settings.data ? { amount: settings.data.late_fine_amount, dueDay: settings.data.due_day } : null
+  const lateFee = settings.data ? { amount: settings.data.late_fine_amount, dueDay: settings.data.due_day, enabled: settings.data.late_fee_enabled } : null
   const late = lateFeeEntry(lateFee)
   return (
     <>
@@ -44,7 +44,7 @@ export default function Regulamento() {
             return (
               <ul className="list">
                 {sortedTypes(list).map((t) => <FineTypeRow key={t.id} t={t} />)}
-                {late && <RuleCard r={late} />}
+                {late && <LateFeeAdminCard r={late} />}
               </ul>
             )
           const rows = finesInForce(list, lateFee)

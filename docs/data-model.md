@@ -139,7 +139,7 @@ erDiagram
 
 | Table | Purpose | Notes |
 | --- | --- | --- |
-| `settings` | One row: `late_fine_amount` (default 5), `due_day` (default 7, 1 to 28) and `season` (format `2026/27`). | Admins can update it; nobody can insert or delete rows. |
+| `settings` | One row: `late_fine_amount` (default 5), `due_day` (default 7, 1 to 28) and `season` (format `2026/27`) and `late_fee_enabled` (default true). | Admins can update it; nobody can insert or delete rows. |
 
 ### Access
 
@@ -243,7 +243,7 @@ A fine is due on `due_day` of the month **after** its date. With the default of 
 
 ### Late fees
 
-`apply_late_fees` runs daily at 06:00 UTC if `pg_cron` is set up (see [`supabase/cron.sql`](../supabase/cron.sql)), and whenever an admin opens the app. For each player with an unpaid regular fine past its due date it adds **one** flat late fee (`late_fine_amount`), dated the day after the due date. The unique index on `(player_id, late_for_month)` guarantees one per player per month, even if an admin cancels it. A late fee never triggers another late fee.
+`apply_late_fees` runs daily at 06:00 UTC if `pg_cron` is set up (see [`supabase/cron.sql`](../supabase/cron.sql)), and whenever an admin opens the app. For each player with an unpaid regular fine past its due date it adds **one** flat late fee (`late_fine_amount`), dated the day after the due date, **unless an admin switched the rule off** (`late_fee_enabled = false`, the Ativa switch on the late fee card of the Regulamento page): then nothing new is added, the amount and the due day are kept, and the late fees already charged stay exactly as they are. The unique index on `(player_id, late_for_month)` guarantees one per player per month, even if an admin cancels it. A late fee never triggers another late fee.
 
 **Deleting a late fee is different from cancelling it.** A cancelled late fee stays in the table, so the unique index counts it and the rule leaves it alone. A *deleted* one used to vanish without trace, and the rule, which runs every time an admin opens the app, saw an unpaid month with no late fee and added it again. Now deleting a late fee records it in `late_fee_waivers`, and the rule skips that player and month for good (until the season is closed). Restoring the deleted late fee from the history removes that note.
 
@@ -274,5 +274,6 @@ A fine is due on `due_day` of the month **after** its date. With the default of 
 | `20261117000000_main_admin.sql` | `admins.is_owner`, protection in `remove_admin`, owner first in `list_admins`. |
 | `20261118000000_late_fee_waivers.sql` | `late_fee_waivers`, the trigger that fills it, and `apply_late_fees` and `close_season` updated to respect it. A deleted late fee now stays deleted. |
 | `20261119000000_change_log.sql` | `change_log` with its triggers, `list_changes`, `restore_change`. The record starts from the moment this is run: earlier changes are not in it. |
+| `20261120000000_late_fee_switch.sql` | `settings.late_fee_enabled` and `apply_late_fees` updated to add nothing while it is off. Run it before using the switch; the app works without it (the late fee is simply always on). |
 
 How to apply and verify them is in [operations](operations.md#database-migrations).

@@ -45,6 +45,7 @@ Open **SQL Editor → New query**, paste the **whole contents** of each file bel
 | 6 | `20261117000000_main_admin.sql` | the first admin is marked as the main admin and cannot be removed from the app |
 | 7 | `20261118000000_late_fee_waivers.sql` | a deleted late fee stays deleted (the automatic rule no longer adds it back) |
 | 8 | `20261119000000_change_log.sql` | a permanent record of who changed what, and putting back a deleted entry (Menu, Histórico) |
+| 9 | `20261120000000_late_fee_switch.sql` | a switch to turn the automatic late fee off and on (Regulamento page, as admin) |
 
 (Prefer the command line? `npx supabase link --project-ref <ref>` then `npx supabase db push` applies the same files.)
 
@@ -232,7 +233,7 @@ Phones get a bottom tab bar, wide screens a sidebar: same code, same screens. Th
 | Rule | Behaviour |
 | --- | --- |
 | Due date | A fine is due on **day 7 of the following month** (October fine → 7 Nov). The day is configurable in Definições. |
-| Late fine | Once per player per month, a flat fee (default 5 €, configurable) is added automatically after the due date if the player still owes any of that month's fines. |
+| Late fine | Once per player per month, a flat fee (default 5 €, configurable) is added automatically after the due date if the player still owes any of that month's fines. An admin can switch the rule off (and on) on the Regulamento page: off only stops new ones. |
 | Statuses | `pending`, `overdue` (automatic after the due date), `paid`, `cancelled` (admin correction). |
 | Payments | Recorded per player, any amount. They settle the player's **oldest fines first**; partial payments are possible and any surplus is **credit**. |
 | Box | payments + income (prizes, donations) − expenses. |

@@ -31,6 +31,8 @@ export interface Settings {
   due_day: number
   /** e.g. '2026/27' */
   season: string
+  /** false when an admin switched the automatic late fee off */
+  late_fee_enabled: boolean
 }
 
 export interface LedgerRow {

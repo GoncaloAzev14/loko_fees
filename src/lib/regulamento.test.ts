@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { finesInForce, LATE_FEE_NAME, sortedTypes } from './regulamento'
+import { finesInForce, lateFeeEntry, LATE_FEE_NAME, sortedTypes } from './regulamento'
 import type { FineType } from './types'
 
 const type = (id: string, name: string, default_amount: number, active = true): FineType => ({ id, name, default_amount, active })
@@ -13,16 +13,23 @@ describe('finesInForce', () => {
   })
 
   it('adds the late fee last, even when it is zero, and explains that unpaid fines are marked as vencidas', () => {
-    const rows = finesInForce([type('1', 'Atraso', 1)], { amount: 5, dueDay: 7 })
+    const rows = finesInForce([type('1', 'Atraso', 1)], { amount: 5, dueDay: 7, enabled: true })
     const late = rows.at(-1)!
     expect(late).toMatchObject({ key: 'late-fee', description: LATE_FEE_NAME, amount: 5 })
     expect(late.note).toContain('dia 7 do mês seguinte')
     expect(late.note).toContain('vencidas')
-    expect(finesInForce([], { amount: 0, dueDay: 7 })).toHaveLength(1)
+    expect(finesInForce([], { amount: 0, dueDay: 7, enabled: true })).toHaveLength(1)
   })
 
   it('follows the due day from the settings', () => {
-    expect(finesInForce([], { amount: 5, dueDay: 12 })[0].note).toContain('dia 12 do mês seguinte')
+    expect(finesInForce([], { amount: 5, dueDay: 12, enabled: true })[0].note).toContain('dia 12 do mês seguinte')
+  })
+
+  it('leaves the late fee out for visitors while an admin has it switched off, but still gives it to the admin as inactive', () => {
+    const off = { amount: 5, dueDay: 7, enabled: false }
+    expect(finesInForce([type('1', 'Atraso', 1)], off).map((r) => r.description)).toEqual(['Atraso'])
+    expect(lateFeeEntry(off)).toMatchObject({ description: LATE_FEE_NAME, amount: 5, active: false })
+    expect(lateFeeEntry({ ...off, enabled: true })?.active).toBe(true)
   })
 
   it('has no late fee card while the settings are not loaded', () => {
