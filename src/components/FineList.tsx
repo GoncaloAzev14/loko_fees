@@ -5,6 +5,7 @@ import { deleteFine, setFineCancelled } from '../lib/api'
 import { useAction, useLookups } from '../lib/hooks'
 import { fineName } from '../lib/labels'
 import type { LedgerRow } from '../lib/types'
+import { useConfirm } from './Confirm'
 import SaveStatus from './SaveStatus'
 import { ErrorNote, StatusBadge, SyncBadge } from './ui'
 
@@ -13,8 +14,13 @@ export function FineList({ rows, showPlayer = true, groupByDate = false }: { row
   const { players, types } = useLookups()
   const { isAdmin } = useAuth()
   // one action for both buttons, so there is one status line: the latest thing that was done
-  const act = useAction((kind: 'cancel' | 'delete', id: string, cancelled?: boolean) =>
-    kind === 'cancel' ? setFineCancelled(id, Boolean(cancelled)) : deleteFine(id))
+  const act = useAction(
+    (kind: 'cancel' | 'delete', id: string, cancelled?: boolean, _late?: boolean) =>
+      kind === 'cancel' ? setFineCancelled(id, Boolean(cancelled)) : deleteFine(id),
+    (_result, kind, _id, cancelled?: boolean, late?: boolean) =>
+      kind === 'cancel' ? (cancelled ? 'Multa anulada' : 'Multa reposta') : late ? 'Multa de atraso apagada' : 'Multa apagada',
+  )
+  const ask = useConfirm()
 
   if (rows.length === 0) return <p className="muted pad">Sem multas para mostrar.</p>
 
@@ -41,7 +47,15 @@ export function FineList({ rows, showPlayer = true, groupByDate = false }: { row
             <button
               className="link danger"
               disabled={act.busy}
-              onClick={() => confirm(r.kind === 'late_fee' ? 'Apagar esta multa de atraso? Não volta a ser aplicada a este jogador neste mês.' : 'Apagar esta multa definitivamente?') && act.run('delete', r.id)}
+              onClick={async () => {
+                const late = r.kind === 'late_fee'
+                const yes = await ask(
+                  late
+                    ? { title: 'Apagar esta multa de atraso?', message: 'Não volta a ser aplicada a este jogador neste mês. Pode repô-la no Histórico.', confirmLabel: 'Apagar', tone: 'danger' }
+                    : { title: 'Apagar esta multa?', message: 'Fica apagada. Pode repô-la no Histórico.', confirmLabel: 'Apagar', tone: 'danger' },
+                )
+                if (yes) act.run('delete', r.id, undefined, late)
+              }}
             >
               Apagar
             </button>

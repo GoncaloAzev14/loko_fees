@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useConfirm } from '../../components/Confirm'
 import { PlusIcon } from '../../components/icons'
 import { Async, ErrorNote } from '../../components/ui'
 import { deleteFineType, saveFineType } from '../../lib/api'
@@ -11,7 +12,7 @@ export default function Catalog() {
   const q = useFineTypes()
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
-  const add = useAction(saveFineType)
+  const add = useAction(saveFineType, 'Tipo de multa adicionado')
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -43,8 +44,9 @@ function TypeRow({ t }: { t: FineType }) {
   const [name, setName] = useState(t.name)
   const [amount, setAmount] = useState(String(t.default_amount).replace('.', ','))
   const [active, setActive] = useState(t.active)
-  const save = useAction(saveFineType)
-  const del = useAction(deleteFineType)
+  const save = useAction(saveFineType, 'Tipo de multa guardado')
+  const del = useAction(deleteFineType, 'Tipo de multa apagado')
+  const ask = useConfirm()
   const value = parseAmount(amount)
   const dirty = name.trim() !== t.name || value !== t.default_amount || active !== t.active
   return (
@@ -58,7 +60,7 @@ function TypeRow({ t }: { t: FineType }) {
       <button
         className="link danger"
         disabled={del.busy}
-        onClick={() => confirm(`Apagar «${t.name}» definitivamente? Só é possível se nenhuma multa o usar.`) && del.run(t.id)}
+        onClick={async () => (await ask({ title: `Apagar «${t.name}»?`, message: 'Só é possível se nenhuma multa o usar.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(t.id)}
       >
         Apagar
       </button>

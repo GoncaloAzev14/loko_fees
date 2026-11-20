@@ -47,6 +47,7 @@ src/
   pages/                     one file per screen
     admin/                   screens only admins can open
   components/                layout, tab bar, lists, icons, shared UI
+    Confirm.tsx, Toast.tsx   the app's own confirmation dialog and toasts (never window.confirm)
   lib/
     supabase.ts              the one Supabase client
     api.ts                   every call to the backend (reads, writes, rpc, functions)

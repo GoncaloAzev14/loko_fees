@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useConfirm } from '../../components/Confirm'
 import SaveStatus from '../../components/SaveStatus'
 import { Async, BalanceLine, ErrorNote, PlayerSelect, SyncBadge } from '../../components/ui'
 import { addPayment, deletePayment } from '../../lib/api'
@@ -18,17 +19,15 @@ export default function Payments() {
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(todayISO())
   const [note, setNote] = useState('')
-  const [done, setDone] = useState<string | null>(null)
-  const save = useAction(addPayment)
-  const del = useAction(deletePayment)
+  const save = useAction(addPayment, (_r, p) => `Pagamento de ${money(p.amount)} registado`)
+  const del = useAction(deletePayment, 'Pagamento apagado')
+  const ask = useConfirm()
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    setDone(null)
     const value = parseAmount(amount)
     if (!playerId || !(value > 0)) return
     if (await save.run({ player_id: playerId, amount: value, paid_on: date, note })) {
-      setDone(`Pagamento de ${money(value)} registado.`)
       setAmount('')
       setNote('')
     }
@@ -68,7 +67,6 @@ export default function Payments() {
           }}
         </Async>
         <ErrorNote error={save.error} />
-        {done && <p className="good form-msg" role="status">{done}</p>}
         <SaveStatus save={save.saved} />
       </div>
 
@@ -87,7 +85,7 @@ export default function Payments() {
                   </div>
                   {p.sync !== 'deleting' && (
                     <div className="row-actions">
-                      <button className="link danger" disabled={del.busy} onClick={() => confirm('Apagar este pagamento?') && del.run(p.id)}>Apagar</button>
+                      <button className="link danger" disabled={del.busy} onClick={async () => (await ask({ title: 'Apagar este pagamento?', message: 'Deixa de contar para o jogador e para a caixa. Pode repô-lo no Histórico.', confirmLabel: 'Apagar', tone: 'danger' })) && del.run(p.id)}>Apagar</button>
                     </div>
                   )}
                 </div>

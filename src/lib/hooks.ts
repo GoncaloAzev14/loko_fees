@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import * as api from './api'
+import { useToast } from '../components/Toast'
 import { useAuth } from './auth'
 import type { Saved } from './saveStatus'
 import { getSyncStatus, outbox, subscribeSyncStatus } from './sync'
@@ -51,11 +52,17 @@ export function useLookups() {
  * Wraps a write. Every view is derived from the same ledger, so on success
  * everything is refetched rather than patched.
  */
-export function useAction<A extends unknown[]>(fn: (...args: A) => Promise<unknown>) {
+/** What to say when an action worked: a fixed sentence, or one made from its result and arguments (null = say nothing). */
+export type SuccessText<A extends unknown[]> = string | ((result: unknown, ...args: A) => string | null | undefined)
+
+export function useAction<A extends unknown[]>(fn: (...args: A) => Promise<unknown>, success?: SuccessText<A>) {
   const qc = useQueryClient()
+  const toast = useToast()
   const [state, setState] = useState<{ busy: boolean; error: string | null; saved: Saved | null }>({ busy: false, error: null, saved: null })
   const fnRef = useRef(fn)
   fnRef.current = fn
+  const successRef = useRef(success)
+  successRef.current = success
   const run = useCallback(
     async (...args: A) => {
       setState({ busy: true, error: null, saved: null })
@@ -67,13 +74,23 @@ export function useAction<A extends unknown[]>(fn: (...args: A) => Promise<unkno
         if (!queued) await qc.invalidateQueries()
         // `saved` tells the screen whether it reached the server or is only waiting on this phone, and which entries to follow
         setState({ busy: false, error: null, saved: { queued, ids: answer?.ids ?? [] } })
+        const sayWhat = successRef.current
+        const text = typeof sayWhat === 'function' ? sayWhat(result, ...args) : sayWhat
+        if (text) {
+          // money entries say where they ended up; anything else just confirms
+          const saves = answer && typeof answer === 'object' && 'queued' in answer
+          if (!saves) toast(text)
+          else if (!queued) toast(text, { detail: 'Guardado no servidor ✓' })
+          else if (answer?.ids?.length) toast(text, { tone: 'warn', detail: 'Só no telemóvel: falta enviar' })
+          else toast(text)
+        }
         return true
       } catch (e) {
         setState({ busy: false, error: e instanceof Error ? e.message : 'Erro inesperado', saved: null })
         return false
       }
     },
-    [qc],
+    [qc, toast],
   )
   return { run, ...state }
 }

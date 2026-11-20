@@ -17,8 +17,7 @@ export default function AddFine() {
   const [date, setDate] = useState(todayISO())
   const [description, setDescription] = useState('')
   const [selected, setSelected] = useState<Set<string>>(() => new Set(params.get('player') ? [params.get('player')!] : []))
-  const [done, setDone] = useState<string | null>(null)
-  const save = useAction(addFines)
+  const save = useAction(addFines, (_r, n) => (n.playerIds.length === 1 ? 'Multa registada' : `${n.playerIds.length} multas registadas`))
   const formRef = useRef<HTMLFormElement>(null)
   const amountValue = parseAmount(amount)
 
@@ -33,12 +32,10 @@ export default function AddFine() {
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    setDone(null)
     const value = parseAmount(amount)
     if (!typeId || selected.size === 0 || !(value >= 0)) return
     const ok = await save.run({ playerIds: [...selected], fineTypeId: typeId, amount: value, finedOn: date, description })
     if (ok) {
-      setDone(`${selected.size} ${selected.size === 1 ? 'multa registada' : 'multas registadas'} (${money(value * selected.size)}).`)
       setSelected(new Set())
       setDescription('')
     }
@@ -100,7 +97,6 @@ export default function AddFine() {
                   </div>
 
                   <ErrorNote error={save.error} />
-                  {done && <p className="good form-msg" role="status">{done}</p>}
                   <SaveStatus save={save.saved} />
                   <SlideToConfirm
                     label="Deslize para registar"
