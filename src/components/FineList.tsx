@@ -39,7 +39,7 @@ export function FineList({ rows, showPlayer = true, groupByDate = false }: { row
             <button
               className="link danger"
               disabled={del.busy}
-              onClick={() => confirm('Apagar esta multa definitivamente?') && del.run(r.id)}
+              onClick={() => confirm(r.kind === 'late_fee' ? 'Apagar esta multa de atraso? Não volta a ser aplicada a este jogador neste mês.' : 'Apagar esta multa definitivamente?') && del.run(r.id)}
             >
               Apagar
             </button>

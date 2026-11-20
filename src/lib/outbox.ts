@@ -10,6 +10,8 @@
  * Only the day-to-day money entries go through here: fines, payments, income and expenses.
  */
 
+import { newUuid } from './uuid'
+
 export type Table = 'fines' | 'payments' | 'incomes' | 'expenses'
 
 export type Draft =
@@ -43,7 +45,7 @@ export const OUTBOX_KEY = 'loko.outbox.v1'
 /** Raised when an entry cannot be kept on the phone, so the person is told instead of losing it silently. */
 export class OutboxError extends Error {}
 
-export function createOutbox(storage: Storage, key = OUTBOX_KEY, newId: () => string = () => crypto.randomUUID()) {
+export function createOutbox(storage: Storage, key = OUTBOX_KEY, newId: () => string = newUuid) {
   let raw: string | null = storage.getItem(key)
   let entries: Entry[] = parse(raw)
   const listeners = new Set<() => void>()

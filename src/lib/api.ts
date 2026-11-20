@@ -3,8 +3,9 @@ import { ApiError } from './errors'
 import { passwordErrorMessage } from './password'
 import { supabase } from './supabase'
 import { submit } from './sync'
+import { newUuid } from './uuid'
 import type {
-  AdminUser, ArchivedFineType, ArchivedPlayer, ArchivedSeason, Balance, Expense, FineType, Income, LedgerFilter, LedgerRow, Payment, Role, Settings, Summary,
+  AdminUser, ArchivedFineType, Change, ArchivedPlayer, ArchivedSeason, Balance, Expense, FineType, Income, LedgerFilter, LedgerRow, Payment, Role, Settings, Summary,
 } from './types'
 
 async function run<T>(q: PromiseLike<{ data: T | null; error: { message: string; code?: string } | null; status?: number }>): Promise<T> {
@@ -74,7 +75,7 @@ export interface NewFines {
 // The day-to-day money entries below go through `submit`: straight to the server when it can be
 // reached, otherwise saved on the phone and sent later (see lib/sync.ts). Every new row gets its id
 // here, so sending it twice can never create it twice.
-const newId = () => crypto.randomUUID()
+const newId = newUuid
 
 export const addFines = (n: NewFines) =>
   submit(
@@ -184,6 +185,13 @@ export async function finishAccess(email: string, code: string, password: string
   const { error } = await supabase.auth.updateUser({ password })
   if (error) throw new Error(passwordErrorMessage(error))
 }
+
+// --- the record of changes ---
+
+export const listChanges = (limit = 300) => run<Change[]>(supabase.rpc('list_changes', { p_limit: limit }))
+
+/** Puts a deleted row back exactly as it was. */
+export const restoreChange = (id: number) => run(supabase.rpc('restore_change', { p_id: id }))
 
 // --- deleting (only allowed while nothing depends on the row) ---
 

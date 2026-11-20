@@ -29,6 +29,7 @@ export const useArchivedDetail = (id: string, enabled: boolean) =>
     enabled,
     queryFn: async () => ({ players: await api.getArchivedPlayers(id), types: await api.getArchivedFineTypes(id) }),
   })
+export const useChanges = () => useQuery({ queryKey: ['changes'], queryFn: () => api.listChanges() })
 export const useExpenses = () => useQuery({ queryKey: ['expenses'], queryFn: api.getExpenses })
 
 /** id -> row lookups for joining names client-side. */

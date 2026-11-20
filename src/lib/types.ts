@@ -94,6 +94,21 @@ export interface LedgerFilter {
   to?: string
 }
 
+/** One line of the permanent record of changes (who did what, and the row before and after). */
+export interface Change {
+  id: number
+  at: string
+  /** Null when the system did it: the daily job, or the dashboard. */
+  who_email: string | null
+  action: 'insert' | 'update' | 'delete'
+  table_name: string
+  row_id: string | null
+  old_row: Record<string, unknown> | null
+  new_row: Record<string, unknown> | null
+  /** A delete that has not been put back yet. */
+  restorable: boolean
+}
+
 export interface AdminUser {
   user_id: string
   email: string
